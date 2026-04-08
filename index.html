@@ -127,7 +127,8 @@ td{padding:10px 13px;vertical-align:middle;}
     <div style="background:var(--card);border-radius:10px;padding:14px;margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 연속 스캔 모드 — 선생님·학기 선택 후 바코드를 계속 찍으면 자동 대여처리</div>
       <div class="scan-row">
-        <div style="display:flex;gap:6px;align-items:center;flex:1"><div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div></div><button class="btn btn-g btn-sm" onclick="openCamera(\'loan-barcode\')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button></div><button class="btn btn-g" onclick="openCam('loan-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div>
+        <button class="btn btn-g btn-sm" onclick="openCamera('loan-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('loan-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
         <button class="btn btn-g" onclick="doLoan()">수동 처리</button>
       </div>
       <!-- 대여 처리 결과 로그 -->
@@ -137,7 +138,8 @@ td{padding:10px 13px;vertical-align:middle;}
   <div class="card">
     <div class="card-title">↩️ 교재 반납</div>
     <div class="scan-row">
-      <div style="display:flex;gap:6px;align-items:center;flex:1"><div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div></div><button class="btn btn-g btn-sm" onclick="openCamera(\'return-barcode\')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button></div><button class="btn btn-g" onclick="openCam('return-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div>
+        <button class="btn btn-g btn-sm" onclick="openCamera('return-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('return-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
       <button class="btn btn-s" onclick="doReturn()">↩️ 반납 처리</button>
     </div>
   </div>
@@ -150,7 +152,8 @@ td{padding:10px 13px;vertical-align:middle;}
   <div class="card">
     <div class="card-title">📦 판매 입출고 처리</div>
     <div class="scan-row">
-      <div style="display:flex;gap:6px;align-items:center;flex:1"><div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div></div><button class="btn btn-g btn-sm" onclick="openCamera(\'sales-barcode\')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button></div><button class="btn btn-g" onclick="openCam('sales-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
+        <button class="btn btn-g btn-sm" onclick="openCamera('sales-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('sales-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
     </div>
     <div class="fgrid">
       <div class="fg"><label class="fl">유형</label>
@@ -180,7 +183,8 @@ td{padding:10px 13px;vertical-align:middle;}
     <div class="fgrid">
       <div class="fg">
         <label class="fl">교재 바코드</label>
-        <div style="display:flex;gap:6px;align-items:center;flex:1"><div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div></div><button class="btn btn-g btn-sm" onclick="openCamera(\'bulk-barcode\')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button></div><button class="btn btn-g" onclick="openCam('bulk-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
+        <button class="btn btn-g btn-sm" onclick="openCamera('bulk-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('bulk-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
       <div class="fg"><label class="fl">반</label><select id="bulk-class" onchange="updateBulkPreview()"><option value="">-- 반 선택 --</option></select></div>
@@ -493,14 +497,14 @@ td{padding:10px 13px;vertical-align:middle;}
 
 
 <!-- 카메라 스캔 모달 -->
-<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(90vw,400px)">
+<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(95vw,420px)">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span style="font-weight:700;font-size:15px">📷 바코드 스캔</span>
-      <button class="btn btn-g btn-sm" onclick="closeCamera()">✕ 닫기</button>
+      <button class="btn btn-d btn-sm" onclick="closeCamera()">✕ 닫기</button>
     </div>
-    <video id="camera-video" style="width:100%;border-radius:10px;background:#000"></video>
-    <div id="camera-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:10px">카메라 시작 중...</div>
+    <video id="camera-video" playsinline autoplay muted style="width:100%;height:260px;border-radius:10px;background:#000;object-fit:cover;display:block"></video>
+    <div id="camera-status" style="font-size:13px;color:var(--accent2);text-align:center;margin-top:12px;font-weight:600">📷 바코드에 카메라를 갖다 대세요</div>
   </div>
 </div>
 
