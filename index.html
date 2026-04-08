@@ -6,7 +6,6 @@
 <title>정상어학원 교재 관리</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=VT323&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
-<script src="https://unpkg.com/@zxing/browser@latest"></script>
 <style>
 :root{
   --bg:#f6f1d7;
@@ -201,12 +200,12 @@ td{padding:10px 13px;vertical-align:middle}
 #cam-video{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.14) contrast(1.08) saturate(1.08)}
 #cam-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #cam-guide-box{
-  width:min(82vw,480px);height:min(32vw,180px);
+  width:min(72vw,420px);height:min(22vw,120px);
   border:3px solid rgba(255,235,160,.98);border-radius:16px;
   box-shadow:0 0 0 9999px rgba(0,0,0,.28), 0 0 16px rgba(255,225,120,.65);
 }
 #cam-guide-line{
-  position:absolute;width:min(74vw,420px);height:2px;background:rgba(255,232,134,.98);box-shadow:0 0 12px rgba(255,225,120,.92);
+  position:absolute;width:min(64vw,360px);height:2px;background:rgba(255,232,134,.98);box-shadow:0 0 12px rgba(255,225,120,.92);
 }
 #cam-status-text{font-weight:700;color:#644b16}
 #cam-chip{
@@ -227,7 +226,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver3</span>
+    <span>정상어학원 교재 관리 ver4</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -263,7 +262,6 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="scan-row">
         <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div>
         <button class="btn btn-cam" onclick="openCam('loan-barcode', true)">카메라</button>
-        <button class="btn btn-y" onclick="openExternalScanner('loan-barcode', true)">외부 스캐너</button>
         <button class="btn btn-g" onclick="doLoan()">수동 처리</button>
       </div>
       <div id="loan-log" style="max-height:120px;overflow-y:auto;margin-top:8px"></div>
@@ -276,7 +274,6 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('return-barcode', true)">카메라</button>
-      <button class="btn btn-y" onclick="openExternalScanner('return-barcode', true)">외부 스캐너</button>
       <button class="btn btn-s" onclick="doReturn()">반납 처리</button>
     </div>
   </div>
@@ -292,7 +289,6 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
-      <button class="btn btn-y" onclick="openExternalScanner('sales-barcode', false)">외부 스캐너</button>
     </div>
     <div class="fgrid">
       <div class="fg"><label class="fl">유형</label>
@@ -325,7 +321,6 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="scan-row" style="margin-bottom:0">
           <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
           <button class="btn btn-cam" onclick="openCam('bulk-barcode', false)">카메라</button>
-          <button class="btn btn-y" onclick="openExternalScanner('bulk-barcode', false)">외부 스캐너</button>
         </div>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
@@ -433,7 +428,6 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="scan-row" style="margin-bottom:0">
           <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input type="text" id="book-barcode" placeholder="스캔하면 자동조회" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBookByISBN();}"></div>
           <button class="btn btn-cam" onclick="openCam('book-barcode', false)">카메라</button>
-          <button class="btn btn-y" onclick="openExternalScanner('book-barcode', false)">외부 스캐너</button>
         </div>
       </div>
       <div class="fg"><label class="fl">교재명 *</label><input type="text" id="book-name" placeholder="스캔하면 자동완성"></div>
@@ -1228,103 +1222,149 @@ function printBarcodes(){
   win.document.close();
 }
 
-/* 카메라 바코드 인식 */
+/* 카메라 바코드 인식 - BarcodeDetector */
 var _camTarget = null;
 var _camAutoAction = false;
-var _codeReader = null;
-var _camControls = null;
 var _camBusy = false;
+var _camStream = null;
+var _camFrame = null;
+var _detector = null;
+var _scanCanvas = document.createElement('canvas');
+var _scanCtx = _scanCanvas.getContext('2d', { willReadFrequently: true });
+var _lastDetectedCode = '';
+var _lastDetectedAt = 0;
 
-function getZXingReader() {
-  if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) {
-    return new window.ZXingBrowser.BrowserMultiFormatReader();
-  }
-  if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
-    return new window.ZXing.BrowserMultiFormatReader();
-  }
-  throw new Error('ZXing 객체를 찾지 못했습니다.');
+function supportsBarcodeDetector() {
+  return 'BarcodeDetector' in window;
 }
 
-function openCam(inputId, autoAction) {
+async function buildDetector() {
+  if (!supportsBarcodeDetector()) return null;
+
+  var preferred = ['ean_13', 'ean_8', 'upc_a', 'upc_e', 'code_128', 'code_39'];
+  try {
+    if (typeof BarcodeDetector.getSupportedFormats === 'function') {
+      var supported = await BarcodeDetector.getSupportedFormats();
+      var formats = preferred.filter(function(f){ return supported.includes(f); });
+      if (!formats.length) formats = preferred;
+      return new BarcodeDetector({ formats: formats });
+    }
+  } catch (e) {}
+
+  return new BarcodeDetector({ formats: preferred });
+}
+
+async function openCam(inputId, autoAction) {
   _camTarget = inputId;
   _camAutoAction = !!autoAction;
   _camBusy = false;
+  _lastDetectedCode = '';
+  _lastDetectedAt = 0;
 
   var modal = document.getElementById('cam-modal');
   var video = document.getElementById('cam-video');
   var status = document.getElementById('cam-status-text');
 
-  status.textContent = '카메라 시작 중...';
   modal.classList.add('open');
 
-  try {
-    _codeReader = getZXingReader();
-  } catch (e) {
-    status.textContent = 'ZXing 로드 실패: ' + e.message;
+  if (!supportsBarcodeDetector()) {
+    status.textContent = '이 브라우저는 바코드 감지를 지원하지 않습니다. 안드로이드 크롬으로 열어주세요.';
     return;
   }
 
-  Promise.resolve(
-    _codeReader.decodeFromVideoDevice(
-      null,
-      video,
-      function (result, err, controls) {
-        if (!_camControls && controls) {
-          _camControls = controls;
-        }
+  status.textContent = '카메라 시작 중...';
 
-        if (result && !_camBusy) {
-          _camBusy = true;
+  try {
+    _detector = await buildDetector();
 
-          var code = '';
-          if (typeof result.getText === 'function') {
-            code = result.getText();
-          } else if (result.text) {
-            code = result.text;
-          } else {
-            code = String(result);
-          }
+    _camStream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 }
+      },
+      audio: false
+    });
 
-          if (navigator.vibrate) navigator.vibrate(120);
+    video.srcObject = _camStream;
+    await video.play();
 
-          var input = document.getElementById(_camTarget);
-          if (input) input.value = code;
+    status.textContent = '바코드를 네모 안에 크게 맞춰주세요';
+    _camFrame = requestAnimationFrame(scanLoop);
+  } catch (e) {
+    status.textContent = '카메라 실행 실패: ' + (e && e.message ? e.message : e);
+  }
+}
 
-          status.textContent = '인식됨: ' + code;
+async function scanLoop() {
+  var video = document.getElementById('cam-video');
 
-          setTimeout(function () {
-            closeCam();
+  if (_camBusy) return;
+  if (!_detector || !_camStream || !video || video.readyState < 2 || !video.videoWidth) {
+    _camFrame = requestAnimationFrame(scanLoop);
+    return;
+  }
 
-            if (_camAutoAction) {
-              if (_camTarget === 'loan-barcode') doLoan();
-              if (_camTarget === 'return-barcode') doReturn();
-            }
-          }, 250);
+  try {
+    var vw = video.videoWidth;
+    var vh = video.videoHeight;
 
-          return;
-        }
+    /* 중앙의 가로형 영역만 잘라서 확대 판독 */
+    var cropW = Math.floor(vw * 0.68);
+    var cropH = Math.floor(vh * 0.16);
+    var sx = Math.floor((vw - cropW) / 2);
+    var sy = Math.floor((vh - cropH) / 2);
 
-        if (!_camBusy) {
-          status.textContent = '시중교재 / 자체 바코드를 네모 안에 맞춰주세요';
-        }
+    _scanCanvas.width = cropW * 2;
+    _scanCanvas.height = cropH * 2;
+
+    _scanCtx.drawImage(video, sx, sy, cropW, cropH, 0, 0, _scanCanvas.width, _scanCanvas.height);
+
+    var barcodes = await _detector.detect(_scanCanvas);
+    if (barcodes && barcodes.length) {
+      var raw = (barcodes[0].rawValue || '').trim();
+      var now = Date.now();
+
+      if (raw && (raw !== _lastDetectedCode || now - _lastDetectedAt > 1500)) {
+        _lastDetectedCode = raw;
+        _lastDetectedAt = now;
+        handleDetectedCode(raw);
+        return;
       }
-    )
-  ).catch(function (err) {
-    status.textContent = '카메라 실행 실패: ' + (err && err.message ? err.message : err);
-  });
+    }
+  } catch (e) {
+    /* detect 실패는 계속 재시도 */
+  }
+
+  _camFrame = requestAnimationFrame(scanLoop);
+}
+
+function handleDetectedCode(code) {
+  _camBusy = true;
+
+  if (navigator.vibrate) navigator.vibrate(120);
+
+  var input = document.getElementById(_camTarget);
+  if (input) input.value = code;
+
+  document.getElementById('cam-status-text').textContent = '인식됨: ' + code;
+
+  setTimeout(function () {
+    closeCam();
+
+    if (_camAutoAction) {
+      if (_camTarget === 'loan-barcode') doLoan();
+      if (_camTarget === 'return-barcode') doReturn();
+    }
+  }, 220);
 }
 
 function closeCam() {
   _camBusy = false;
 
-  if (_camControls) {
-    try { _camControls.stop(); } catch (e) {}
-    _camControls = null;
-  }
-
-  if (_codeReader) {
-    try { _codeReader.reset(); } catch (e) {}
-    _codeReader = null;
+  if (_camFrame) {
+    cancelAnimationFrame(_camFrame);
+    _camFrame = null;
   }
 
   var video = document.getElementById('cam-video');
@@ -1333,6 +1373,14 @@ function closeCam() {
     video.srcObject = null;
   }
 
+  if (_camStream) {
+    try {
+      _camStream.getTracks().forEach(function(track){ track.stop(); });
+    } catch (e) {}
+    _camStream = null;
+  }
+
+  _detector = null;
   document.getElementById('cam-modal').classList.remove('open');
   document.getElementById('cam-status-text').textContent = '카메라 시작 중...';
 }
@@ -1341,57 +1389,7 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape') closeCam();
 });
 
-
-function isAndroid() {
-  return /Android/i.test(navigator.userAgent || '');
-}
-
-function buildExternalScanUrl(targetId, autoAction) {
-  var base = window.location.origin + window.location.pathname;
-  var ret = base +
-    '?scan_target=' + encodeURIComponent(targetId) +
-    '&scan_auto=' + encodeURIComponent(autoAction ? '1' : '0') +
-    '&scan_value={CODE}';
-
-  var encodedRet = encodeURIComponent(ret);
-  return 'https://zxing.appspot.com/scan?ret=' + encodedRet +
-    '&SCAN_FORMATS=UPC_A,UPC_E,EAN_13,EAN_8,CODE_128,CODE_39';
-}
-
-function openExternalScanner(targetId, autoAction) {
-  if (!isAndroid()) {
-    toast('외부 스캐너 방식은 안드로이드 크롬에서 가장 잘 동작합니다.', false);
-    return;
-  }
-  var url = buildExternalScanUrl(targetId, autoAction);
-  window.location.href = url;
-}
-
-function applyReturnedScanIfAny() {
-  var params = new URLSearchParams(window.location.search);
-  var value = params.get('scan_value');
-  var target = params.get('scan_target');
-  var auto = params.get('scan_auto') === '1';
-
-  if (!value || !target) return;
-
-  var input = document.getElementById(target);
-  if (input) input.value = value;
-
-  var cleaned = window.location.origin + window.location.pathname;
-  history.replaceState({}, document.title, cleaned);
-
-  toast('외부 스캐너로 인식됨: ' + value, true);
-
-  if (auto) {
-    setTimeout(function(){
-      if (target === 'loan-barcode') doLoan();
-      if (target === 'return-barcode') doReturn();
-    }, 120);
-  }
-}
-
-window.addEventListener('load', function(){ init(); applyReturnedScanIfAny(); });
+window.addEventListener('load', init);
 </script>
 </body>
 </html>
