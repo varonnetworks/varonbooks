@@ -497,13 +497,15 @@ td{padding:10px 13px;vertical-align:middle;}
 
 
 <!-- 카메라 스캔 모달 -->
-<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(95vw,420px)">
+<div id="camera-modal" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:9999;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(95vw,420px);position:relative">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
       <span style="font-weight:700;font-size:15px">📷 바코드 스캔</span>
       <button class="btn btn-d btn-sm" onclick="closeCamera()">✕ 닫기</button>
     </div>
-    <video id="camera-video" playsinline autoplay muted style="width:100%;height:260px;border-radius:10px;background:#000;object-fit:cover;display:block"></video>
+    <div style="width:100%;height:280px;border-radius:10px;overflow:hidden;background:#000;position:relative">
+      <video id="camera-video" playsinline autoplay muted style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover"></video>
+    </div>
     <div id="camera-status" style="font-size:13px;color:var(--accent2);text-align:center;margin-top:12px;font-weight:600">📷 바코드에 카메라를 갖다 대세요</div>
   </div>
 </div>
@@ -1794,6 +1796,8 @@ async function openCamera(targetInputId) {
   cameraTargetId = targetInputId;
   var modal = document.getElementById('camera-modal');
   modal.style.display = 'flex';
+  modal.style.alignItems = 'center';
+  modal.style.justifyContent = 'center';
   document.getElementById('camera-status').textContent = '카메라 시작 중...';
 
   try {
