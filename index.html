@@ -1224,94 +1224,116 @@ function printBarcodes(){
 }
 
 /* 카메라 바코드 인식 */
-var _camTarget=null;
-var _camAutoAction=false;
-var _codeReader=null;
-var _camControls=null;
-var _camBusy=false;
+var _camTarget = null;
+var _camAutoAction = false;
+var _codeReader = null;
+var _camControls = null;
+var _camBusy = false;
 
-function openCam(inputId, autoAction){
-  _camTarget=inputId;
-  _camAutoAction=!!autoAction;
-  _camBusy=false;
+function getZXingReader() {
+  if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) {
+    return new window.ZXingBrowser.BrowserMultiFormatReader();
+  }
+  if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
+    return new window.ZXing.BrowserMultiFormatReader();
+  }
+  throw new Error('ZXing 객체를 찾지 못했습니다.');
+}
 
-  var modal=document.getElementById('cam-modal');
-  var video=document.getElementById('cam-video');
-  var status=document.getElementById('cam-status-text');
+function openCam(inputId, autoAction) {
+  _camTarget = inputId;
+  _camAutoAction = !!autoAction;
+  _camBusy = false;
 
-  status.textContent='카메라 시작 중...';
+  var modal = document.getElementById('cam-modal');
+  var video = document.getElementById('cam-video');
+  var status = document.getElementById('cam-status-text');
+
+  status.textContent = '카메라 시작 중...';
   modal.classList.add('open');
 
-  try{
-    _codeReader = new ZXingBrowser.BrowserMultiFormatReader();
-  }catch(e){
-    status.textContent='ZXing 로드 실패';
+  try {
+    _codeReader = getZXingReader();
+  } catch (e) {
+    status.textContent = 'ZXing 로드 실패: ' + e.message;
     return;
   }
 
-  _codeReader.decodeFromVideoDevice(
-    null,
-    video,
-    function(result, err, controls){
-      if(!_camControls && controls){
-        _camControls = controls;
-      }
+  Promise.resolve(
+    _codeReader.decodeFromVideoDevice(
+      null,
+      video,
+      function (result, err, controls) {
+        if (!_camControls && controls) {
+          _camControls = controls;
+        }
 
-      if(result && !_camBusy){
-        _camBusy = true;
-        var code = result.getText ? result.getText() : (result.text || '');
+        if (result && !_camBusy) {
+          _camBusy = true;
 
-        if(navigator.vibrate) navigator.vibrate(120);
-
-        var input = document.getElementById(_camTarget);
-        if(input) input.value = code;
-
-        status.textContent = '인식됨: ' + code;
-
-        setTimeout(function(){
-          closeCam();
-
-          if(_camAutoAction){
-            if(_camTarget === 'loan-barcode') doLoan();
-            if(_camTarget === 'return-barcode') doReturn();
+          var code = '';
+          if (typeof result.getText === 'function') {
+            code = result.getText();
+          } else if (result.text) {
+            code = result.text;
+          } else {
+            code = String(result);
           }
-        }, 250);
-        return;
-      }
 
-      if(!_camBusy){
-        status.textContent = '시중교재 / 자체 바코드를 네모 안에 맞춰주세요';
+          if (navigator.vibrate) navigator.vibrate(120);
+
+          var input = document.getElementById(_camTarget);
+          if (input) input.value = code;
+
+          status.textContent = '인식됨: ' + code;
+
+          setTimeout(function () {
+            closeCam();
+
+            if (_camAutoAction) {
+              if (_camTarget === 'loan-barcode') doLoan();
+              if (_camTarget === 'return-barcode') doReturn();
+            }
+          }, 250);
+
+          return;
+        }
+
+        if (!_camBusy) {
+          status.textContent = '시중교재 / 자체 바코드를 네모 안에 맞춰주세요';
+        }
       }
-    }
-  ).catch(function(err){
-    status.textContent = '카메라 실행 실패: ' + err.message;
+    )
+  ).catch(function (err) {
+    status.textContent = '카메라 실행 실패: ' + (err && err.message ? err.message : err);
   });
 }
 
-function closeCam(){
+function closeCam() {
   _camBusy = false;
 
-  if(_camControls){
-    try{ _camControls.stop(); }catch(e){}
+  if (_camControls) {
+    try { _camControls.stop(); } catch (e) {}
     _camControls = null;
   }
 
-  if(_codeReader){
-    try{ _codeReader.reset(); }catch(e){}
+  if (_codeReader) {
+    try { _codeReader.reset(); } catch (e) {}
     _codeReader = null;
   }
 
-  var video=document.getElementById('cam-video');
-  if(video){
+  var video = document.getElementById('cam-video');
+  if (video) {
+    try { video.pause(); } catch (e) {}
     video.srcObject = null;
   }
 
   document.getElementById('cam-modal').classList.remove('open');
-  document.getElementById('cam-status-text').textContent='카메라 시작 중...';
+  document.getElementById('cam-status-text').textContent = '카메라 시작 중...';
 }
 
 document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape') closeCam();
+  if (e.key === 'Escape') closeCam();
 });
 
 window.addEventListener('load', init);
