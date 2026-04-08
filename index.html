@@ -128,7 +128,7 @@ td{padding:10px 13px;vertical-align:middle;}
       <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 연속 스캔 모드 — 선생님·학기 선택 후 바코드를 계속 찍으면 자동 대여처리</div>
       <div class="scan-row">
         <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div>
-        <button class="btn btn-g btn-sm" onclick="openCamera('loan-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('loan-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+        <button class="btn btn-g btn-sm" onclick="openCam('loan-barcode')" style="white-space:nowrap">📱 카메라</button>
         <button class="btn btn-g" onclick="doLoan()">수동 처리</button>
       </div>
       <!-- 대여 처리 결과 로그 -->
@@ -139,7 +139,7 @@ td{padding:10px 13px;vertical-align:middle;}
     <div class="card-title">↩️ 교재 반납</div>
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div>
-        <button class="btn btn-g btn-sm" onclick="openCamera('return-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('return-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+      <button class="btn btn-g btn-sm" onclick="openCam('return-barcode')" style="white-space:nowrap">📱 카메라</button>
       <button class="btn btn-s" onclick="doReturn()">↩️ 반납 처리</button>
     </div>
   </div>
@@ -153,7 +153,7 @@ td{padding:10px 13px;vertical-align:middle;}
     <div class="card-title">📦 판매 입출고 처리</div>
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
-        <button class="btn btn-g btn-sm" onclick="openCamera('sales-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('sales-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+      <button class="btn btn-g btn-sm" onclick="openCam('sales-barcode')" style="white-space:nowrap">📱 카메라</button>
     </div>
     <div class="fgrid">
       <div class="fg"><label class="fl">유형</label>
@@ -184,7 +184,7 @@ td{padding:10px 13px;vertical-align:middle;}
       <div class="fg">
         <label class="fl">교재 바코드</label>
         <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
-        <button class="btn btn-g btn-sm" onclick="openCamera('bulk-barcode')" title="카메라로 스캔" style="white-space:nowrap">📱 카메라</button><button class="btn btn-g" onclick="openCam('bulk-barcode')" style="padding:9px 12px;font-size:16px" title="카메라로 스캔">📸</button></div>
+        <button class="btn btn-g btn-sm" onclick="openCam('bulk-barcode')" style="white-space:nowrap">📱 카메라</button>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
       <div class="fg"><label class="fl">반</label><select id="bulk-class" onchange="updateBulkPreview()"><option value="">-- 반 선택 --</option></select></div>
@@ -386,11 +386,6 @@ td{padding:10px 13px;vertical-align:middle;}
 </div>
 
 
-<!-- ══ 카메라 스캔 모달 ══ -->
-<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(400px,90vw);border:1px solid var(--border)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-size:15px;font-weight:700">📷 카메라 스캔</div>
       <button onclick="closeCamera()" style="background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;padding:4px">✕</button>
     </div>
     <div id="camera-reader" style="border-radius:10px;overflow:hidden;"></div>
@@ -399,13 +394,6 @@ td{padding:10px 13px;vertical-align:middle;}
 </div>
 
 </main>
-<!-- 카메라 스캔 모달 -->
-<div id="scan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;flex-direction:column;align-items:center;justify-content:center">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:20px;width:min(95vw,480px);position:relative">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <span style="font-weight:700;font-size:15px">📷 카메라 스캔</span>
-      <button onclick="stopScan()" style="background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:13px">✕ 닫기</button>
-    </div>
     <div style="position:relative;border-radius:10px;overflow:hidden;background:#000">
       <div id="scan-viewport" style="width:100%;max-height:300px;overflow:hidden"></div>
       <!-- 스캔 가이드라인 -->
@@ -422,19 +410,9 @@ td{padding:10px 13px;vertical-align:middle;}
   </div>
 </div>
 
-<!-- 카메라 스캔 모달 -->
-<div id="cam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px">
-  <div style="color:#fff;font-size:15px;font-weight:700">📷 바코드에 카메라를 갖다 대세요</div>
   <div id="cam-reader" style="width:min(360px,90vw);border-radius:12px;overflow:hidden;background:#000"></div>
   <button onclick="stopCamScan()" style="padding:10px 28px;border-radius:8px;border:none;background:#ff6b6b;color:#fff;font-size:14px;font-weight:700;cursor:pointer">✕ 닫기</button>
 </div>
-<!-- 카메라 스캔 모달 -->
-<div id="cam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(420px,95vw);border:1px solid var(--border)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <span style="font-weight:700;font-size:15px">📷 카메라 스캔</span>
-      <button class="btn btn-g btn-sm" onclick="closeCam()">✕ 닫기</button>
-    </div>
     <div style="position:relative;border-radius:10px;overflow:hidden;background:#000;aspect-ratio:4/3">
       <div id="cam-viewport" style="width:100%;height:100%"></div>
       <!-- 조준선 -->
@@ -450,11 +428,6 @@ td{padding:10px 13px;vertical-align:middle;}
   </div>
 </div>
 
-<!-- 카메라 스캔 모달 -->
-<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(420px,95vw);border:1px solid var(--border)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-weight:700;font-size:15px">📷 카메라 스캔</div>
       <button class="btn btn-g btn-sm" onclick="closeCamera()">✕ 닫기</button>
     </div>
     <div style="position:relative;border-radius:10px;overflow:hidden;background:#000;margin-bottom:12px">
@@ -473,10 +446,6 @@ td{padding:10px 13px;vertical-align:middle;}
 </div>
 
 
-<!-- ══ 카메라 스캔 모달 ══ -->
-<div id="scan-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:none;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;width:min(400px,95vw);text-align:center">
-    <div style="font-size:15px;font-weight:700;margin-bottom:6px">📷 카메라 스캔</div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:14px">바코드를 카메라에 갖다대세요</div>
     <div id="qr-reader" style="width:100%;border-radius:10px;overflow:hidden"></div>
     <div id="scan-result" style="font-size:13px;color:var(--accent2);margin-top:12px;min-height:20px"></div>
@@ -485,10 +454,6 @@ td{padding:10px 13px;vertical-align:middle;}
 </div>
 
 
-<!-- 카메라 스캔 모달 -->
-<div id="camera-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;display:none;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(360px,90vw);text-align:center">
-    <div style="font-size:15px;font-weight:700;margin-bottom:14px">📱 카메라로 바코드 스캔</div>
     <video id="camera-video" style="width:100%;border-radius:10px;background:#000;max-height:240px" autoplay muted playsinline></video>
     <div id="camera-status" style="font-size:12px;color:var(--muted);margin-top:10px">카메라 시작 중...</div>
     <button class="btn btn-d" onclick="closeCamera()" style="margin-top:14px;width:100%">닫기</button>
@@ -497,32 +462,6 @@ td{padding:10px 13px;vertical-align:middle;}
 
 
 <!-- 카메라 스캔 모달 -->
-<style>
-  #cam-modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:#000; z-index:9999; flex-direction:column; }
-  #cam-modal.open { display:flex!important; }
-  #cam-video { width:100%; flex:1; object-fit:cover; display:block; }
-  #cam-bar { background:rgba(0,0,0,.7); padding:14px 20px; display:flex; align-items:center; justify-content:space-between; }
-  #cam-result-text { color:#fff; font-size:14px; font-weight:600; }
-</style>
-<div id="cam-modal">
-  <div id="cam-bar">
-    <span style="color:#fff;font-weight:700;font-size:15px">📷 바코드를 화면에 맞춰주세요</span>
-    <button onclick="closeCamera()" style="background:var(--warn);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">✕ 닫기</button>
-  </div>
-  <video id="cam-video" playsinline autoplay muted></video>
-  <canvas id="cam-canvas" style="display:none"></canvas>
-  <div id="cam-bar2" style="background:rgba(0,0,0,.7);padding:12px;text-align:center">
-    <span id="cam-result-text" style="color:var(--accent2);font-size:13px;font-weight:600">인식 대기 중...</span>
-  </div>
-</div>
-
-<div id="toast"></div>
-
-<!-- 카메라 스캔 모달 -->
-<div id="cam-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;flex-direction:column;align-items:center;justify-content:center;">
-  <div style="background:var(--surface);border-radius:16px;padding:20px;width:min(440px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.5)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div style="font-size:15px;font-weight:700">📸 카메라 스캔</div>
       <button onclick="closeCam()" style="background:var(--card);border:none;color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px">✕</button>
     </div>
     <div style="position:relative;border-radius:10px;overflow:hidden;background:#000;margin-bottom:12px">
@@ -540,7 +479,31 @@ td{padding:10px 13px;vertical-align:middle;}
   </div>
 </div>
 
+
+<!-- 카메라 스캔 모달 -->
+<style>
+#cam-modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:#000;z-index:9999;flex-direction:column;}
+#cam-modal.open{display:flex!important;}
+#cam-video{width:100%;flex:1;object-fit:cover;display:block;}
+#cam-top{background:rgba(0,0,0,.7);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+#cam-bottom{background:rgba(0,0,0,.7);padding:12px;text-align:center;flex-shrink:0;}
+#cam-status-text{color:var(--accent2);font-size:13px;font-weight:600;}
+</style>
+<div id="cam-modal">
+  <div id="cam-top">
+    <span style="color:#fff;font-weight:700;font-size:14px">📷 바코드를 화면에 맞춰주세요</span>
+    <button onclick="closeCam()" style="background:var(--warn);color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer">✕ 닫기</button>
+  </div>
+  <video id="cam-video" playsinline autoplay muted></video>
+  <canvas id="cam-canvas" style="display:none"></canvas>
+  <div id="cam-bottom">
+    <span id="cam-status-text">인식 대기 중...</span>
+  </div>
+</div>
+
+<div id="toast"></div>
 <script>
+
 // ─── 상태 ─────────────────────────────────────────────────────
 var teachers=[], books=[], students=[], semesters=[];
 var bulkAssigns=[];
@@ -1260,659 +1223,90 @@ function printBarcodes(){
 }
 
 
-// ─── 카메라 스캔 ──────────────────────────────────────────────
-var camTargetInput = null;
-var codeReader = null;
-var camStream = null;
-var camFacingMode = 'environment'; // 후면 카메라 기본
+window.addEventListener('load',init);
+// ─── 카메라 스캔 ─────────────────────────────────────────────
+var _camTarget = null;
+var _camStream = null;
+var _camFrame  = null;
+var _camCanvas = document.createElement('canvas');
+var _camCtx    = _camCanvas.getContext('2d');
+var _camLast   = '';
+var _camTime   = 0;
 
 function openCam(inputId) {
-  camTargetInput = inputId;
-  document.getElementById('cam-modal').style.display = 'flex';
-  document.getElementById('cam-status').textContent = '카메라 시작 중...';
-  startCam();
-}
-
-async function startCam() {
-  try {
-    // 기존 스트림 정지
-    if (camStream) {
-      camStream.getTracks().forEach(function(t){ t.stop(); });
-    }
-
-    camStream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: camFacingMode, width: { ideal: 1280 }, height: { ideal: 720 } }
-    });
-
-    var video = document.getElementById('cam-video');
-    video.srcObject = camStream;
-    await video.play();
-
-    document.getElementById('cam-status').textContent = '바코드를 카메라에 갖다대세요';
-
-    // ZXing으로 바코드 인식
-    if (window.ZXing) {
-      startZXing(video);
-    } else {
-      // 라이브러리 로드 대기
-      var check = setInterval(function() {
-        if (window.ZXing) { clearInterval(check); startZXing(video); }
-      }, 200);
-    }
-  } catch(e) {
-    document.getElementById('cam-status').textContent = '카메라 접근 실패: ' + e.message;
-  }
-}
-
-function startZXing(video) {
-  try {
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    codeReader.decodeFromVideoElement(video, function(result, err) {
-      if (result) {
-        var code = result.getText();
-        // 입력칸에 값 넣기
-        var el = document.getElementById(camTargetInput);
-        if (el) {
-          el.value = code;
-          el.focus();
-        }
-        document.getElementById('cam-status').innerHTML = '<span style="color:var(--accent2)">✅ 스캔 완료: ' + code + '</span>';
-        // 0.5초 후 자동으로 처리 실행
-        setTimeout(function() {
-          closeCam();
-          // 해당 입력칸의 Enter 이벤트 트리거
-          var event = new KeyboardEvent('keydown', { key: 'Enter', bubbles: true });
-          if (el) el.dispatchEvent(event);
-        }, 500);
-      }
-    });
-  } catch(e) {
-    document.getElementById('cam-status').textContent = '스캔 오류: ' + e.message;
-  }
-}
-
-function switchCamera() {
-  camFacingMode = camFacingMode === 'environment' ? 'user' : 'environment';
-  if (codeReader) { try { codeReader.reset(); } catch(e) {} }
-  startCam();
-}
-
-function closeCam() {
-  if (codeReader) { try { codeReader.reset(); } catch(e) {} codeReader = null; }
-  if (camStream) { camStream.getTracks().forEach(function(t){ t.stop(); }); camStream = null; }
-  document.getElementById('cam-modal').style.display = 'none';
-}
-
-// ESC로 닫기
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeCam();
-});
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var scanTargetId = '';
-var scanConfirmedCode = '';
-
-function openScan(targetInputId) {
-  scanTargetId = targetInputId;
-  scanConfirmedCode = '';
-  document.getElementById('scan-result-preview').style.display = 'none';
-  document.getElementById('scan-status').textContent = '바코드를 가이드선에 맞춰주세요';
-  document.getElementById('scan-modal').style.display = 'flex';
-  startQuagga();
-}
-
-function startQuagga() {
-  if (!window.Quagga) {
-    document.getElementById('scan-status').textContent = '⚠️ 스캔 라이브러리 로딩 중...';
-    setTimeout(startQuagga, 500);
-    return;
-  }
-  Quagga.init({
-    inputStream: {
-      type: 'LiveStream',
-      target: document.getElementById('scan-viewport'),
-      constraints: {
-        facingMode: 'environment', // 후면 카메라
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    },
-    decoder: {
-      readers: ['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader']
-    },
-    locate: true
-  }, function(err) {
-    if (err) {
-      document.getElementById('scan-status').textContent = '❌ 카메라 접근 실패. 브라우저 카메라 권한을 허용해주세요.';
-      return;
-    }
-    Quagga.start();
-    document.getElementById('scan-status').textContent = '📷 카메라 준비됨 — 바코드를 가이드선에 맞춰주세요';
-  });
-
-  Quagga.onDetected(function(result) {
-    var code = result.codeResult.code;
-    if (!code) return;
-    // 같은 코드 연속 감지 방지
-    if (code === scanConfirmedCode) return;
-    scanConfirmedCode = code;
-    Quagga.pause();
-    document.getElementById('scan-result-code').textContent = code;
-    document.getElementById('scan-result-preview').style.display = '';
-    document.getElementById('scan-status').textContent = '✅ 바코드 인식됨!';
-  });
-}
-
-function confirmScan() {
-  var code = document.getElementById('scan-result-code').textContent;
-  if (!code) return;
-  // 대상 입력칸에 값 설정
-  var input = document.getElementById(scanTargetId);
-  if (input) {
-    input.value = code;
-    input.dispatchEvent(new Event('input'));
-  }
-  stopScan();
-  // 대여탭이면 자동 처리
-  if (scanTargetId === 'loan-barcode') {
-    setTimeout(doLoan, 100);
-  }
-}
-
-function stopScan() {
-  document.getElementById('scan-modal').style.display = 'none';
-  document.getElementById('scan-viewport').innerHTML = '';
-  scanConfirmedCode = '';
-  try { Quagga.stop(); } catch(e) {}
-}
-
-// 모달 바깥 클릭시 닫기
-document.getElementById('scan-modal').addEventListener('click', function(e) {
-  if (e.target === this) stopScan();
-});
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var _camScanner = null;
-var _camTargetId = null;
-var _camCallback = null;
-
-function startCamScan(inputId, callback) {
-  _camTargetId = inputId;
-  _camCallback = callback;
-
-  var modal = document.getElementById('cam-modal');
-  modal.style.display = 'flex';
-
-  // 이전 스캐너 정리
-  if (_camScanner) {
-    _camScanner.stop().catch(function(){});
-    _camScanner.clear();
-    _camScanner = null;
-  }
-
-  // reader div 초기화
-  document.getElementById('cam-reader').innerHTML = '';
-
-  _camScanner = new Html5Qrcode('cam-reader');
-  _camScanner.start(
-    { facingMode: 'environment' }, // 후면 카메라
-    { fps: 10, qrbox: { width: 250, height: 150 } },
-    function(decodedText) {
-      // 스캔 성공
-      var input = document.getElementById(_camTargetId);
-      if (input) {
-        input.value = decodedText;
-        input.focus();
-      }
-      stopCamScan();
-      // 콜백 실행 (자동 처리)
-      if (_camCallback) {
-        setTimeout(_camCallback, 200);
-      }
-    },
-    function() {} // 스캔 중 오류는 무시
-  ).catch(function(e) {
-    toast('카메라를 열 수 없어요. 브라우저 카메라 권한을 허용해주세요.', false);
-    stopCamScan();
-  });
-}
-
-function stopCamScan() {
-  var modal = document.getElementById('cam-modal');
-  modal.style.display = 'none';
-  if (_camScanner) {
-    _camScanner.stop().catch(function(){});
-    _camScanner.clear();
-    _camScanner = null;
-  }
-  document.getElementById('cam-reader').innerHTML = '';
-}
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var camTargetId = null;
-var camRunning  = false;
-
-function openCam(targetInputId) {
-  camTargetId = targetInputId;
-  var modal = document.getElementById('cam-modal');
-  modal.style.display = 'flex';
-  document.getElementById('cam-result').style.display = 'none';
-  document.getElementById('cam-status').textContent = '카메라 시작 중...';
-  startQuagga();
-}
-
-function closeCam() {
-  stopQuagga();
-  document.getElementById('cam-modal').style.display = 'none';
-  camTargetId = null;
-}
-
-function startQuagga() {
-  if (camRunning) stopQuagga();
-  var viewport = document.getElementById('cam-viewport');
-  viewport.innerHTML = '';
-
-  Quagga.init({
-    inputStream: {
-      type: 'LiveStream',
-      target: viewport,
-      constraints: {
-        facingMode: 'environment', // 후면 카메라
-        width: { ideal: 1280 },
-        height: { ideal: 720 }
-      }
-    },
-    decoder: {
-      readers: ['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader']
-    },
-    locate: true,
-    frequency: 10
-  }, function(err) {
-    if (err) {
-      document.getElementById('cam-status').textContent = '카메라 접근 실패: ' + err.message;
-      return;
-    }
-    Quagga.start();
-    camRunning = true;
-    document.getElementById('cam-status').textContent = '바코드를 네모 안에 맞춰주세요';
-  });
-
-  Quagga.onDetected(function(result) {
-    var code = result.codeResult.code;
-    if (!code) return;
-
-    // 진동 (모바일)
-    if (navigator.vibrate) navigator.vibrate(100);
-
-    // 결과 표시
-    document.getElementById('cam-result-code').textContent = code;
-    document.getElementById('cam-result').style.display = '';
-    document.getElementById('cam-status').textContent = '✅ 인식 완료!';
-
-    // 대상 입력칸에 값 넣기
-    if (camTargetId) {
-      var input = document.getElementById(camTargetId);
-      if (input) {
-        input.value = code;
-        // 대여 모드면 자동으로 대여 처리
-        if (camTargetId === 'loan-barcode') {
-          closeCam();
-          setTimeout(doLoan, 200);
-        } else {
-          // 다른 칸은 모달 닫고 포커스
-          setTimeout(function() {
-            closeCam();
-            input.focus();
-          }, 800);
-        }
-      }
-    }
-  });
-}
-
-function stopQuagga() {
-  if (camRunning) {
-    try { Quagga.stop(); } catch(e) {}
-    camRunning = false;
-  }
-}
-
-// 모달 바깥 클릭시 닫기
-document.getElementById('cam-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeCam();
-});
-
-
-// ─── 카메라 바코드 스캔 ───────────────────────────────────────
-var camStream = null;
-var camTargetInput = null;
-var camAnimFrame = null;
-var camCanvas = document.createElement('canvas');
-var camCtx = camCanvas.getContext('2d');
-var camResultTimeout = null;
-var camLastResult = '';
-var camLastTime = 0;
-
-function openCamera(targetInputId) {
-  camTargetInput = targetInputId;
-  camLastResult = '';
-
-  // ZXing 라이브러리 동적 로드
-  if (!window.ZXing) {
-    var s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/zxing-js/0.20.0/zxing.min.js';
-    s.onload = function() { _startCamera(); };
-    s.onerror = function() {
-      // fallback: quagga
-      loadQuagga(targetInputId);
-    };
-    document.head.appendChild(s);
-  } else {
-    _startCamera();
-  }
-}
-
-function _startCamera() {
-  var modal = document.getElementById('cam-modal');
-  var video = document.getElementById('cam-video');
-  modal.classList.add('open');
+  _camTarget = inputId;
+  _camLast   = '';
+  document.getElementById('cam-status-text').textContent = '카메라 시작 중...';
+  document.getElementById('cam-modal').classList.add('open');
 
   navigator.mediaDevices.getUserMedia({
     video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
   }).then(function(stream) {
-    camStream = stream;
+    _camStream = stream;
+    var video = document.getElementById('cam-video');
     video.srcObject = stream;
-    video.play();
-    video.onloadedmetadata = function() { _scanLoop(); };
-  }).catch(function(e) {
-    toast('카메라 접근 실패: ' + e.message, false);
-    closeCamera();
-  });
-}
-
-function _scanLoop() {
-  var video = document.getElementById('cam-video');
-  if (!video || !camStream) return;
-
-  camCanvas.width = video.videoWidth;
-  camCanvas.height = video.videoHeight;
-  camCtx.drawImage(video, 0, 0);
-
-  try {
-    var hints = new Map();
-    var formats = [
-      ZXing.BarcodeFormat.EAN_13,
-      ZXing.BarcodeFormat.EAN_8,
-      ZXing.BarcodeFormat.CODE_128,
-      ZXing.BarcodeFormat.CODE_39,
-      ZXing.BarcodeFormat.QR_CODE,
-      ZXing.BarcodeFormat.DATA_MATRIX,
-    ];
-    hints.set(ZXing.DecodeHintType.POSSIBLE_FORMATS, formats);
-    var reader = new ZXing.MultiFormatReader();
-    reader.setHints(hints);
-    var imageData = camCtx.getImageData(0, 0, camCanvas.width, camCanvas.height);
-    var luminance = new ZXing.RGBLuminanceSource(imageData.data, camCanvas.width, camCanvas.height);
-    var binary = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminance));
-    var result = reader.decode(binary);
-
-    if (result && result.text) {
-      var now = Date.now();
-      // 같은 결과 1초 내 중복 방지
-      if (result.text !== camLastResult || now - camLastTime > 1000) {
-        camLastResult = result.text;
-        camLastTime = now;
-        _onScanResult(result.text);
-      }
-    }
-  } catch(e) {
-    // 인식 안 되면 계속 스캔
-  }
-
-  camAnimFrame = requestAnimationFrame(_scanLoop);
-}
-
-function _onScanResult(code) {
-  // 결과 표시
-  var resultEl = document.getElementById('cam-result-text');
-  resultEl.textContent = '✅ ' + code;
-  
-  clearTimeout(camResultTimeout);
-  camResultTimeout = setTimeout(function() {  }, 1500);
-
-  // 입력칸에 값 설정
-  var input = document.getElementById(camTargetInput);
-  if (input) {
-    input.value = code;
-    input.dispatchEvent(new Event('input'));
-
-    // 대여 탭이면 자동으로 대여 처리
-    if (camTargetInput === 'loan-barcode') {
-      closeCamera();
-      doLoan();
-      return;
-    }
-    // 반납 탭이면 자동 반납 처리
-    if (camTargetInput === 'return-barcode') {
-      closeCamera();
-      doReturn();
-      return;
-    }
-    // 나머지는 카메라 닫고 입력칸에 포커스
-    closeCamera();
-    input.focus();
-  }
-}
-
-function closeCamera() {
-  if (camStream) {
-    camStream.getTracks().forEach(function(t) { t.stop(); });
-    camStream = null;
-  }
-  if (camAnimFrame) {
-    cancelAnimationFrame(camAnimFrame);
-    camAnimFrame = null;
-  }
-  document.getElementById('cam-modal').classList.remove('open');
-  document.getElementById('cam-video').srcObject = null;
-  document.getElementById('cam-result').classList.remove('show');
-}
-
-// ESC로 닫기
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') closeCamera();
-});
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var qrScanner = null;
-var scanTargetId = null;
-var scanCallback = null;
-
-function openScanner(inputId, callback) {
-  scanTargetId = inputId;
-  scanCallback = callback;
-
-  var modal = document.getElementById('scan-modal');
-  modal.style.display = 'flex';
-  document.getElementById('scan-result').textContent = '';
-
-  // 이미 실행 중이면 중지
-  if (qrScanner) {
-    qrScanner.clear().catch(function(){});
-    qrScanner = null;
-  }
-
-  qrScanner = new Html5Qrcode('qr-reader');
-  qrScanner.start(
-    { facingMode: 'environment' }, // 후면 카메라
-    { fps: 10, qrbox: { width: 280, height: 120 } },
-    function(decodedText) {
-      // 스캔 성공
-      document.getElementById(scanTargetId).value = decodedText;
-      document.getElementById('scan-result').textContent = '✅ ' + decodedText;
-
-      // 대여 연속 스캔 모드: 스캔 후 자동 처리하고 카메라 유지
-      if (scanTargetId === 'loan-barcode' && scanCallback) {
-        setTimeout(function() {
-          scanCallback();
-          document.getElementById('scan-result').textContent = '';
-        }, 300);
-      } else {
-        // 그 외: 스캔 후 모달 닫기
-        setTimeout(function() { closeScanner(); }, 600);
-      }
-    },
-    function(error) { /* 스캔 중 - 무시 */ }
-  ).catch(function(err) {
-    document.getElementById('scan-result').textContent = '카메라 접근 실패: ' + err;
-  });
-}
-
-function closeScanner() {
-  var modal = document.getElementById('scan-modal');
-  modal.style.display = 'none';
-  if (qrScanner) {
-    qrScanner.stop().then(function() {
-      qrScanner.clear();
-      qrScanner = null;
-    }).catch(function() { qrScanner = null; });
-  }
-  // 원래 입력칸으로 포커스
-  if (scanTargetId) {
-    var el = document.getElementById(scanTargetId);
-    if (el) el.focus();
-  }
-}
-
-// 모달 바깥 클릭 시 닫기
-document.getElementById('scan-modal').addEventListener('click', function(e) {
-  if (e.target === this) closeScanner();
-});
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var cameraTargetId = '';
-var codeReader = null;
-
-async function openCamera(targetInputId) {
-  cameraTargetId = targetInputId;
-  var modal = document.getElementById('camera-modal');
-
-  document.getElementById('camera-status').textContent = '카메라 시작 중...';
-
-  try {
-    if (!window.ZXing) {
-      document.getElementById('camera-status').textContent = '라이브러리 로딩 중...';
-      await new Promise(function(resolve, reject) {
-        var s = document.createElement('script');
-        s.src = 'https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js';
-        s.onload = resolve;
-        s.onerror = reject;
-        document.head.appendChild(s);
-      });
-    }
-
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    var devices = await codeReader.listVideoInputDevices();
-
-    if (!devices.length) {
-      document.getElementById('camera-status').textContent = '카메라를 찾을 수 없습니다.';
-      return;
-    }
-
-    // 후면 카메라 우선
-    var deviceId = devices[devices.length - 1].deviceId;
-
-    document.getElementById('camera-status').textContent = '바코드를 카메라에 갖다 대세요';
-
-    await codeReader.decodeFromVideoDevice(deviceId, 'camera-video', function(result, err) {
-      if (result) {
-        var input = document.getElementById(cameraTargetId);
-        if (input) {
-          input.value = result.getText();
-          input.dispatchEvent(new Event('input'));
-        }
-        closeCamera();
-        // 대여 바코드면 자동 처리
-        if (cameraTargetId === 'loan-barcode') doLoan();
-        if (cameraTargetId === 'return-barcode') doReturn();
-      }
+    video.play().then(function() {
+      document.getElementById('cam-status-text').textContent = '📷 바코드를 화면에 맞춰주세요';
+      _camFrame = requestAnimationFrame(_camScan);
     });
-
-  } catch(e) {
-    document.getElementById('camera-status').textContent = '카메라 오류: ' + e.message;
-  }
+  }).catch(function(e) {
+    document.getElementById('cam-status-text').textContent = '카메라 오류: ' + e.message;
+  });
 }
 
-function closeCamera() {
-  if (codeReader) {
-    try { codeReader.reset(); } catch(e) {}
-    codeReader = null;
-  }
-  document.getElementById('camera-modal').style.display = 'none';
-}
-
-
-// ─── 카메라 스캔 ─────────────────────────────────────────────
-var cameraTarget = null;
-var codeReader = null;
-var camTargetInput = null;
-var camStream = null;
-var camAnimFrame = null;
-var camLastResult = '';
-var camLastTime = 0;
-var camResultTimeout = null;
-var camCanvas = document.createElement('canvas');
-var camCtx = camCanvas.getContext('2d');
-
-function openCamera(targetInputId) {
-  if (!window.ZXing) {
-    toast('카메라 라이브러리 로딩 중... 잠시 후 다시 시도해주세요.', false);
+function _camScan() {
+  var video = document.getElementById('cam-video');
+  if (!video || !_camStream || video.videoWidth === 0) {
+    _camFrame = requestAnimationFrame(_camScan);
     return;
   }
-  cameraTarget = targetInputId;
-  var modal = document.getElementById('camera-modal');
-  modal.style.display = 'flex';
-  document.getElementById('camera-status').textContent = '카메라 시작 중...';
+  _camCanvas.width  = video.videoWidth;
+  _camCanvas.height = video.videoHeight;
+  _camCtx.drawImage(video, 0, 0);
 
-  try {
-    codeReader = new ZXing.BrowserMultiFormatReader();
-    codeReader.listVideoInputDevices().then(function(devices) {
-      if (!devices.length) {
-        document.getElementById('camera-status').textContent = '카메라를 찾을 수 없습니다.';
-        return;
-      }
-      // 후면 카메라 우선
-      var deviceId = devices[devices.length - 1].deviceId;
-      document.getElementById('camera-status').textContent = '스캔 대기 중...';
-      codeReader.decodeFromVideoDevice(deviceId, 'camera-video', function(result, err) {
-        if (result) {
-          var el = document.getElementById(cameraTarget);
-          if (el) {
-            el.value = result.getText();
-            // 해당 입력칸에 맞는 동작 자동 실행
-            if (cameraTarget === 'loan-barcode')   doLoan();
-            if (cameraTarget === 'return-barcode') doReturn();
-            if (cameraTarget === 'sales-barcode')  doSales();
-            if (cameraTarget === 'bulk-barcode')   {} // 수동 처리
-          }
-          closeCamera();
+  if (window.ZXing) {
+    try {
+      var img  = _camCtx.getImageData(0, 0, _camCanvas.width, _camCanvas.height);
+      var lum  = new ZXing.RGBLuminanceSource(img.data, _camCanvas.width, _camCanvas.height);
+      var bmp  = new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(lum));
+      var reader = new ZXing.MultiFormatReader();
+      var result = reader.decode(bmp);
+      if (result && result.text) {
+        var now = Date.now();
+        if (result.text !== _camLast || now - _camTime > 1500) {
+          _camLast = result.text;
+          _camTime = now;
+          _camDone(result.text);
+          return;
         }
-      });
-    });
-  } catch(e) {
-    document.getElementById('camera-status').textContent = '카메라 오류: ' + e.message;
+      }
+    } catch(e) {}
   }
+  _camFrame = requestAnimationFrame(_camScan);
 }
 
-function closeCamera() {
-  if (codeReader) { try { codeReader.reset(); } catch(e) {} codeReader = null; }
-  document.getElementById('camera-modal').style.display = 'none';
+function _camDone(code) {
+  if (navigator.vibrate) navigator.vibrate(100);
+  document.getElementById('cam-status-text').textContent = '✅ ' + code;
+  var input = document.getElementById(_camTarget);
+  if (input) input.value = code;
+  setTimeout(function() {
+    closeCam();
+    if (_camTarget === 'loan-barcode')   doLoan();
+    if (_camTarget === 'return-barcode') doReturn();
+    if (_camTarget === 'sales-barcode')  {} // 수동 처리
+    if (_camTarget === 'bulk-barcode')   {} // 수동 처리
+  }, 400);
 }
+
+function closeCam() {
+  if (_camFrame)  { cancelAnimationFrame(_camFrame); _camFrame = null; }
+  if (_camStream) { _camStream.getTracks().forEach(function(t){t.stop();}); _camStream = null; }
+  var video = document.getElementById('cam-video');
+  if (video) video.srcObject = null;
+  document.getElementById('cam-modal').classList.remove('open');
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCam(); });
 
 window.addEventListener('load',init);
 </script>
