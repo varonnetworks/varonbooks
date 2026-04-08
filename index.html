@@ -226,7 +226,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver5</span>
+    <span>정상어학원 교재 관리 ver6</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -638,6 +638,22 @@ function populateSelects(){
 }
 
 
+function escapeHtml(str){
+  return String(str || '').replace(/[&<>"']/g, function(s){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]);
+  });
+}
+function getBookNameByBarcode(barcode){
+  var found = books.find(function(b){ return String(b['바코드']||'').trim() === String(barcode).trim(); });
+  return found ? String(found['교재명'] || '').trim() : '';
+}
+function makeQueueItem(barcode){
+  var title = getBookNameByBarcode(barcode);
+  return {
+    barcode: String(barcode).trim(),
+    title: title || '등록되지 않은 교재'
+  };
+}
 function renderQueue(containerId, items, kind){
   var el=document.getElementById(containerId);
   if(!el) return;
@@ -646,13 +662,20 @@ function renderQueue(containerId, items, kind){
     return;
   }
   el.innerHTML='' +
-    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">총 '+items.length+'권</div>' +
-    '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
-      items.map(function(code, idx){
-        return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid var(--border-soft);border-radius:999px;background:#fff8e8">' +
-          '<span class="mono">'+code+'</span>' +
-          '<button class="btn btn-d btn-sm" onclick="'+(kind==='loan'?'removeLoanAt':'removeReturnAt')+'('+idx+')">삭제</button>' +
-        '</div>';
+    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">총 '+items.length+'권</div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px">' +
+      items.map(function(item, idx){
+        var title = escapeHtml(item.title);
+        var barcode = escapeHtml(item.barcode);
+        var titleColor = item.title === '등록되지 않은 교재' ? 'var(--warn)' : 'var(--text)';
+        return '' +
+          '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:18px;background:#fff8e8">' +
+            '<div style="min-width:0;flex:1">' +
+              '<div style="font-size:15px;font-weight:700;color:'+titleColor+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+title+'</div>' +
+              '<div class="mono" style="margin-top:2px;font-size:11px">'+barcode+'</div>' +
+            '</div>' +
+            '<button class="btn btn-d btn-sm" onclick="'+(kind==='loan'?'removeLoanAt':'removeReturnAt')+'('+idx+')">삭제</button>' +
+          '</div>';
       }).join('') +
     '</div>';
 }
@@ -660,8 +683,10 @@ function renderLoanQueue(){ renderQueue('loan-queue-wrap', loanQueue, 'loan'); }
 function renderReturnQueue(){ renderQueue('return-queue-wrap', returnQueue, 'return'); }
 
 function pushUnique(queue, code){
-  if(queue.indexOf(code) !== -1) return false;
-  queue.push(code);
+  code = String(code || '').trim();
+  if(!code) return false;
+  if(queue.some(function(item){ return item.barcode === code; })) return false;
+  queue.push(makeQueueItem(code));
   return true;
 }
 
@@ -703,13 +728,14 @@ async function processLoanQueue(){
 
   var items=loanQueue.slice();
   var successCount=0;
-  for(const barcode of items){
+  for(const item of items){
+    var barcode = item.barcode;
     try{
       var res=await call('loanBook',{barcode:barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
       addLoanLog(barcode,res.msg,res.ok);
       if(res.ok){
         successCount++;
-        loanQueue=loanQueue.filter(function(x){return x!==barcode;});
+        loanQueue=loanQueue.filter(function(x){return x.barcode!==barcode;});
         renderLoanQueue();
       }
     }catch(e){
@@ -736,12 +762,13 @@ async function processReturnQueue(){
 
   var items=returnQueue.slice();
   var successCount=0;
-  for(const barcode of items){
+  for(const item of items){
+    var barcode = item.barcode;
     try{
       var res=await call('returnBook',{barcode:barcode});
       if(res.ok){
         successCount++;
-        returnQueue=returnQueue.filter(function(x){return x!==barcode;});
+        returnQueue=returnQueue.filter(function(x){return x.barcode!==barcode;});
         renderReturnQueue();
       }
       toast(barcode+' : '+res.msg, res.ok);
