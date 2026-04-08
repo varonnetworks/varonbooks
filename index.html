@@ -295,6 +295,11 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
     </div>
+    <div id="sales-book-preview" style="display:none;margin:0 0 12px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
+      <div id="sales-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+      <div id="sales-book-preview-barcode" class="mono" style="margin-top:2px"></div>
+    </div>
     <div class="fgrid">
       <div class="fg"><label class="fl">유형</label>
         <select id="sales-type" onchange="toggleStudentField()">
@@ -337,6 +342,11 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="scan-row" style="margin-bottom:0">
           <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
           <button class="btn btn-cam" onclick="openCam('bulk-barcode', false)">카메라</button>
+        </div>
+        <div id="bulk-book-preview" style="display:none;margin-top:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
+          <div id="bulk-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+          <div id="bulk-book-preview-barcode" class="mono" style="margin-top:2px"></div>
         </div>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
@@ -620,6 +630,8 @@ async function init(){
     students=students.filter(function(s){ if(seen[s['학생ID']]) return false; seen[s['학생ID']]=true; return true; });
     populateSelects();
     toggleStudentField();
+    bindBarcodePreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    bindBarcodePreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
     loadActiveLoan();
   }catch(e){
     toast('서버 연결 실패. Apps Script 배포 상태를 확인해주세요.', false);
@@ -655,6 +667,45 @@ function escapeHtml(str){
 function getBookNameByBarcode(barcode){
   var found = books.find(function(b){ return String(b['바코드']||'').trim() === String(barcode).trim(); });
   return found ? String(found['교재명'] || '').trim() : '';
+}
+
+function findBookByBarcode(barcode){
+  return books.find(function(b){ return String(b['바코드']||'').trim() === String(barcode || '').trim(); }) || null;
+}
+function updateBookPreview(inputId, wrapId, nameId, barcodeId){
+  var input = document.getElementById(inputId);
+  var wrap = document.getElementById(wrapId);
+  var nameEl = document.getElementById(nameId);
+  var codeEl = document.getElementById(barcodeId);
+  if(!input || !wrap || !nameEl || !codeEl) return;
+
+  var barcode = String(input.value || '').trim();
+  if(!barcode){
+    wrap.style.display = 'none';
+    nameEl.textContent = '';
+    codeEl.textContent = '';
+    return;
+  }
+
+  var found = findBookByBarcode(barcode);
+  wrap.style.display = 'block';
+  if(found){
+    nameEl.textContent = String(found['교재명'] || '');
+    nameEl.style.color = 'var(--text)';
+  }else{
+    nameEl.textContent = '등록되지 않은 교재';
+    nameEl.style.color = 'var(--warn)';
+  }
+  codeEl.textContent = barcode;
+}
+function bindBarcodePreview(inputId, wrapId, nameId, barcodeId){
+  var input = document.getElementById(inputId);
+  if(!input) return;
+  var handler = function(){ updateBookPreview(inputId, wrapId, nameId, barcodeId); };
+  input.addEventListener('input', handler);
+  input.addEventListener('change', handler);
+  input.addEventListener('blur', handler);
+  handler();
 }
 function makeQueueItem(barcode){
   var title = getBookNameByBarcode(barcode);
@@ -926,6 +977,7 @@ async function doSales(){
     toast(res.msg,res.ok);
     if(res.ok){
       document.getElementById('sales-barcode').value='';
+      updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
       document.getElementById('sales-price').value='';
       document.getElementById('sales-memo').value='';
