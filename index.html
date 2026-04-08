@@ -1,6 +1,4 @@
-from pathlib import Path
-
-html = r'''<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
@@ -8,7 +6,7 @@ html = r'''<!DOCTYPE html>
 <title>정상어학원 교재 관리</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=VT323&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
-<script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
+<script src="https://unpkg.com/@zxing/browser@0.1.5/umd/index.min.js"></script>
 <style>
 :root{
   --bg:#f6f1d7;
@@ -200,7 +198,7 @@ td{padding:10px 13px;vertical-align:middle}
 #cam-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
 .cam-title{font-family:'VT323', monospace;font-size:28px;color:#5a4314}
 #cam-view{position:relative;flex:1;background:#000;overflow:hidden}
-#cam-video{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.12) contrast(1.06) saturate(1.08)}
+#cam-video{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.14) contrast(1.08) saturate(1.08)}
 #cam-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
 #cam-guide-box{
   width:min(82vw,480px);height:min(32vw,180px);
@@ -543,7 +541,7 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
   </div>
   <div id="cam-view">
-    <video id="cam-video" playsinline autoplay muted></video>
+    <video id="cam-video" playsinline></video>
     <div id="cam-guide">
       <div id="cam-guide-box"></div>
       <div id="cam-guide-line"></div>
@@ -1225,126 +1223,98 @@ function printBarcodes(){
   win.document.close();
 }
 
-/* 카메라 */
+/* 카메라 바코드 인식 */
 var _camTarget=null;
-var _camStream=null;
-var _camFrame=null;
 var _camAutoAction=false;
-var _camCanvas=document.createElement('canvas');
-var _camCtx=_camCanvas.getContext('2d');
-var _camLast='';
-var _camTime=0;
+var _codeReader=null;
+var _camControls=null;
+var _camBusy=false;
 
 function openCam(inputId, autoAction){
   _camTarget=inputId;
   _camAutoAction=!!autoAction;
-  _camLast='';
-  _camTime=0;
+  _camBusy=false;
 
   var modal=document.getElementById('cam-modal');
-  var status=document.getElementById('cam-status-text');
   var video=document.getElementById('cam-video');
+  var status=document.getElementById('cam-status-text');
 
   status.textContent='카메라 시작 중...';
   modal.classList.add('open');
 
-  navigator.mediaDevices.getUserMedia({
-    video:{
-      facingMode:{ideal:'environment'},
-      width:{ideal:1280},
-      height:{ideal:720}
-    },
-    audio:false
-  }).then(function(stream){
-    _camStream=stream;
-    video.srcObject=stream;
-    return video.play();
-  }).then(function(){
-    status.textContent='바코드를 네모 안에 맞춰주세요';
-    _camFrame=requestAnimationFrame(_camScan);
-  }).catch(function(err){
-    status.textContent='카메라 실행 실패: '+err.message;
-  });
-}
-
-function _camScan(){
-  var video=document.getElementById('cam-video');
-  if(!_camStream || !video || video.readyState < 2 || video.videoWidth===0){
-    _camFrame=requestAnimationFrame(_camScan);
+  try{
+    _codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+  }catch(e){
+    status.textContent='ZXing 로드 실패';
     return;
   }
 
-  _camCanvas.width=video.videoWidth;
-  _camCanvas.height=video.videoHeight;
-  _camCtx.drawImage(video,0,0,_camCanvas.width,_camCanvas.height);
+  _codeReader.decodeFromVideoDevice(
+    null,
+    video,
+    function(result, err, controls){
+      if(!_camControls && controls){
+        _camControls = controls;
+      }
 
-  try{
-    var imageData=_camCtx.getImageData(0,0,_camCanvas.width,_camCanvas.height);
-    var luminanceSource=new ZXing.RGBLuminanceSource(imageData.data,_camCanvas.width,_camCanvas.height);
-    var binaryBitmap=new ZXing.BinaryBitmap(new ZXing.HybridBinarizer(luminanceSource));
-    var reader=new ZXing.MultiFormatReader();
-    var result=reader.decode(binaryBitmap);
+      if(result && !_camBusy){
+        _camBusy = true;
+        var code = result.getText ? result.getText() : (result.text || '');
 
-    if(result && result.text){
-      var code=result.text.trim();
-      var now=Date.now();
-      if(code && (code!==_camLast || now-_camTime>1500)){
-        _camLast=code;
-        _camTime=now;
-        _camDone(code);
+        if(navigator.vibrate) navigator.vibrate(120);
+
+        var input = document.getElementById(_camTarget);
+        if(input) input.value = code;
+
+        status.textContent = '인식됨: ' + code;
+
+        setTimeout(function(){
+          closeCam();
+
+          if(_camAutoAction){
+            if(_camTarget === 'loan-barcode') doLoan();
+            if(_camTarget === 'return-barcode') doReturn();
+          }
+        }, 250);
         return;
       }
+
+      if(!_camBusy){
+        status.textContent = '시중교재 / 자체 바코드를 네모 안에 맞춰주세요';
+      }
     }
-  }catch(e){
-    // 인식 대기
-  }
-
-  _camFrame=requestAnimationFrame(_camScan);
-}
-
-function _camDone(code){
-  if(navigator.vibrate) navigator.vibrate(100);
-  var input=document.getElementById(_camTarget);
-  if(input) input.value=code;
-  document.getElementById('cam-status-text').textContent='인식됨: '+code;
-
-  setTimeout(function(){
-    closeCam();
-    if(_camAutoAction){
-      if(_camTarget==='loan-barcode') doLoan();
-      if(_camTarget==='return-barcode') doReturn();
-    }
-  }, 320);
+  ).catch(function(err){
+    status.textContent = '카메라 실행 실패: ' + err.message;
+  });
 }
 
 function closeCam(){
-  if(_camFrame){
-    cancelAnimationFrame(_camFrame);
-    _camFrame=null;
+  _camBusy = false;
+
+  if(_camControls){
+    try{ _camControls.stop(); }catch(e){}
+    _camControls = null;
   }
-  if(_camStream){
-    _camStream.getTracks().forEach(function(track){track.stop();});
-    _camStream=null;
+
+  if(_codeReader){
+    try{ _codeReader.reset(); }catch(e){}
+    _codeReader = null;
   }
+
   var video=document.getElementById('cam-video');
   if(video){
-    video.pause();
-    video.srcObject=null;
+    video.srcObject = null;
   }
+
   document.getElementById('cam-modal').classList.remove('open');
   document.getElementById('cam-status-text').textContent='카메라 시작 중...';
 }
 
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape') closeCam();
+document.addEventListener('keydown', function(e){
+  if(e.key === 'Escape') closeCam();
 });
 
 window.addEventListener('load', init);
 </script>
 </body>
 </html>
-'''
-
-path = Path('/mnt/data/jls_book_manager_retro_camera.html')
-path.write_text(html, encoding='utf-8')
-print(f"Saved to {path}")
