@@ -6,7 +6,7 @@
 <title>정상어학원 교재 관리</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=VT323&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
+<script src="https://unpkg.com/@zxing/browser@latest"></script>
 <style>
 :root{
   --bg:#f6f1d7;
@@ -227,7 +227,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver2</span>
+    <span>정상어학원 교재 관리 ver3</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -263,6 +263,7 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="scan-row">
         <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div>
         <button class="btn btn-cam" onclick="openCam('loan-barcode', true)">카메라</button>
+        <button class="btn btn-y" onclick="openExternalScanner('loan-barcode', true)">외부 스캐너</button>
         <button class="btn btn-g" onclick="doLoan()">수동 처리</button>
       </div>
       <div id="loan-log" style="max-height:120px;overflow-y:auto;margin-top:8px"></div>
@@ -275,6 +276,7 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('return-barcode', true)">카메라</button>
+      <button class="btn btn-y" onclick="openExternalScanner('return-barcode', true)">외부 스캐너</button>
       <button class="btn btn-s" onclick="doReturn()">반납 처리</button>
     </div>
   </div>
@@ -290,6 +292,7 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="scan-row">
       <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
+      <button class="btn btn-y" onclick="openExternalScanner('sales-barcode', false)">외부 스캐너</button>
     </div>
     <div class="fgrid">
       <div class="fg"><label class="fl">유형</label>
@@ -322,6 +325,7 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="scan-row" style="margin-bottom:0">
           <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 / 입력" autocomplete="off"></div>
           <button class="btn btn-cam" onclick="openCam('bulk-barcode', false)">카메라</button>
+          <button class="btn btn-y" onclick="openExternalScanner('bulk-barcode', false)">외부 스캐너</button>
         </div>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
@@ -429,6 +433,7 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="scan-row" style="margin-bottom:0">
           <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input type="text" id="book-barcode" placeholder="스캔하면 자동조회" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBookByISBN();}"></div>
           <button class="btn btn-cam" onclick="openCam('book-barcode', false)">카메라</button>
+          <button class="btn btn-y" onclick="openExternalScanner('book-barcode', false)">외부 스캐너</button>
         </div>
       </div>
       <div class="fg"><label class="fl">교재명 *</label><input type="text" id="book-name" placeholder="스캔하면 자동완성"></div>
@@ -1223,11 +1228,22 @@ function printBarcodes(){
   win.document.close();
 }
 
-/* 카메라 바코드 인식 - Quagga */
+/* 카메라 바코드 인식 */
 var _camTarget = null;
 var _camAutoAction = false;
+var _codeReader = null;
+var _camControls = null;
 var _camBusy = false;
-var _quaggaRunning = false;
+
+function getZXingReader() {
+  if (window.ZXingBrowser && window.ZXingBrowser.BrowserMultiFormatReader) {
+    return new window.ZXingBrowser.BrowserMultiFormatReader();
+  }
+  if (window.ZXing && window.ZXing.BrowserMultiFormatReader) {
+    return new window.ZXing.BrowserMultiFormatReader();
+  }
+  throw new Error('ZXing 객체를 찾지 못했습니다.');
+}
 
 function openCam(inputId, autoAction) {
   _camTarget = inputId;
@@ -1235,141 +1251,86 @@ function openCam(inputId, autoAction) {
   _camBusy = false;
 
   var modal = document.getElementById('cam-modal');
-  var status = document.getElementById('cam-status-text');
   var video = document.getElementById('cam-video');
+  var status = document.getElementById('cam-status-text');
 
   status.textContent = '카메라 시작 중...';
   modal.classList.add('open');
 
-  if (typeof Quagga === 'undefined') {
-    status.textContent = 'Quagga 로드 실패';
+  try {
+    _codeReader = getZXingReader();
+  } catch (e) {
+    status.textContent = 'ZXing 로드 실패: ' + e.message;
     return;
   }
 
-  try {
-    video.style.display = 'none';
-  } catch(e) {}
+  Promise.resolve(
+    _codeReader.decodeFromVideoDevice(
+      null,
+      video,
+      function (result, err, controls) {
+        if (!_camControls && controls) {
+          _camControls = controls;
+        }
 
-  Quagga.offDetected(onDetectedSafe);
-  if (_quaggaRunning) {
-    try { Quagga.stop(); } catch(e) {}
-    _quaggaRunning = false;
-  }
+        if (result && !_camBusy) {
+          _camBusy = true;
 
-  Quagga.init({
-    inputStream: {
-      type: 'LiveStream',
-      target: document.querySelector('#cam-view'),
-      constraints: {
-        facingMode: 'environment',
-        width: { ideal: 1920 },
-        height: { ideal: 1080 }
-      },
-      area: {
-        top: '38%',
-        right: '8%',
-        left: '8%',
-        bottom: '38%'
-      },
-      singleChannel: false
-    },
-    locator: {
-      patchSize: 'medium',
-      halfSample: false
-    },
-    numOfWorkers: 0,
-    frequency: 10,
-    decoder: {
-      readers: [
-        'ean_reader',
-        'ean_8_reader',
-        'code_128_reader',
-        'code_39_reader',
-        'upc_reader',
-        'upc_e_reader'
-      ],
-      multiple: false
-    },
-    locate: true
-  }, function(err) {
-    if (err) {
-      status.textContent = '카메라 실행 실패: ' + (err.message || err);
-      return;
-    }
+          var code = '';
+          if (typeof result.getText === 'function') {
+            code = result.getText();
+          } else if (result.text) {
+            code = result.text;
+          } else {
+            code = String(result);
+          }
 
-    try {
-      var quaggaVideo = document.querySelector('#cam-view video');
-      if (quaggaVideo) {
-        quaggaVideo.setAttribute('playsinline', 'true');
-        quaggaVideo.muted = true;
-        quaggaVideo.style.width = '100%';
-        quaggaVideo.style.height = '100%';
-        quaggaVideo.style.objectFit = 'cover';
-        quaggaVideo.style.filter = 'brightness(1.16) contrast(1.12) saturate(1.08)';
+          if (navigator.vibrate) navigator.vibrate(120);
+
+          var input = document.getElementById(_camTarget);
+          if (input) input.value = code;
+
+          status.textContent = '인식됨: ' + code;
+
+          setTimeout(function () {
+            closeCam();
+
+            if (_camAutoAction) {
+              if (_camTarget === 'loan-barcode') doLoan();
+              if (_camTarget === 'return-barcode') doReturn();
+            }
+          }, 250);
+
+          return;
+        }
+
+        if (!_camBusy) {
+          status.textContent = '시중교재 / 자체 바코드를 네모 안에 맞춰주세요';
+        }
       }
-    } catch(e) {}
-
-    Quagga.onDetected(onDetectedSafe);
-    Quagga.start();
-    _quaggaRunning = true;
-    status.textContent = '바코드를 네모 안에 꽉 차게 맞춰주세요';
+    )
+  ).catch(function (err) {
+    status.textContent = '카메라 실행 실패: ' + (err && err.message ? err.message : err);
   });
-}
-
-function onDetectedSafe(data) {
-  if (_camBusy) return;
-  if (!data || !data.codeResult || !data.codeResult.code) return;
-
-  var code = String(data.codeResult.code).trim();
-  if (!code) return;
-
-  _camBusy = true;
-
-  if (navigator.vibrate) navigator.vibrate(120);
-
-  var input = document.getElementById(_camTarget);
-  if (input) input.value = code;
-
-  document.getElementById('cam-status-text').textContent = '인식됨: ' + code;
-
-  setTimeout(function () {
-    closeCam();
-
-    if (_camAutoAction) {
-      if (_camTarget === 'loan-barcode') doLoan();
-      if (_camTarget === 'return-barcode') doReturn();
-    }
-  }, 250);
 }
 
 function closeCam() {
   _camBusy = false;
 
-  if (typeof Quagga !== 'undefined') {
-    try { Quagga.offDetected(onDetectedSafe); } catch(e) {}
-    try { Quagga.stop(); } catch(e) {}
+  if (_camControls) {
+    try { _camControls.stop(); } catch (e) {}
+    _camControls = null;
   }
-  _quaggaRunning = false;
 
-  var camView = document.getElementById('cam-view');
-  if (camView) {
-    var vids = camView.querySelectorAll('video');
-    vids.forEach(function(v, idx){
-      if (v.id !== 'cam-video') {
-        try { v.pause(); } catch(e) {}
-        v.remove();
-      }
-    });
-
-    var canvases = camView.querySelectorAll('canvas');
-    canvases.forEach(function(c){ c.remove(); });
+  if (_codeReader) {
+    try { _codeReader.reset(); } catch (e) {}
+    _codeReader = null;
   }
 
   var video = document.getElementById('cam-video');
   if (video) {
     try { video.pause(); } catch (e) {}
     video.srcObject = null;
-    video.style.display = 'block';
   }
 
   document.getElementById('cam-modal').classList.remove('open');
@@ -1380,7 +1341,57 @@ document.addEventListener('keydown', function(e){
   if (e.key === 'Escape') closeCam();
 });
 
-window.addEventListener('load', init);
+
+function isAndroid() {
+  return /Android/i.test(navigator.userAgent || '');
+}
+
+function buildExternalScanUrl(targetId, autoAction) {
+  var base = window.location.origin + window.location.pathname;
+  var ret = base +
+    '?scan_target=' + encodeURIComponent(targetId) +
+    '&scan_auto=' + encodeURIComponent(autoAction ? '1' : '0') +
+    '&scan_value={CODE}';
+
+  var encodedRet = encodeURIComponent(ret);
+  return 'https://zxing.appspot.com/scan?ret=' + encodedRet +
+    '&SCAN_FORMATS=UPC_A,UPC_E,EAN_13,EAN_8,CODE_128,CODE_39';
+}
+
+function openExternalScanner(targetId, autoAction) {
+  if (!isAndroid()) {
+    toast('외부 스캐너 방식은 안드로이드 크롬에서 가장 잘 동작합니다.', false);
+    return;
+  }
+  var url = buildExternalScanUrl(targetId, autoAction);
+  window.location.href = url;
+}
+
+function applyReturnedScanIfAny() {
+  var params = new URLSearchParams(window.location.search);
+  var value = params.get('scan_value');
+  var target = params.get('scan_target');
+  var auto = params.get('scan_auto') === '1';
+
+  if (!value || !target) return;
+
+  var input = document.getElementById(target);
+  if (input) input.value = value;
+
+  var cleaned = window.location.origin + window.location.pathname;
+  history.replaceState({}, document.title, cleaned);
+
+  toast('외부 스캐너로 인식됨: ' + value, true);
+
+  if (auto) {
+    setTimeout(function(){
+      if (target === 'loan-barcode') doLoan();
+      if (target === 'return-barcode') doReturn();
+    }, 120);
+  }
+}
+
+window.addEventListener('load', function(){ init(); applyReturnedScanIfAny(); });
 </script>
 </body>
 </html>
