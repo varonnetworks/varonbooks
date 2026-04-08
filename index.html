@@ -226,7 +226,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver4</span>
+    <span>정상어학원 교재 관리 ver5</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -258,13 +258,16 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg"><label class="fl">반납 예정일</label><input type="date" id="loan-return"></div>
     </div>
     <div style="background:linear-gradient(180deg,var(--surface2),#fff4d2);border:2px solid var(--border-soft);border-radius:12px;padding:14px;margin-bottom:10px">
-      <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 연속 스캔 모드 — 선생님·학기 선택 후 바코드를 계속 찍으면 자동 대여처리</div>
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 바코드를 여러 권 스캔한 뒤 목록 확인 후 한 번에 대여처리</div>
       <div class="scan-row">
-        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 대여처리" autocomplete="off"></div>
-        <button class="btn btn-cam" onclick="openCam('loan-barcode', true)">카메라</button>
-        <button class="btn btn-g" onclick="doLoan()">수동 처리</button>
+        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔 / 입력 후 Enter로 목록 추가" autocomplete="off"></div>
+        <button class="btn btn-cam" onclick="openCam('loan-barcode', false)">카메라</button>
+        <button class="btn btn-g" onclick="queueLoanBarcode()">목록 추가</button>
+        <button class="btn btn-p" onclick="processLoanQueue()">대여 처리</button>
+        <button class="btn btn-d" onclick="clearLoanQueue()">목록 비우기</button>
       </div>
-      <div id="loan-log" style="max-height:120px;overflow-y:auto;margin-top:8px"></div>
+      <div id="loan-queue-wrap" style="margin-top:10px"></div>
+      <div id="loan-log" style="max-height:120px;overflow-y:auto;margin-top:10px"></div>
     </div>
   </div>
 
@@ -272,10 +275,13 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="retro-strip"></div>
     <div class="card-title">교재 반납</div>
     <div class="scan-row">
-      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter" autocomplete="off"></div>
-      <button class="btn btn-cam" onclick="openCam('return-barcode', true)">카메라</button>
-      <button class="btn btn-s" onclick="doReturn()">반납 처리</button>
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔 / 입력 후 Enter로 목록 추가" autocomplete="off"></div>
+      <button class="btn btn-cam" onclick="openCam('return-barcode', false)">카메라</button>
+      <button class="btn btn-g" onclick="queueReturnBarcode()">목록 추가</button>
+      <button class="btn btn-s" onclick="processReturnQueue()">반납 처리</button>
+      <button class="btn btn-d" onclick="clearReturnQueue()">목록 비우기</button>
     </div>
+    <div id="return-queue-wrap" style="margin-top:10px"></div>
   </div>
 
   <div class="shead"><span class="stitle">현재 대여 중</span><button class="btn btn-g" onclick="loadActiveLoan()">새로고침</button></div>
@@ -559,6 +565,8 @@ var teachers=[],books=[],students=[],semesters=[],bulkAssigns=[],salesCache=[],g
 var uploadedRows=[],fileHeaders=[],previewData=[];
 var MAPPING_KEY='jls_col_mapping';
 var MAP_FIELDS=['map-id','map-name','map-grade','map-class','map-contact','map-note'];
+var loanQueue=[];
+var returnQueue=[];
 
 function call(action,payload){
   return fetch(APPS_SCRIPT_URL,{
@@ -629,22 +637,89 @@ function populateSelects(){
   });
 }
 
-async function doLoan(){
-  var barcode=document.getElementById('loan-barcode').value.trim();
+
+function renderQueue(containerId, items, kind){
+  var el=document.getElementById(containerId);
+  if(!el) return;
+  if(!items.length){
+    el.innerHTML='<div style="font-size:12px;color:var(--muted)">스캔된 목록이 없습니다.</div>';
+    return;
+  }
+  el.innerHTML='' +
+    '<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:6px">총 '+items.length+'권</div>' +
+    '<div style="display:flex;flex-wrap:wrap;gap:8px">' +
+      items.map(function(code, idx){
+        return '<div style="display:flex;align-items:center;gap:6px;padding:7px 10px;border:2px solid var(--border-soft);border-radius:999px;background:#fff8e8">' +
+          '<span class="mono">'+code+'</span>' +
+          '<button class="btn btn-d btn-sm" onclick="'+(kind==='loan'?'removeLoanAt':'removeReturnAt')+'('+idx+')">삭제</button>' +
+        '</div>';
+      }).join('') +
+    '</div>';
+}
+function renderLoanQueue(){ renderQueue('loan-queue-wrap', loanQueue, 'loan'); }
+function renderReturnQueue(){ renderQueue('return-queue-wrap', returnQueue, 'return'); }
+
+function pushUnique(queue, code){
+  if(queue.indexOf(code) !== -1) return false;
+  queue.push(code);
+  return true;
+}
+
+function queueLoanBarcode(){
+  var input=document.getElementById('loan-barcode');
+  var barcode=input.value.trim();
+  if(!barcode) return toast('바코드를 입력하세요.', false);
+  if(pushUnique(loanQueue, barcode)){
+    input.value='';
+    renderLoanQueue();
+    toast('대여 목록에 추가됨', true);
+  }else{
+    toast('이미 목록에 있는 바코드입니다.', false);
+  }
+}
+function queueReturnBarcode(){
+  var input=document.getElementById('return-barcode');
+  var barcode=input.value.trim();
+  if(!barcode) return toast('바코드를 입력하세요.', false);
+  if(pushUnique(returnQueue, barcode)){
+    input.value='';
+    renderReturnQueue();
+    toast('반납 목록에 추가됨', true);
+  }else{
+    toast('이미 목록에 있는 바코드입니다.', false);
+  }
+}
+function removeLoanAt(idx){ loanQueue.splice(idx,1); renderLoanQueue(); }
+function removeReturnAt(idx){ returnQueue.splice(idx,1); renderReturnQueue(); }
+function clearLoanQueue(){ loanQueue=[]; renderLoanQueue(); }
+function clearReturnQueue(){ returnQueue=[]; renderReturnQueue(); }
+
+async function processLoanQueue(){
   var teacherId=document.getElementById('loan-teacher').value;
   var returnDate=document.getElementById('loan-return').value;
   var semester=document.getElementById('loan-semester').value.trim();
-  if(!barcode) return toast('바코드를 입력하세요.', false);
+  if(!loanQueue.length) return toast('대여 목록이 비어 있습니다.', false);
   if(!teacherId) return toast('선생님을 먼저 선택하세요.', false);
-  document.getElementById('loan-barcode').value='';
-  try{
-    var res=await call('loanBook',{barcode:barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
-    addLoanLog(barcode,res.msg,res.ok);
-    if(res.ok) loadActiveLoan();
-  }catch(e){
-    addLoanLog(barcode,'오류 발생',false);
+
+  var items=loanQueue.slice();
+  var successCount=0;
+  for(const barcode of items){
+    try{
+      var res=await call('loanBook',{barcode:barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
+      addLoanLog(barcode,res.msg,res.ok);
+      if(res.ok){
+        successCount++;
+        loanQueue=loanQueue.filter(function(x){return x!==barcode;});
+        renderLoanQueue();
+      }
+    }catch(e){
+      addLoanLog(barcode,'오류 발생',false);
+    }
   }
+  if(successCount) loadActiveLoan();
+  toast('대여 처리 완료: '+successCount+' / '+items.length, successCount>0);
 }
+
 function addLoanLog(barcode,msg,ok){
   var log=document.getElementById('loan-log');
   var time=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -654,21 +729,30 @@ function addLoanLog(barcode,msg,ok){
   log.insertBefore(item,log.firstChild);
   while(log.children.length>20) log.removeChild(log.lastChild);
 }
-document.getElementById('loan-barcode').addEventListener('keydown',function(e){ if(e.key==='Enter') doLoan(); });
+document.getElementById('loan-barcode').addEventListener('keydown',function(e){ if(e.key==='Enter') queueLoanBarcode(); });
 
-async function doReturn(){
-  var barcode=document.getElementById('return-barcode').value.trim();
-  if(!barcode) return toast('바코드를 입력하세요.', false);
-  try{
-    var res=await call('returnBook',{barcode:barcode});
-    toast(res.msg,res.ok);
-    if(res.ok){
-      document.getElementById('return-barcode').value='';
-      loadActiveLoan();
+async function processReturnQueue(){
+  if(!returnQueue.length) return toast('반납 목록이 비어 있습니다.', false);
+
+  var items=returnQueue.slice();
+  var successCount=0;
+  for(const barcode of items){
+    try{
+      var res=await call('returnBook',{barcode:barcode});
+      if(res.ok){
+        successCount++;
+        returnQueue=returnQueue.filter(function(x){return x!==barcode;});
+        renderReturnQueue();
+      }
+      toast(barcode+' : '+res.msg, res.ok);
+    }catch(e){
+      toast(barcode+' : 오류 발생', false);
     }
-  }catch(e){ toast('오류 발생', false); }
+  }
+  if(successCount) loadActiveLoan();
+  toast('반납 처리 완료: '+successCount+' / '+items.length, successCount>0);
 }
-document.getElementById('return-barcode').addEventListener('keydown',function(e){ if(e.key==='Enter') doReturn(); });
+document.getElementById('return-barcode').addEventListener('keydown',function(e){ if(e.key==='Enter') queueReturnBarcode(); });
 
 async function loadActiveLoan(){
   var el=document.getElementById('loan-list');
