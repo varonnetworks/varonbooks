@@ -1008,7 +1008,10 @@ async function cancelSales(saleId,type,bookName,qty){
 }
 
 async function initBulkPage(){
-  var r=await call('getSemesters');semesters=r.data||[];
+  // 캐시된 학기 먼저 사용
+  if(!semesters.length){
+    var r=await call('getSemesters');semesters=r.data||[];
+  }
   var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
   document.getElementById('bulk-semester').innerHTML='<option value="">-- 학기 선택 --</option>'+semOpts;
   document.getElementById('bulk-class').innerHTML='<option value="">-- 반 선택 --</option>';
@@ -1055,10 +1058,17 @@ async function doBulk(){
 }
 
 async function initUnpaidPage(){
-  var r=await call('getSemesters');semesters=r.data||[];
-  var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
-  document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
-  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';loadUnpaid();
+  // 캐시된 학기 먼저 사용해서 빠르게 렌더링
+  if(semesters.length){
+    var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
+    document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
+  } else {
+    var r=await call('getSemesters');semesters=r.data||[];
+    var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
+    document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
+  }
 }
 async function updateUnpaidClasses(){
   var sem=document.getElementById('unpaid-semester').value;
@@ -1339,7 +1349,18 @@ async function scanLoop(){
 }
 function handleDetectedCode(code){
   _camBusy=true;if(navigator.vibrate) navigator.vibrate(120);
-  var input=document.getElementById(_camTarget);if(input) input.value=code;
+  var input=document.getElementById(_camTarget);
+  if(input){
+    input.value=code;
+    input.dataset.selectedBarcode='';
+    // 교재 바코드 입력칸이면 교재명으로 변환 + 프리뷰 표시
+    if(_camTarget==='sales-barcode'){
+      finalizeBookInput('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    }
+    if(_camTarget==='bulk-barcode'){
+      finalizeBookInput('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+    }
+  }
   document.getElementById('cam-status-text').textContent='인식됨: '+code;
   setTimeout(function(){
     closeCam();
