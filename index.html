@@ -161,7 +161,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver2</span>
+    <span>정상어학원 교재 관리 ver3</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -744,18 +744,13 @@ async function call(action, payload){
       return {ok:true,msg:rows.length+'명 업로드 완료'};
     }
     if(action==='searchBook'){
-      var isbn=String(payload.isbn||'').trim().replace(/[^0-9]/g,'');
-      if(!isbn) return {ok:false,msg:'ISBN을 입력해주세요.'};
       try{
-        var res=await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn);
-        var data=await res.json();
-        if(!data.items||!data.items.length) return {ok:false,msg:'검색 결과가 없습니다.'};
-        var info=data.items[0].volumeInfo;
-        return {ok:true,data:{
-          title:info.title||'',
-          publisher:info.publisher||'',
-          authors:(info.authors||[]).join(', ')
-        }};
+        var res=await fetch('https://cvygjxnaexwutbabtixu.supabase.co/functions/v1/bright-api',{
+          method:'POST',
+          headers:{'Content-Type':'application/json','Authorization':'Bearer '+SB_KEY,'apikey':SB_KEY},
+          body:JSON.stringify({isbn:payload.isbn})
+        });
+        return await res.json();
       }catch(e){return {ok:false,msg:'검색 실패'};}
     }
     if(action==='initSheets'){
