@@ -161,7 +161,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver6</span>
+    <span>정상어학원 교재 관리 ver8</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -1454,10 +1454,17 @@ function handleDetectedCode(code){
     if(_camTarget==='bulk-barcode') finalizeBookInput('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
   }
   document.getElementById('cam-status-text').textContent='인식됨: '+code;
+  var _savedTarget=_camTarget;
   setTimeout(function(){
     closeCam();
-    if(_camTarget==='book-barcode') searchBookByISBN();
-    if(_camAutoAction){if(_camTarget==='loan-barcode') queueLoanBarcode();if(_camTarget==='return-barcode') queueReturnBarcode();}
+    if(_savedTarget==='book-barcode'){
+      // closeCam 후 input 값이 살아있는지 확인 후 검색
+      setTimeout(function(){
+        var val=document.getElementById('book-barcode');
+        if(val&&val.value.trim()) searchBookByISBN();
+      },100);
+    }
+    if(_camAutoAction){if(_savedTarget==='loan-barcode') queueLoanBarcode();if(_savedTarget==='return-barcode') queueReturnBarcode();}
   },220);
 }
 function closeCam(){
