@@ -8,272 +8,1307 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"></script>
 <style>
 :root{
-  --bg:#cfd6e2; --bg2:#b8c2d2; --surface:#f2f4f8; --surface2:#e4e9f1; --card:#edf1f7;
-  --border:#7b8798; --border-soft:#9aa6b7; --accent:#1f62d0; --accent2:#59b95a;
-  --warn:#c9504d; --yellow:#e2b73f; --text:#233142; --muted:#556272;
-  --shadow:3px 3px 0 rgba(85,98,114,.18); --inset:inset 0 1px 0 rgba(255,255,255,.85);
+  --bg:#cfd6e2;
+  --bg2:#b8c2d2;
+  --surface:#f2f4f8;
+  --surface2:#e4e9f1;
+  --card:#edf1f7;
+  --border:#7b8798;
+  --border-soft:#9aa6b7;
+  --accent:#1f62d0;
+  --accent2:#59b95a;
+  --warn:#c9504d;
+  --yellow:#e2b73f;
+  --text:#233142;
+  --muted:#556272;
+  --shadow:3px 3px 0 rgba(85,98,114,.18);
+  --inset:inset 0 1px 0 rgba(255,255,255,.85);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{min-height:100%}
 body{
   font-family:'IBM Plex Sans KR',sans-serif;
-  background: linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0)), repeating-linear-gradient(0deg, rgba(109,90,42,.035) 0 1px, transparent 1px 30px), linear-gradient(180deg, var(--bg), var(--bg2));
-  color:var(--text); display:flex; flex-direction:column;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.35), rgba(255,255,255,0)),
+    repeating-linear-gradient(0deg, rgba(109,90,42,.035) 0 1px, transparent 1px 30px),
+    linear-gradient(180deg, var(--bg), var(--bg2));
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
 }
-header{ background:linear-gradient(180deg, #3e84ea, #1f57bb); border-bottom:1px solid #23498e; padding:0 24px; height:66px; display:flex; align-items:center; gap:12px; position:sticky; top:0; z-index:100; }
-.logo{font-weight:700; font-size:18px; display:flex; align-items:center; gap:10px; color:white;}
+body::before{
+  content:"";
+  position:fixed; inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 20% 15%, rgba(255,255,255,.4), transparent 22%),
+    radial-gradient(circle at 80% 10%, rgba(29,95,208,.06), transparent 18%),
+    radial-gradient(circle at 50% 100%, rgba(0,163,122,.06), transparent 24%);
+  mix-blend-mode:multiply;
+}
+header{
+  background:linear-gradient(180deg, #3e84ea, #1f57bb);
+  border-bottom:1px solid #23498e;
+  box-shadow:0 2px 0 rgba(29,59,115,.18);
+  padding:0 24px;
+  height:66px;
+  display:flex; align-items:center; gap:12px;
+  position:sticky; top:0; z-index:100;
+}
+.logo{font-weight:700; font-size:18px; display:flex; align-items:center; gap:10px;}
+.logo-mark{width:34px;height:34px;border:1px solid #71829a;background:linear-gradient(180deg,#fefefe,#d9e0eb);display:grid;place-items:center;border-radius:6px;box-shadow:var(--shadow),var(--inset);font-size:18px;}
 .logo-badge{background:linear-gradient(180deg,#f8de82,#d7ae35);color:#4c3900;font-size:12px;font-weight:700;padding:4px 8px;border-radius:6px;border:1px solid #9f7c1c;}
-nav{background:#e9e9e3;border-top:1px solid #f8f8f5;border-bottom:1px solid #99a2ad;padding:4px 10px 5px;display:flex;overflow-x:auto;gap:0;}
-.tab{min-width:72px;padding:4px 10px 5px;font-size:11px;font-weight:700;color:#344251;cursor:pointer;border-right:1px solid #b8bec7;display:flex;flex-direction:column;align-items:center;gap:3px;flex:0 0 auto;}
-.tab.active{background:#dfe6ef;color:#164a9a;box-shadow:inset 0 -1px 0 #aeb9c5;}
+.hright{margin-left:auto;display:flex;align-items:center;gap:10px;color:#eef4ff;font-size:12px}
+.dot{width:10px;height:10px;border-radius:50%;background:var(--accent2);border:2px solid #0b5c46;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.82);opacity:.55}}
+nav{background:#e9e9e3;border-top:1px solid #f8f8f5;border-bottom:1px solid #99a2ad;padding:4px 10px 5px;display:flex;overflow-x:auto;gap:0;align-items:stretch;}
+.tab{min-width:72px;padding:4px 10px 5px;font-size:11px;font-weight:700;color:#344251;cursor:pointer;border:none;border-right:1px solid #b8bec7;white-space:nowrap;user-select:none;background:transparent;box-shadow:none;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;line-height:1.05;gap:3px;flex:0 0 auto;}
+.tab:first-child{border-left:1px solid #d8dde3;}
+.tab:hover{background:#f3f4f6;color:#214b98;}
+.tab.active{background:#dfe6ef;color:#164a9a;box-shadow:inset 0 1px 0 #fdfefe,inset 0 -1px 0 #aeb9c5;}
+.tab .tab-ico{font-size:16px;line-height:1;display:block;filter:saturate(.9);}
+.tab .tab-txt{display:block;}
+@media (max-width:768px){nav{padding:3px 6px 4px}.tab{min-width:68px;padding:4px 8px;font-size:10px}.tab .tab-ico{font-size:14px}}
 main{flex:1;padding:22px;max-width:1240px;margin:0 auto;width:100%}
 .page{display:none}.page.active{display:block}
-.card{background:linear-gradient(180deg, var(--surface), var(--card));border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow),var(--inset);padding:20px;margin-bottom:16px;position:relative;}
+.card,.scard{background:linear-gradient(180deg, var(--surface), var(--card));border:1px solid var(--border);border-radius:10px;box-shadow:var(--shadow),var(--inset);}
+.card{padding:20px;margin-bottom:16px}
 .card-title{font-family:'VT323', monospace;font-size:24px;letter-spacing:1px;color:#2450a6;margin-bottom:12px;}
-.retro-strip{background:linear-gradient(180deg,#3f87ef,#245cbf);height:26px;border-radius:6px 6px 0 0;margin:-20px -20px 12px -20px;border-bottom:1px solid #23498e}
 .fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .fg{display:flex;flex-direction:column;gap:5px}
 .fl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.5px}
-input, select{background:#ffffff;border:1px solid var(--border-soft);border-radius:4px;padding:10px 12px;font-size:13px;width:100%;}
-.btn{padding:10px 16px;border-radius:4px;border:1px solid #7f8c9e;font-size:13px;font-weight:700;cursor:pointer;transition:transform .05s;}
-.btn-p{background:linear-gradient(180deg,#4a84ea,#2760c2);color:#fff;}
-.btn-s{background:linear-gradient(180deg,#86d389,#4aa656);color:#11361a;}
-.btn-d{background:linear-gradient(180deg,#ea8c89,#c8514d);color:#fff;}
-.sinput-wrap{position:relative;flex:1;}
-.sicon{position:absolute;left:12px;top:50%;transform:translateY(-50%);}
-.sinput{padding-left:40px!important;font-family:'DM Mono',monospace;}
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#fff7df;border:2px solid var(--border);border-radius:12px;padding:12px 20px;z-index:999;transition:transform .25s;}
+input[type=text],input[type=date],input[type=number],select{background:#ffffff;border:1px solid var(--border-soft);border-radius:4px;padding:10px 12px;color:var(--text);font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;outline:none;transition:border-color .15s, box-shadow .15s, transform .05s;width:100%;box-shadow:inset 0 1px 0 rgba(255,255,255,.92);}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(29,95,208,.12);}
+select option{background:#fffef9}
+.sinput-wrap{position:relative;flex:1;min-width:180px}
+.sicon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:17px;pointer-events:none}
+.sinput{padding-left:40px!important;font-family:'DM Mono',monospace!important;font-size:15px!important}
+.btn{padding:10px 16px;border-radius:4px;border:1px solid #7f8c9e;font-family:'IBM Plex Sans KR',sans-serif;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap;box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 1px 1px 0 rgba(0,0,0,.08);transition:transform .05s, filter .15s;}
+.btn:hover{filter:brightness(1.02)}
+.btn:active{transform:translateY(1px);box-shadow:inset 0 1px 0 rgba(255,255,255,.75)}
+.btn-p{background:linear-gradient(180deg,#4a84ea,#2760c2);color:#fff;border-color:#30599b}
+.btn-s{background:linear-gradient(180deg,#86d389,#4aa656);color:#11361a;border-color:#46824e}
+.btn-d{background:linear-gradient(180deg,#ea8c89,#c8514d);color:#fff;border-color:#9e4a46}
+.btn-g{background:linear-gradient(180deg,#f7f8fb,#d4dae3);color:var(--text);border-color:#8f99a8}
+.btn-y{background:linear-gradient(180deg,#f6db86,#d2aa35);color:#4a3906;border-color:#a07c25}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-cam{background:linear-gradient(180deg,#f7f8fb,#d4dae3);color:#314154;border-color:#8f99a8}
+#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:#fff7df;border:2px solid var(--border);border-radius:12px;padding:12px 20px;font-size:14px;font-weight:700;z-index:999;transition:transform .25s;max-width:520px;text-align:center;box-shadow:var(--shadow);}
 #toast.show{transform:translateX(-50%) translateY(0)}
+#toast.ok{border-color:#178d6c;color:#126a52}
+#toast.err{border-color:#c54d4a;color:#b13835}
 .twrap{overflow-x:auto;border-radius:6px;border:1px solid var(--border-soft);background:#fff}
 table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{background:#dfe6ef;padding:11px 13px;text-align:left;border-bottom:1px solid var(--border-soft)}
-td{padding:10px 13px;border-top:1px solid #dde3eb;}
-.search-results{display:none;position:absolute;left:0;right:0;top:100%;z-index:1000;background:white;border:1px solid var(--border);max-height:200px;overflow-y:auto;box-shadow:var(--shadow);}
-.search-item{padding:10px;cursor:pointer;border-bottom:1px solid #eee;}
-.search-item:hover{background:#f0f7ff;}
+thead th{background:linear-gradient(180deg,#dfe6ef,#c5cfdb);color:#415062;font-weight:700;font-size:11px;letter-spacing:.5px;text-transform:uppercase;padding:11px 13px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border-soft)}
+tbody tr{border-top:1px solid #dde3eb;transition:background .1s}
+tbody tr:hover{background:rgba(29,95,208,.05)}
+td{padding:10px 13px;vertical-align:middle}
+.mono{font-family:'DM Mono',monospace;font-size:12px;color:#7c6c46}
+.badge{display:inline-block;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid rgba(0,0,0,.08)}
+.b-blue{background:rgba(46,111,226,.12);color:#1d5fd0}
+.b-green{background:rgba(19,180,138,.12);color:#0f8968}
+.b-red{background:rgba(216,91,87,.12);color:#b83f3b}
+.b-yellow{background:rgba(244,191,55,.18);color:#936900}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:18px}
+.scard{padding:18px}
+.sl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+.sn{font-family:'VT323', monospace;font-size:42px;line-height:1;color:#5b4515}
+.ss{font-size:12px;color:var(--muted);margin-top:4px}
+.shead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap}
+.stitle{font-size:16px;font-weight:700}
+.empty{text-align:center;padding:40px;color:var(--muted);font-size:14px}
+.loading{text-align:center;padding:28px;color:var(--muted)}
+.spinner{display:inline-block;width:22px;height:22px;border:3px solid #d3c08a;border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.scan-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.retro-strip{background:linear-gradient(180deg,#3f87ef,#245cbf);height:26px;border-radius:6px 6px 0 0;margin:-20px -20px 12px -20px;opacity:1;border-bottom:1px solid #23498e}
+#cam-modal{display:none;position:fixed;inset:0;z-index:3000;background:#141009;flex-direction:column}
+#cam-modal.open{display:flex}
+#cam-top,#cam-bottom{background:linear-gradient(180deg, rgba(223,230,239,.97), rgba(197,207,219,.97));border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0;}
+#cam-bottom{border-top:2px solid var(--border);border-bottom:none;text-align:center}
+#cam-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cam-title{font-family:'VT323', monospace;font-size:28px;color:#2450a6}
+#cam-view{position:relative;flex:1;background:#000;overflow:hidden}
+#cam-video{width:100%;height:100%;object-fit:cover;display:block;filter:brightness(1.14) contrast(1.08) saturate(1.08)}
+#cam-guide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+#cam-guide-box{width:min(72vw,420px);height:min(22vw,120px);border:3px solid rgba(255,235,160,.98);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.28), 0 0 16px rgba(255,225,120,.65);}
+#cam-guide-line{position:absolute;width:min(64vw,360px);height:2px;background:rgba(255,232,134,.98);box-shadow:0 0 12px rgba(255,225,120,.92);}
+#cam-status-text{font-weight:700;color:#644b16}
+#cam-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff8dc;border:2px solid #c4a552;color:#6a4f14;font-size:12px;font-weight:700;}
+
+.bulk-panels{display:grid;grid-template-columns:minmax(320px,1.2fr) minmax(320px,1fr);gap:14px;align-items:start}
+.bulk-panel{background:linear-gradient(180deg,#f6f8fb,#e7ecf3);border:1px solid #97a2b1;border-radius:6px;padding:12px;box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+.bulk-panel-title{font-size:12px;font-weight:700;color:#415062;background:linear-gradient(180deg,#dbe3ee,#c7d2df);border:1px solid #9ba7b6;border-radius:4px;padding:6px 8px;margin:0 0 10px}
+.bulk-panel-book{grid-row:span 2}
+.bulk-book-row{display:flex;flex-direction:column;align-items:flex-start;gap:8px}
+.bulk-book-input{width:100%}
+.bulk-cam-btn{min-width:96px}
+.bulk-side-grid{display:grid;grid-template-columns:1fr;gap:10px}
+.bulk-footer-row{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.bulk-action-row{display:flex;gap:10px;flex-wrap:wrap}
+.bulk-preview-text{font-size:13px;color:var(--muted)}
+#bulk-book-preview-name{white-space:normal;word-break:keep-all;line-height:1.45}
+@media (max-width:980px){
+  .bulk-panels{grid-template-columns:1fr}
+  .bulk-panel-book{grid-row:auto}
+}
+
+@media (max-width:768px){header{padding:0 14px;height:62px}nav{padding:6px 8px;gap:5px}main{padding:14px}.card{padding:16px}.fgrid{grid-template-columns:1fr}.shead{align-items:flex-start}.bulk-footer-row{flex-direction:column;align-items:stretch}.bulk-action-row{width:100%}.bulk-action-row .btn{flex:1}.bulk-cam-btn{width:100%}.tab{min-width:88px;padding:8px 10px;font-size:11px}}
 </style>
 </head>
 <body>
 
 <header>
-  <div class="logo">📚 <span>정상어학원 교재 관리</span> <span class="logo-badge">RETRO</span></div>
+  <div class="logo">
+    <div class="logo-mark">📚</div>
+    <span>정상어학원 교재 관리 ver2.0</span>
+    <span class="logo-badge">NAM</span>
+  </div>
+  <div class="hright">
+    <div class="dot"></div>
+    <span>최신 데이터 동기화 완료</span>
+  </div>
 </header>
 
 <nav>
-  <div class="tab active" onclick="showTab('loan', this)">📖 대여·반납</div>
-  <div class="tab" onclick="showTab('sales', this)">🛒 판매 입출고</div>
-  <div class="tab" onclick="showTab('bulk', this)">🏫 반별 일괄출고</div>
-  <div class="tab" onclick="showTab('unpaid', this)">💰 미납 관리</div>
-  <div class="tab" onclick="showTab('stock', this)">📦 재고 현황</div>
-  <div class="tab" onclick="showTab('settings', this)">⚙️ 설정</div>
+  <div class="tab active" onclick="showTab('loan', this)"><span class="tab-ico">📖</span><span class="tab-txt">대여·반납</span></div>
+  <div class="tab" onclick="showTab('sales', this)"><span class="tab-ico">🛒</span><span class="tab-txt">판매 입출고</span></div>
+  <div class="tab" onclick="showTab('bulk', this)"><span class="tab-ico">🏫</span><span class="tab-txt">반별 일괄출고</span></div>
+  <div class="tab" onclick="showTab('unpaid', this)"><span class="tab-ico">💰</span><span class="tab-txt">미납 관리</span></div>
+  <div class="tab" onclick="showTab('stock', this)"><span class="tab-ico">📦</span><span class="tab-txt">재고 현황</span></div>
+  <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
+  <div class="tab" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
+  <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
 
 <main>
-  <!-- 대여 페이지 -->
-  <div id="page-loan" class="page active">
-    <div class="card">
-      <div class="retro-strip"></div>
-      <div class="card-title">교재 대여</div>
-      <div class="fgrid">
-        <div class="fg"><label class="fl">선생님</label><select id="loan-teacher"><option value="">-- 선택 --</option></select></div>
-        <div class="fg"><label class="fl">학기</label><input type="text" id="loan-semester" placeholder="26년봄"></div>
-      </div>
-      <div class="sinput-wrap" style="margin-top:15px">
-        <span class="sicon">🔍</span>
-        <input class="sinput" id="loan-barcode" placeholder="바코드 스캔 또는 교재명 입력 후 Enter">
+
+<div id="page-loan" class="page active">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">교재 대여</div>
+    <div class="fgrid" style="margin-bottom:14px">
+      <div class="fg"><label class="fl">선생님 *</label><select id="loan-teacher"><option value="">-- 선택 --</option></select></div>
+      <div class="fg"><label class="fl">학기</label><input type="text" id="loan-semester" placeholder="예: 26년봄"></div>
+      <div class="fg"><label class="fl">반납 예정일</label><input type="date" id="loan-return"></div>
+    </div>
+    <div style="background:linear-gradient(180deg,var(--surface2),#fff4d2);border:2px solid var(--border-soft);border-radius:12px;padding:14px;margin-bottom:10px">
+      <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 바코드를 찍는 대로 목록에 자동 추가되고, 잘못 들어간 건 삭제 후 한 번에 대여처리</div>
+      <div class="scan-row">
+        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 추가 / 입력 후 Enter" autocomplete="off"></div>
+        <button class="btn btn-cam" onclick="openCam('loan-barcode', true)">카메라</button>
+        <button class="btn btn-p" onclick="processLoanQueue()">대여 처리</button>
+        <button class="btn btn-d" onclick="clearLoanQueue()">목록 비우기</button>
       </div>
       <div id="loan-queue-wrap" style="margin-top:10px"></div>
-      <button class="btn btn-p" style="margin-top:10px" onclick="processLoanQueue()">대여 처리</button>
+      <div id="loan-log" style="max-height:120px;overflow-y:auto;margin-top:10px"></div>
     </div>
   </div>
 
-  <!-- 판매 페이지 -->
-  <div id="page-sales" class="page">
-    <div class="card">
-      <div class="retro-strip"></div>
-      <div class="card-title">판매 입출고</div>
-      <div class="fg" style="position:relative">
-        <label class="fl">교재 검색</label>
-        <input type="text" id="sales-barcode" placeholder="교재명 또는 바코드 입력" autocomplete="off">
-        <div id="sales-results" class="search-results"></div>
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">교재 반납</div>
+    <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 바코드를 찍는 대로 목록에 자동 추가되고, 잘못 들어간 건 삭제 후 한 번에 반납처리</div>
+    <div class="scan-row">
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="return-barcode" placeholder="바코드 스캔하면 자동 추가 / 입력 후 Enter" autocomplete="off"></div>
+      <button class="btn btn-cam" onclick="openCam('return-barcode', true)">카메라</button>
+      <button class="btn btn-s" onclick="processReturnQueue()">반납 처리</button>
+      <button class="btn btn-d" onclick="clearReturnQueue()">목록 비우기</button>
+    </div>
+    <div id="return-queue-wrap" style="margin-top:10px"></div>
+  </div>
+
+  <div class="shead"><span class="stitle">현재 대여 중</span><button class="btn btn-g" onclick="loadActiveLoan()">새로고침</button></div>
+  <div id="loan-list"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<div id="page-sales" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">판매 입출고 처리</div>
+    <div class="scan-row" style="position:relative">
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
+      <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
+    </div>
+    <div id="sales-book-results" style="display:none;position:relative;z-index:40;background:#f3f5f8;border:1px solid #9aa8ba;border-radius:4px;box-shadow:none;max-height:220px;overflow-y:auto;margin:-4px 0 12px"></div>
+    <div id="sales-book-preview" style="display:none;margin:0 0 12px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
+      <div id="sales-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+      <div id="sales-book-preview-barcode" class="mono" style="margin-top:2px"></div>
+    </div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">유형</label>
+        <select id="sales-type" onchange="toggleStudentField()">
+          <option value="입고">입고 (구입)</option>
+          <option value="출고">출고 (판매)</option>
+        </select>
       </div>
-      <div id="sales-book-preview" style="margin-top:10px; padding:10px; background:#fff8e8; display:none; border-radius:8px; border:1px solid #e0c8a0;">
-        <strong>선택된 교재:</strong> <span id="sales-preview-name"></span>
+      <div class="fg"><label class="fl">수량</label><input type="number" id="sales-qty" value="1" min="1"></div>
+      <div class="fg"><label class="fl">단가 (빈칸=기본가)</label><input type="number" id="sales-price" placeholder="기본가 사용"></div>
+      <div class="fg" id="sf-semester"><label class="fl">학기</label><select id="sales-semester"><option value="">-- 학기 선택 --</option></select></div>
+      <div class="fg" id="sf-student">
+        <label class="fl">학생</label>
+        <div style="position:relative">
+          <input type="text" id="sales-student-search" placeholder="학생 이름 검색" autocomplete="off">
+          <input type="hidden" id="sales-student">
+          <div id="sales-student-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:#fffdf5;border:2px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
+        </div>
+        <div id="sales-student-picked" style="display:none;margin-top:6px;padding:8px 10px;border:2px solid var(--border-soft);border-radius:10px;background:#fff8e8;font-size:12px;font-weight:700;color:var(--text);align-items:center;justify-content:space-between;gap:8px">
+          <span id="sales-student-picked-name"></span>
+          <button type="button" class="btn btn-d btn-sm" onclick="clearSalesStudent()">선택해제</button>
+        </div>
       </div>
-      <div class="fgrid" style="margin-top:15px">
-        <div class="fg"><label class="fl">유형</label><select id="sales-type"><option value="출고">출고 (판매)</option><option value="입고">입고</option></select></div>
-        <div class="fg"><label class="fl">수량</label><input type="number" id="sales-qty" value="1"></div>
-        <div class="fg"><label class="fl">학생이름</label><input type="text" id="sales-student-name"></div>
+      <div class="fg" id="sf-pay"><label class="fl">입금 상태</label><select id="sales-pay"><option value="미납">미납</option><option value="완납">완납</option></select></div>
+      <div class="fg"><label class="fl">메모</label><input type="text" id="sales-memo" placeholder="메모"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doSales()">처리</button></div>
+    </div>
+  </div>
+  <div class="shead"><span class="stitle">최근 입출고 이력</span><button class="btn btn-g" onclick="loadSalesHistory()">새로고침</button></div>
+  <div id="sales-list"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<div id="page-bulk" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">반별 일괄 출고</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">학기+반을 선택하면 배정된 학생 전원에게 1권씩 출고됩니다. 전원 미납으로 기록됩니다.</p>
+
+    <div class="bulk-panels">
+      <div class="bulk-panel bulk-panel-book">
+        <div class="bulk-panel-title">교재 선택</div>
+        <label class="fl">교재 바코드 / 교재명</label>
+        <div class="bulk-book-row">
+          <div class="sinput-wrap bulk-book-input"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
+          <button class="btn btn-cam bulk-cam-btn" onclick="openCam('bulk-barcode', false)">카메라</button>
+        </div>
+        <div id="bulk-book-results" style="display:none;background:#f3f5f8;border:1px solid #9aa8ba;border-radius:4px;box-shadow:none;max-height:220px;overflow-y:auto;margin-top:6px"></div>
+        <div id="bulk-book-preview" style="display:none;margin-top:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
+          <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
+          <div id="bulk-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+          <div id="bulk-book-preview-barcode" class="mono" style="margin-top:2px"></div>
+        </div>
       </div>
-      <button class="btn btn-p" style="margin-top:15px" onclick="doSales()">처리하기</button>
+
+      <div class="bulk-panel bulk-panel-class">
+        <div class="bulk-panel-title">반 선택</div>
+        <div class="bulk-side-grid">
+          <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
+          <div class="fg">
+            <label class="fl">반</label>
+            <select id="bulk-class" onchange="syncClassSearchFromSelect('bulk');updateBulkPreview()"><option value="">-- 반 선택 --</option></select>
+            <input type="text" id="bulk-class-search" placeholder="반 검색" style="margin-top:6px">
+          </div>
+        </div>
+      </div>
+
+      <div class="bulk-panel bulk-panel-meta">
+        <div class="bulk-panel-title">출고 정보</div>
+        <div class="bulk-side-grid">
+          <div class="fg"><label class="fl">단가 (빈칸=기본가)</label><input type="number" id="bulk-price" placeholder="기본가 사용"></div>
+          <div class="fg"><label class="fl">메모</label><input type="text" id="bulk-memo" placeholder="예: 26년봄 교재"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bulk-footer-row">
+      <div id="bulk-preview" class="bulk-preview-text">학기와 반을 선택하면 인원이 표시됩니다.</div>
+      <div class="bulk-action-row">
+        <button class="btn btn-g" onclick="updateBulkPreview()">학생명단 새로고침</button>
+        <button class="btn btn-y" onclick="doBulk()">일괄 출고 실행</button>
+      </div>
+    </div>
+  </div>
+  <div id="bulk-student-list"></div>
+</div>
+
+<div id="page-unpaid" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">미납 조회 필터</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">학기</label><select id="unpaid-semester" onchange="updateUnpaidClasses()"><option value="">전체 학기</option></select></div>
+      <div class="fg">
+        <label class="fl">반</label>
+        <select id="unpaid-class" onchange="syncClassSearchFromSelect('unpaid')"><option value="">전체 반</option></select>
+        <input type="text" id="unpaid-class-search" placeholder="반 검색" style="margin-top:6px">
+      </div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadUnpaid()">조회</button></div>
+    </div>
+  </div>
+  <div class="shead">
+    <span class="stitle" id="unpaid-title">미납 목록</span>
+    <div style="display:flex;gap:8px">
+      <span id="unpaid-total" style="font-size:13px;color:var(--warn);font-weight:700;align-self:center"></span>
+      <button class="btn btn-g" onclick="loadUnpaid()">새로고침</button>
+    </div>
+  </div>
+  <div id="unpaid-list"><div class="loading"><div class="spinner"></div><br>불러오는 중...</div></div>
+</div>
+
+<div id="page-stock" class="page">
+  <div id="stock-stats" class="sgrid"></div>
+  <div class="shead"><span class="stitle">교재별 재고</span><button class="btn btn-g" onclick="loadStock()">새로고침</button></div>
+  <div id="stock-list"><div class="loading"><div class="spinner"></div></div></div>
+</div>
+
+<div id="page-history" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">이력 조회</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">조회 유형</label>
+        <select id="history-type" onchange="renderHistoryFilter()">
+          <option value="loan">대여 이력</option>
+          <option value="sales">판매 이력</option>
+        </select>
+      </div>
+      <div class="fg" id="ft-teacher"><label class="fl">선생님</label><select id="filter-teacher"><option value="">전체</option></select></div>
+      <div class="fg" id="ft-status"><label class="fl">상태</label><select id="filter-status"><option value="">전체</option><option value="대여중">대여중</option><option value="반납완료">반납완료</option></select></div>
+      <div class="fg" id="ft-stype" style="display:none"><label class="fl">입/출고</label><select id="filter-stype"><option value="">전체</option><option value="입고">입고</option><option value="출고">출고</option></select></div>
+      <div class="fg" id="ft-sem" style="display:none"><label class="fl">학기</label><select id="filter-sem"><option value="">전체</option></select></div>
+      <div class="fg" id="ft-student" style="display:none"><label class="fl">학생</label><select id="filter-student"><option value="">전체</option></select></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadHistory()">조회</button></div>
+    </div>
+  </div>
+  <div id="history-list"></div>
+</div>
+
+<div id="page-barcode" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">자체제작 교재 바코드</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">코드 prefix</label><input type="text" id="bc-prefix" placeholder="예: ZNS, JS"></div>
+      <div class="fg" style="grid-column:span 2"><label class="fl">교재명</label><input type="text" id="bc-bookname" placeholder="예: T Map Starter Basic A1-A3"></div>
+      <div class="fg"><label class="fl">번호 (자동증가)</label><input type="number" id="bc-start" value="1" min="1"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="generateBarcodes('custom')">추가</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">교사용 교재 바코드</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">교재 선택</label><select id="bc-teacher-book"><option value="">-- 교재 선택 --</option></select></div>
+      <div class="fg"><label class="fl">권수</label><input type="number" id="bc-teacher-count" value="1" min="1" max="50"></div>
+      <div class="fg"><label class="fl">시작 번호</label><input type="number" id="bc-teacher-start" value="1" min="1"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="generateBarcodes('teacher')">생성</button></div>
+    </div>
+  </div>
+  <div id="barcode-result" style="display:none">
+    <div class="shead">
+      <span class="stitle">생성된 바코드 <span id="barcode-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn btn-g" onclick="clearBarcodes()">초기화</button>
+        <button class="btn btn-s" onclick="printBarcodes()">선택 출력</button>
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">카드를 클릭해서 선택/해제하세요.</div>
+    <div id="barcode-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+  </div>
+</div>
+
+<div id="page-settings" class="page">
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">교재 등록</div>
+    <div class="fgrid">
+      <div class="fg">
+        <label class="fl">바코드 * <span id="isbn-status" style="font-weight:400;font-size:11px"></span></label>
+        <div class="scan-row" style="margin-bottom:0">
+          <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input type="text" id="book-barcode" placeholder="스캔하면 자동조회" onkeydown="if(event.key==='Enter'){event.preventDefault();searchBookByISBN();}"></div>
+          <button class="btn btn-cam" onclick="openCam('book-barcode', false)">카메라</button>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">교재명 *</label><input type="text" id="book-name" placeholder="스캔하면 자동완성"></div>
+      <div class="fg"><label class="fl">과목</label><input type="text" id="book-subject" placeholder="영어/수학..."></div>
+      <div class="fg"><label class="fl">출판사</label><input type="text" id="book-publisher"></div>
+      <div class="fg"><label class="fl">정가 (원)</label><input type="number" id="book-price"></div>
+      <div class="fg"><label class="fl">비고</label><input type="text" id="book-note"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddBook()">교재 등록</button></div>
     </div>
   </div>
 
-  <!-- 일괄출고 페이지 -->
-  <div id="page-bulk" class="page">
-    <div class="card">
-      <div class="retro-strip"></div>
-      <div class="card-title">반별 일괄 출고</div>
-      <div class="fg" style="position:relative">
-        <label class="fl">교재 검색</label>
-        <input type="text" id="bulk-barcode" placeholder="교재명 검색" autocomplete="off">
-        <div id="bulk-results" class="search-results"></div>
-      </div>
-      <div class="fgrid" style="margin-top:15px">
-        <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"></select></div>
-        <div class="fg"><label class="fl">반 선택</label><select id="bulk-class"></select></div>
-      </div>
-      <button class="btn btn-p" style="margin-top:15px" onclick="doBulk()">일괄 출고 실행</button>
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">선생님 등록</div>
+    <div class="fgrid">
+      <div class="fg"><label class="fl">교사 ID *</label><input type="text" id="teacher-id" placeholder="예: T001"></div>
+      <div class="fg"><label class="fl">이름 *</label><input type="text" id="teacher-name"></div>
+      <div class="fg"><label class="fl">담당 과목</label><input type="text" id="teacher-subject"></div>
+      <div class="fg"><label class="fl">연락처</label><input type="text" id="teacher-contact"></div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddTeacher()">선생님 등록</button></div>
     </div>
   </div>
 
-  <!-- 재고 현황 -->
-  <div id="page-stock" class="page">
-    <div class="card">
-      <div class="retro-strip"></div>
-      <div class="card-title">실시간 재고 현황</div>
-      <div id="stock-list"></div>
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">학생 등록</div>
+    <div style="display:flex;gap:0;margin-bottom:16px;border-bottom:2px solid #d7c384">
+      <div class="stab active" onclick="switchStudentTab('manual')" style="padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid var(--accent);color:var(--accent)">직접 입력</div>
+      <div class="stab" onclick="switchStudentTab('upload')" style="padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer;border-bottom:3px solid transparent;color:var(--muted)">파일 업로드</div>
+    </div>
+    <div id="stab-manual">
+      <div class="fgrid">
+        <div class="fg"><label class="fl">학생 ID *</label><input type="text" id="student-id" placeholder="예: U001234567"></div>
+        <div class="fg"><label class="fl">이름 *</label><input type="text" id="student-name"></div>
+        <div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="student-contact"></div>
+        <div class="fg"><label class="fl">비고</label><input type="text" id="student-note"></div>
+        <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddStudent()">학생 등록</button></div>
+      </div>
+    </div>
+    <div id="stab-upload" style="display:none">
+      <div id="drop-zone" onclick="document.getElementById('file-input').click()" style="border:2px dashed var(--border-soft);border-radius:12px;padding:28px;text-align:center;cursor:pointer;transition:border-color .15s;margin-bottom:14px;background:#fff9ea">
+        <div style="font-size:28px;margin-bottom:8px">📂</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">클릭하거나 파일을 여기 끌어다 놓으세요</div>
+        <div style="font-size:12px;color:var(--muted)">.xlsx, .xls, .csv 지원</div>
+        <input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this.files[0])">
+      </div>
+      <div id="mapping-section" style="display:none">
+        <div style="font-size:13px;font-weight:700;margin-bottom:10px;color:var(--accent2)">컬럼 매핑</div>
+        <div class="fgrid" style="margin-bottom:10px">
+          <div class="fg"><label class="fl">학생 ID *</label><select id="map-id"><option value="">-- 선택 --</option></select></div>
+          <div class="fg"><label class="fl">이름 *</label><select id="map-name"><option value="">-- 선택 --</option></select></div>
+          <div class="fg"><label class="fl">학년</label><select id="map-grade"><option value="">사용 안 함</option></select></div>
+          <div class="fg"><label class="fl">반</label><select id="map-class"><option value="">사용 안 함</option></select></div>
+          <div class="fg"><label class="fl">학부모 연락처</label><select id="map-contact"><option value="">사용 안 함</option></select></div>
+          <div class="fg"><label class="fl">기타 (비고)</label><select id="map-note"><option value="">사용 안 함</option></select></div>
+        </div>
+        <div class="fgrid" style="margin-bottom:14px">
+          <div class="fg">
+            <label class="fl">학기 * (필수)</label>
+            <input type="text" id="upload-semester" placeholder="예: 26년봄">
+            <div style="font-size:11px;color:var(--warn);margin-top:3px">* 업로드 전 필수 입력</div>
+          </div>
+          <div class="fg" style="justify-content:flex-end;align-self:flex-end">
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <button class="btn btn-g btn-sm" onclick="saveMappingPreset()">매핑 저장</button>
+              <button class="btn btn-p" onclick="doPreview()">미리보기</button>
+            </div>
+          </div>
+        </div>
+        <div id="mapping-preset-info" style="font-size:12px;color:var(--accent2);margin-bottom:8px"></div>
+      </div>
+      <div id="preview-section" style="display:none">
+        <div class="shead">
+          <span class="stitle" style="font-size:13px">미리보기 <span id="preview-count" style="color:var(--muted);font-weight:400"></span></span>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button class="btn btn-g btn-sm" onclick="document.getElementById('preview-section').style.display='none'">다시 수정</button>
+            <button class="btn btn-s" onclick="doUpload()">업로드 실행</button>
+          </div>
+        </div>
+        <div id="preview-table"></div>
+      </div>
+    </div>
+    <div style="margin-top:18px">
+      <div class="shead"><span class="stitle" style="font-size:13px">등록된 학생 목록 (<span id="student-count">0</span>명)</span><button class="btn btn-g btn-sm" onclick="loadStudentList()">새로고침</button></div>
+      <div id="student-list"></div>
     </div>
   </div>
 
-  <!-- 설정 페이지 -->
-  <div id="page-settings" class="page">
-    <div class="card">
-      <div class="retro-strip"></div>
-      <div class="card-title">시스템 관리</div>
-      <button class="btn btn-d" onclick="doInit()">시트 초기화(최초1회)</button>
-    </div>
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">시스템 초기화</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">구글 스프레드시트에 필요한 시트를 자동 생성합니다. 최초 1회만 실행하면 됩니다.</p>
+    <button class="btn btn-d" onclick="doInit()">시트 초기화 실행</button>
   </div>
+</div>
+
 </main>
+
+<div id="cam-modal">
+  <div id="cam-top">
+    <div class="cam-title">BARCODE CAMERA</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div id="cam-chip">📼 live view</div>
+      <button type="button" class="btn btn-g btn-sm" onclick="closeCam()">닫기</button>
+    </div>
+  </div>
+  <div id="cam-view">
+    <video id="cam-video" playsinline></video>
+    <div id="cam-guide">
+      <div id="cam-guide-box"></div>
+      <div id="cam-guide-line"></div>
+    </div>
+  </div>
+  <div id="cam-bottom">
+    <div id="cam-status-text">카메라 시작 중...</div>
+  </div>
+</div>
+
+<datalist id="book-search-list"></datalist>
 
 <div id="toast"></div>
 
 <script>
-var APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwDjKsqwVOqtpmbptlowSWffQHqfgqhOLSMZ4si_Pttc4MFku9JNZKrenSHW2k3xn-4/exec';
-var books = [], teachers = [], semesters = [];
+var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwDjKsqwVOqtpmbptlowSWffQHqfgqhOLSMZ4si_Pttc4MFku9JNZKrenSHW2k3xn-4/exec';
+var teachers=[],books=[],students=[],semesters=[],bulkAssigns=[],salesCache=[],generatedBarcodes=[];
+var uploadedRows=[],fileHeaders=[],previewData=[];
+var MAPPING_KEY='jls_col_mapping';
+var MAP_FIELDS=['map-id','map-name','map-grade','map-class','map-contact','map-note'];
+var loanQueue=[];
+var returnQueue=[];
 
-async function call(action, payload) {
-  try {
-    const response = await fetch(APPS_SCRIPT_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'text/plain' },
-      body: JSON.stringify({ action, payload: payload || {} })
-    });
-    return await response.json();
-  } catch (e) {
-    toast('서버 연결 오류', false);
-    return { ok: false };
+function call(action,payload){
+  return fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:action,payload:payload||{}})})
+    .then(function(r){return r.json();})
+    .catch(function(e){throw new Error('서버 연결 실패: '+e.message);});
+}
+
+var _tt;
+function toast(msg,isOk){
+  if(isOk===undefined)isOk=true;
+  var el=document.getElementById('toast');
+  el.textContent=msg; el.className='show '+(isOk?'ok':'err');
+  clearTimeout(_tt); _tt=setTimeout(function(){el.className='';},3500);
+}
+
+function showTab(id,tabEl){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.page').forEach(function(p){p.classList.remove('active');});
+  if(tabEl) tabEl.classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
+  if(id==='loan') loadActiveLoan();
+  if(id==='sales') loadSalesHistory();
+  if(id==='bulk') initBulkPage();
+  if(id==='unpaid') initUnpaidPage();
+  if(id==='stock') loadStock();
+  if(id==='barcode') initBarcodePage();
+  if(id==='settings') loadStudentList();
+}
+
+var CACHE_KEYS={books:'jls_cache_books_v1',teachers:'jls_cache_teachers_v1',students:'jls_cache_students_v1',semesters:'jls_cache_semesters_v1',ts:'jls_cache_ts_v1'};
+var dataReady=false;
+
+function setLoadingState(isReady,msg){
+  dataReady=!!isReady;
+  var statusText=document.querySelector('.hright span:last-child');
+  if(statusText) statusText.textContent=msg||(isReady?'데이터 준비 완료':'데이터 불러오는 중');
+}
+function readCache(){
+  try{return {teachers:JSON.parse(localStorage.getItem(CACHE_KEYS.teachers)||'[]'),books:JSON.parse(localStorage.getItem(CACHE_KEYS.books)||'[]'),students:JSON.parse(localStorage.getItem(CACHE_KEYS.students)||'[]'),semesters:JSON.parse(localStorage.getItem(CACHE_KEYS.semesters)||'[]')};}
+  catch(e){return {teachers:[],books:[],students:[],semesters:[]};}
+}
+function writeCache(){
+  try{localStorage.setItem(CACHE_KEYS.teachers,JSON.stringify(teachers||[]));localStorage.setItem(CACHE_KEYS.books,JSON.stringify(books||[]));localStorage.setItem(CACHE_KEYS.students,JSON.stringify(students||[]));localStorage.setItem(CACHE_KEYS.semesters,JSON.stringify(semesters||[]));localStorage.setItem(CACHE_KEYS.ts,String(Date.now()));}catch(e){}
+}
+function initClassSearchUI(){bindClassSearch('bulk');bindClassSearch('unpaid');}
+function bindClassSearch(prefix){
+  var select=document.getElementById(prefix+'-class');
+  var input=document.getElementById(prefix+'-class-search');
+  if(!select||!input||input.dataset.bound==='1') return;
+  input.dataset.bound='1';
+  input.addEventListener('input',function(){filterClassOptions(prefix,input.value.trim());});
+}
+function syncClassSearchFromSelect(prefix){
+  var select=document.getElementById(prefix+'-class');
+  var input=document.getElementById(prefix+'-class-search');
+  if(select&&input) input.value=select.value||'';
+}
+function setClassOptions(prefix){
+  var select=document.getElementById(prefix+'-class');
+  if(!select) return;
+  select.dataset.allOptions=JSON.stringify(Array.from(select.options).map(function(o){return {value:o.value,text:o.textContent};}));
+}
+function filterClassOptions(prefix,keyword){
+  var select=document.getElementById(prefix+'-class');
+  if(!select) return;
+  var current=select.value;
+  var base=select.dataset.allOptions?JSON.parse(select.dataset.allOptions):[];
+  if(!base.length){base=Array.from(select.options).map(function(o){return {value:o.value,text:o.textContent};});select.dataset.allOptions=JSON.stringify(base);}
+  var filtered=base.filter(function(o){if(!keyword) return true;return String(o.text).toLowerCase().includes(keyword.toLowerCase())||String(o.value).toLowerCase().includes(keyword.toLowerCase());});
+  select.innerHTML='';
+  filtered.forEach(function(o){var opt=document.createElement('option');opt.value=o.value;opt.textContent=o.text;select.appendChild(opt);});
+  if(filtered.some(function(o){return o.value===current;})) select.value=current;
+}
+function hydrateFromCache(){
+  var c=readCache();
+  if(c.books.length||c.students.length||c.teachers.length){
+    teachers=c.teachers||[];books=c.books||[];students=c.students||[];semesters=c.semesters||[];
+    var seen={};students=students.filter(function(s){if(seen[s['학생ID']]) return false;seen[s['학생ID']]=true;return true;});
+    populateSelects();toggleStudentField();
+    bindBarcodePreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    bindBarcodePreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+    initClassSearchUI();setLoadingState(true,'데이터 준비 완료 (캐시)');return true;
+  }
+  return false;
+}
+async function init(){
+  setLoadingState(false,'데이터 불러오는 중...');
+  var hasCache=hydrateFromCache();
+  try{
+    var r=await Promise.all([call('getTeachers'),call('getBooks'),call('getStudents'),call('getSemesters')]);
+    teachers=r[0].data||[];books=r[1].data||[];students=r[2].data||[];semesters=r[3].data||[];
+    var seen={};students=students.filter(function(s){if(seen[s['학생ID']]) return false;seen[s['학생ID']]=true;return true;});
+    writeCache();populateSelects();toggleStudentField();
+    bindBarcodePreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    bindBarcodePreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+    initClassSearchUI();setLoadingState(true,hasCache?'최신 데이터 동기화 완료':'데이터 준비 완료');
+    loadActiveLoan();
+  }catch(e){
+    if(hasCache){setLoadingState(true,'데이터 준비 완료 (캐시 사용중)');loadActiveLoan();}
+    else{setLoadingState(false,'데이터 로드 실패');toast('서버 연결 실패.',false);}
   }
 }
 
-function toast(msg, isOk = true) {
-  const el = document.getElementById('toast');
-  el.textContent = msg;
-  el.style.border = isOk ? '2px solid green' : '2px solid red';
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 3000);
-}
-
-function showTab(id, el) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById('page-' + id).classList.add('active');
-  if(id === 'stock') loadStock();
-}
-
-// 교재 검색 기능 (핵심 수정 사항)
-function initSearch(inputId, resultsId, previewId, nameId) {
-  const input = document.getElementById(inputId);
-  const results = document.getElementById(resultsId);
-  const preview = document.getElementById(previewId);
-  const nameSpan = document.getElementById(nameId);
-
-  input.addEventListener('input', () => {
-    const val = input.value.toLowerCase();
-    if (!val) { results.style.display = 'none'; return; }
-    
-    const filtered = books.filter(b => 
-      (b['교재명'] && b['교재명'].toLowerCase().includes(val)) || 
-      (b['바코드'] && String(b['바코드']).includes(val))
-    ).slice(0, 10);
-
-    if (filtered.length > 0) {
-      results.innerHTML = filtered.map(b => `
-        <div class="search-item" onclick="selectBook('${inputId}', '${resultsId}', '${previewId}', '${nameId}', '${b['교재명']}', '${b['바코드']}')">
-          <strong>${b['교재명']}</strong><br><small>${b['바코드']}</small>
-        </div>
-      `).join('');
-      results.style.display = 'block';
-    } else {
-      results.style.display = 'none';
-    }
+function populateSelects(){
+  var tOpts=teachers.map(function(t){return '<option value="'+t['교사ID']+'">'+t['이름']+' ('+(t['담당과목']||'-')+')</option>';}).join('');
+  var loanTeacher=document.getElementById('loan-teacher');if(loanTeacher) loanTeacher.innerHTML='<option value="">-- 선택 --</option>'+tOpts;
+  var filterTeacher=document.getElementById('filter-teacher');if(filterTeacher) filterTeacher.innerHTML='<option value="">전체</option>'+tOpts;
+  var filterStudent=document.getElementById('filter-student');if(filterStudent) filterStudent.innerHTML='<option value="">전체</option>'+students.map(function(s){return '<option value="'+s['학생ID']+'">'+s['이름']+'</option>';}).join('');
+  initSalesStudentSearch();
+  populateBookSearchList();
+  var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  ['sales-semester','bulk-semester','unpaid-semester','filter-sem'].forEach(function(id){
+    var el=document.getElementById(id);if(!el) return;
+    el.innerHTML=(id==='unpaid-semester'||id==='filter-sem'?'<option value="">전체 학기</option>':'<option value="">-- 학기 선택 --</option>')+semOpts;
   });
 }
 
-function selectBook(inputId, resultsId, previewId, nameId, name, barcode) {
-  const input = document.getElementById(inputId);
-  input.value = name;
-  input.dataset.barcode = barcode; // 실제 바코드 값 저장
-  document.getElementById(resultsId).style.display = 'none';
-  
-  if (previewId) {
-    document.getElementById(previewId).style.display = 'block';
-    document.getElementById(nameId).textContent = name + " (" + barcode + ")";
+function escapeHtml(str){return String(str||'').replace(/[&<>"']/g,function(s){return({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s]);});}
+
+// 바코드 정규화 - 원본 그대로 유지 (하이픈 등 제거하지 않음)
+function normalizeBarcode(v){
+  return String(v==null?'':v)
+    .normalize('NFKC')
+    .replace(/[\u200B-\u200D\uFEFF]/g,'')
+    .trim();
+}
+
+function getBookNameByBarcode(barcode){
+  var target=normalizeBarcode(barcode);
+  var found=books.find(function(b){return normalizeBarcode(b['바코드'])===target;});
+  return found?String(found['교재명']||'').trim():'';
+}
+function findBookByBarcode(barcode){
+  var target=normalizeBarcode(barcode);
+  return books.find(function(b){return normalizeBarcode(b['바코드'])===target;})||null;
+}
+function findBookByTitle(title){
+  var target=String(title||'').trim().toLowerCase();
+  if(!target) return null;
+  return books.find(function(b){return String(b['교재명']||'').trim().toLowerCase()===target;})||null;
+}
+function resolveBookInputValue(value){
+  var raw=String(value||'').trim();
+  if(!raw) return {barcode:'',book:null};
+  var byBarcode=findBookByBarcode(raw);
+  if(byBarcode) return {barcode:normalizeBarcode(byBarcode['바코드']),book:byBarcode};
+  var byTitle=findBookByTitle(raw);
+  if(byTitle) return {barcode:normalizeBarcode(byTitle['바코드']),book:byTitle};
+  var partial=books.filter(function(b){return String(b['교재명']||'').toLowerCase().indexOf(raw.toLowerCase())>-1;});
+  if(partial.length===1) return {barcode:normalizeBarcode(partial[0]['바코드']),book:partial[0]};
+  return {barcode:normalizeBarcode(raw),book:null};
+}
+function populateBookSearchList(){
+  initBookSearchUI('sales-barcode','sales-book-results','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+  initBookSearchUI('bulk-barcode','bulk-book-results','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+  bindBookSearchResults('sales-barcode','sales-book-results');
+  bindBookSearchResults('bulk-barcode','bulk-book-results');
+}
+function initBookSearchUI(inputId,resultsId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);var results=document.getElementById(resultsId);
+  if(!input||!results||input.dataset.bookBound==='1') return;
+  input.dataset.bookBound='1';
+  input.addEventListener('input',function(){
+    input.dataset.selectedBarcode='';
+    renderBookResults(inputId,resultsId,input.value.trim());
+    updateBookPreview(inputId,wrapId,nameId,barcodeId);
+  });
+  input.addEventListener('focus',function(){
+    renderBookResults(inputId,resultsId,input.value.trim());
+  });
+  input.addEventListener('blur',function(){
+    setTimeout(function(){
+      finalizeBookInput(inputId,wrapId,nameId,barcodeId);
+      if(results) results.style.display='none';
+    },150);
+  });
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){
+      finalizeBookInput(inputId,wrapId,nameId,barcodeId);
+      if(results) results.style.display='none';
+    }
+  });
+}
+function renderBookResults(inputId,resultsId,keyword){
+  var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
+  if(!input||!box) return;
+  var list=(books||[]).filter(function(b){
+    var title=String(b['교재명']||'');
+    var barcode=String(b['바코드']||'');
+    if(!keyword) return true;
+    keyword=keyword.toLowerCase();
+    return title.toLowerCase().includes(keyword)||barcode.toLowerCase().includes(keyword);
+  }).slice(0,30);
+  if(!keyword && document.activeElement!==input){ box.style.display='none'; return; }
+  if(!list.length){
+    box.innerHTML='<div style="padding:9px 10px;font-size:12px;color:#5f6b77">검색 결과가 없습니다.</div>';
+    box.style.display='block';
+    return;
   }
+  box.innerHTML=list.map(function(b){
+    var title=escapeHtml(String(b['교재명']||''));
+    var code=escapeHtml(String(b['바코드']||''));
+    var payload=encodeURIComponent(JSON.stringify({title:String(b['교재명']||''),barcode:String(b['바코드']||'')}));
+    return '<button type="button" data-book="'+payload+'" style="width:100%;text-align:left;padding:9px 10px;border:none;border-bottom:1px solid #c8d0d9;background:#f3f5f8;cursor:pointer">'
+      +'<div style="font-size:13px;font-weight:700;color:#22303d">'+title+'</div>'
+      +'<div class="mono" style="font-size:11px;margin-top:2px;color:#5c6b7a">'+code+'</div></button>';
+  }).join('');
+  box.style.display='block';
 }
 
-async function loadInitialData() {
-  const rBooks = await call('getBooks');
-  const rTeachers = await call('getTeachers');
-  const rSems = await call('getSemesters');
-  
-  books = rBooks.data || [];
-  teachers = rTeachers.data || [];
-  semesters = rSems.data || [];
+function bindBookSearchResults(inputId,resultsId){
+  var box=document.getElementById(resultsId);
+  if(!box||box.dataset.bookSearchSelectBound==='1') return;
+  box.dataset.bookSearchSelectBound='1';
 
-  // 선생님 셀렉트박스 채우기
-  document.getElementById('loan-teacher').innerHTML = '<option value="">-- 선택 --</option>' + 
-    teachers.map(t => `<option value="${t['교사ID']}">${t['이름']}</option>`).join('');
+  function handlePick(e){
+    var btn=e.target.closest && e.target.closest('button[data-book]');
+    if(!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    try{
+      var data=JSON.parse(decodeURIComponent(btn.getAttribute('data-book')||''));
+      selectBookForInput(inputId,resultsId,data.title||'',data.barcode||'');
+      if(document.activeElement && document.activeElement.blur && document.activeElement===document.getElementById(inputId)){
+        document.activeElement.blur();
+      }
+    }catch(err){}
+  }
 
-  // 학기 셀렉트박스
-  const semHtml = semesters.map(s => `<option value="${s}">${s}</option>`).join('');
-  if(document.getElementById('bulk-semester')) document.getElementById('bulk-semester').innerHTML = semHtml;
+  box.addEventListener('pointerdown',handlePick);
+  box.addEventListener('mousedown',handlePick);
+  box.addEventListener('touchstart',handlePick,{passive:false});
+  box.addEventListener('touchend',handlePick,{passive:false});
+  box.addEventListener('click',handlePick);
+}
+function selectBookForInput(inputId,resultsId,title,barcode){
+  var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
+  if(!input) return;
+  input.value=title;
+  input.dataset.selectedBarcode=barcode;
+  if(box) box.style.display='none';
+  if(inputId==='sales-barcode') updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+  if(inputId==='bulk-barcode') updateBookPreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+}
+function finalizeBookInput(inputId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);
+  if(!input) return;
+  var resolved=resolveBookInputValue(input.value||'');
+  if(resolved.book){
+    input.value=String(resolved.book['교재명']||'');
+    input.dataset.selectedBarcode=normalizeBarcode(resolved.book['바코드']);
+  }else if(!input.value.trim()){
+    input.dataset.selectedBarcode='';
+  }
+  updateBookPreview(inputId,wrapId,nameId,barcodeId);
+}
+function updateBookPreview(inputId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);var wrap=document.getElementById(wrapId);var nameEl=document.getElementById(nameId);var codeEl=document.getElementById(barcodeId);
+  if(!input||!wrap||!nameEl||!codeEl) return;
+  var selected=input.dataset.selectedBarcode||'';
+  var found=selected?findBookByBarcode(selected):null;
+  var resolved=found?{barcode:normalizeBarcode(found['바코드']),book:found}:resolveBookInputValue(input.value||'');
+  var barcode=resolved.barcode; found=resolved.book;
+  if(!barcode){wrap.style.display='none';nameEl.textContent='';codeEl.textContent='';return;}
+  wrap.style.display='block';
+  if(found){nameEl.textContent=String(found['교재명']||'');nameEl.style.color='var(--text)';codeEl.textContent=barcode;}
+  else{nameEl.textContent='등록되지 않은 교재';nameEl.style.color='var(--warn)';codeEl.textContent=barcode;}
+}
+function bindBarcodePreview(inputId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);if(!input) return;
+  var handler=function(){updateBookPreview(inputId,wrapId,nameId,barcodeId);};
+  input.addEventListener('input',handler);input.addEventListener('change',handler);input.addEventListener('blur',handler);handler();
+}
+function makeQueueItem(barcode){var title=getBookNameByBarcode(barcode);return {barcode:String(barcode).trim(),title:title||'등록되지 않은 교재'};}
+function renderQueue(containerId,items,kind){
+  var el=document.getElementById(containerId);if(!el) return;
+  if(!items.length){el.innerHTML='<div style="font-size:12px;color:var(--muted)">스캔된 목록이 없습니다.</div>';return;}
+  el.innerHTML='<div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px">총 '+items.length+'권</div>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    items.map(function(item,idx){
+      var title=escapeHtml(item.title);var barcode=escapeHtml(item.barcode);
+      var titleColor=item.title==='등록되지 않은 교재'?'var(--warn)':'var(--text)';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:18px;background:#fff8e8">'+
+        '<div style="min-width:0;flex:1"><div style="font-size:15px;font-weight:700;color:'+titleColor+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+title+'</div>'+
+        '<div class="mono" style="margin-top:2px;font-size:11px">'+barcode+'</div></div>'+
+        '<button class="btn btn-d btn-sm" onclick="'+(kind==='loan'?'removeLoanAt':'removeReturnAt')+'('+idx+')">삭제</button></div>';
+    }).join('')+'</div>';
+}
+function renderLoanQueue(){renderQueue('loan-queue-wrap',loanQueue,'loan');}
+function renderReturnQueue(){renderQueue('return-queue-wrap',returnQueue,'return');}
+function pushUnique(queue,code){
+  code=String(code||'').trim();if(!code) return false;
+  if(queue.some(function(item){return item.barcode===code;})) return false;
+  queue.push(makeQueueItem(code));return true;
+}
+function queueLoanBarcode(){
+  var input=document.getElementById('loan-barcode');var barcode=input.value.trim();
+  if(!barcode) return toast('바코드 또는 교재명을 입력하세요.',false);
+  if(pushUnique(loanQueue,barcode)){input.value='';renderLoanQueue();toast('대여 목록에 추가됨',true);}
+  else{toast('이미 목록에 있는 바코드입니다.',false);}
+}
+function queueReturnBarcode(){
+  var input=document.getElementById('return-barcode');var barcode=input.value.trim();
+  if(!barcode) return toast('바코드 또는 교재명을 입력하세요.',false);
+  if(pushUnique(returnQueue,barcode)){input.value='';renderReturnQueue();toast('반납 목록에 추가됨',true);}
+  else{toast('이미 목록에 있는 바코드입니다.',false);}
+}
+function removeLoanAt(idx){loanQueue.splice(idx,1);renderLoanQueue();}
+function removeReturnAt(idx){returnQueue.splice(idx,1);renderReturnQueue();}
+function clearLoanQueue(){loanQueue=[];renderLoanQueue();}
+function clearReturnQueue(){returnQueue=[];renderReturnQueue();}
 
-  // 검색 초기화
-  initSearch('sales-barcode', 'sales-results', 'sales-book-preview', 'sales-preview-name');
-  initSearch('bulk-barcode', 'bulk-results', '', '');
+async function processLoanQueue(){
+  var teacherId=document.getElementById('loan-teacher').value;
+  var returnDate=document.getElementById('loan-return').value;
+  var semester=document.getElementById('loan-semester').value.trim();
+  if(!loanQueue.length) return toast('대여 목록이 비어 있습니다.',false);
+  if(!teacherId) return toast('선생님을 먼저 선택하세요.',false);
+  var items=loanQueue.slice();var successCount=0;
+  for(var i=0;i<items.length;i++){
+    var barcode=items[i].barcode;
+    try{
+      var res=await call('loanBook',{barcode:barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
+      addLoanLog(barcode,res.msg,res.ok);
+      if(res.ok){successCount++;loanQueue=loanQueue.filter(function(x){return x.barcode!==barcode;});renderLoanQueue();}
+    }catch(e){addLoanLog(barcode,'오류 발생',false);}
+  }
+  if(successCount) loadActiveLoan();
+  toast('대여 처리 완료: '+successCount+' / '+items.length,successCount>0);
+}
+function addLoanLog(barcode,msg,ok){
+  var log=document.getElementById('loan-log');
+  var time=new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  var item=document.createElement('div');
+  item.style.cssText='font-size:12px;padding:5px 8px;border-radius:8px;margin-bottom:4px;display:flex;align-items:center;gap:8px;background:'+(ok?'rgba(19,180,138,.08)':'rgba(216,91,87,.1)');
+  item.innerHTML='<span style="color:'+(ok?'var(--accent2)':'var(--warn)')+';">●</span><span class="mono">'+barcode+'</span><span style="color:'+(ok?'var(--text)':'var(--warn)')+';">'+msg+'</span><span style="margin-left:auto;color:var(--muted);font-size:10px">'+time+'</span>';
+  log.insertBefore(item,log.firstChild);
+  while(log.children.length>20) log.removeChild(log.lastChild);
+}
+document.getElementById('loan-barcode').addEventListener('keydown',function(e){if(e.key==='Enter') queueLoanBarcode();});
+
+async function processReturnQueue(){
+  if(!returnQueue.length) return toast('반납 목록이 비어 있습니다.',false);
+  var items=returnQueue.slice();var successCount=0;
+  for(var i=0;i<items.length;i++){
+    var barcode=items[i].barcode;
+    try{
+      var res=await call('returnBook',{barcode:barcode});
+      if(res.ok){successCount++;returnQueue=returnQueue.filter(function(x){return x.barcode!==barcode;});renderReturnQueue();}
+      toast(barcode+' : '+res.msg,res.ok);
+    }catch(e){toast(barcode+' : 오류 발생',false);}
+  }
+  if(successCount) loadActiveLoan();
+  toast('반납 처리 완료: '+successCount+' / '+items.length,successCount>0);
+}
+document.getElementById('return-barcode').addEventListener('keydown',function(e){if(e.key==='Enter') queueReturnBarcode();});
+
+async function loadActiveLoan(){
+  var el=document.getElementById('loan-list');if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    var res=await call('getLoanHistory',{status:'대여중'});var data=res.data||[];
+    if(!data.length){el.innerHTML='<div class="empty">대여 중인 교재가 없습니다</div>';return;}
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>선생님</th><th>대여일</th><th>반납예정일</th><th>학기</th></tr></thead><tbody>'+
+      data.map(function(r){return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['교사명']+'</td><td class="mono">'+r['대여일']+'</td><td class="mono">'+(r['반납예정일']||'-')+'</td><td>'+(r['학기']||'-')+'</td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 
-async function loadStock() {
-  const res = await call('getStockStatus');
-  const data = res.data || [];
-  const html = `
-    <div class="twrap">
-      <table>
-        <thead><tr><th>교재명</th><th>재고</th><th>대여중</th></tr></thead>
-        <tbody>
-          ${data.map(r => `<tr><td>${r['교재명']}</td><td>${r['현재재고']}</td><td>${r['대여중']}</td></tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
-  document.getElementById('stock-list').innerHTML = html;
+function toggleStudentField(){
+  var show=document.getElementById('sales-type').value==='출고';
+  ['sf-semester','sf-student','sf-pay'].forEach(function(id){var el=document.getElementById(id);if(el) el.style.display=show?'':'none';});
+}
+function initSalesStudentSearch(){
+  var input=document.getElementById('sales-student-search');var hidden=document.getElementById('sales-student');var box=document.getElementById('sales-student-results');
+  if(!input||!hidden||!box) return;
+  renderSalesStudentResults('');
+  input.oninput=function(){renderSalesStudentResults(input.value.trim());};
+  input.onfocus=function(){renderSalesStudentResults(input.value.trim());};
+}
+function renderSalesStudentResults(keyword){
+  var box=document.getElementById('sales-student-results');var hidden=document.getElementById('sales-student');var picked=document.getElementById('sales-student-picked');var pickedName=document.getElementById('sales-student-picked-name');
+  if(!box||!hidden) return;
+  var list=students.filter(function(s){var name=String(s['이름']||'');var id=String(s['학생ID']||'');if(!keyword) return true;keyword=keyword.toLowerCase();return name.toLowerCase().includes(keyword)||id.toLowerCase().includes(keyword);}).slice(0,30);
+  if(hidden.value){var chosen=students.find(function(s){return String(s['학생ID'])===String(hidden.value);});if(chosen&&picked&&pickedName){picked.style.display='flex';pickedName.textContent=chosen['이름']+' ('+chosen['학생ID']+')';}}else if(picked){picked.style.display='none';}
+  if(!list.length){box.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">검색 결과가 없습니다.</div>';box.style.display='block';return;}
+  box.innerHTML=list.map(function(s){var name=String(s['이름']||'');var id=String(s['학생ID']||'');return '<button type="button" onclick="pickSalesStudent(\''+id.replace(/'/g,"\\'")+'\')" style="width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid #ecd89b;background:#fffdf5;cursor:pointer"><div style="font-size:13px;font-weight:700;color:var(--text)">'+name+'</div><div class="mono" style="font-size:11px;margin-top:2px">'+id+'</div></button>';}).join('');
+  box.style.display='block';
+}
+function pickSalesStudent(studentId){
+  var hidden=document.getElementById('sales-student');var input=document.getElementById('sales-student-search');var box=document.getElementById('sales-student-results');var picked=document.getElementById('sales-student-picked');var pickedName=document.getElementById('sales-student-picked-name');
+  var chosen=students.find(function(s){return String(s['학생ID'])===String(studentId);});
+  if(!hidden||!input||!chosen) return;
+  hidden.value=studentId;input.value=chosen['이름'];if(box) box.style.display='none';if(picked&&pickedName){picked.style.display='flex';pickedName.textContent=chosen['이름']+' ('+chosen['학생ID']+')';}
+}
+function clearSalesStudent(){
+  var hidden=document.getElementById('sales-student');var input=document.getElementById('sales-student-search');var picked=document.getElementById('sales-student-picked');
+  if(hidden) hidden.value='';if(input) input.value='';if(picked) picked.style.display='none';renderSalesStudentResults('');
+}
+document.addEventListener('click',function(e){var wrap=document.getElementById('sf-student');var box=document.getElementById('sales-student-results');if(!wrap||!box) return;if(!wrap.contains(e.target)) box.style.display='none';});
+document.addEventListener('click',function(e){['sales','bulk'].forEach(function(prefix){var input=document.getElementById(prefix+'-barcode');var box=document.getElementById(prefix+'-book-results');if(!input||!box) return;var area=input.closest('.card')||input.parentElement; if(!area.contains(e.target)) box.style.display='none';});});
+document.getElementById('sales-barcode').addEventListener('keydown',function(e){if(e.key==='Enter') doSales();});
+
+async function doSales(){
+  if(!dataReady) return toast('데이터를 불러오는 중입니다.',false);
+  var salesInput=document.getElementById('sales-barcode');
+  var barcode=salesInput&&salesInput.dataset.selectedBarcode?normalizeBarcode(salesInput.dataset.selectedBarcode):resolveBookInputValue(salesInput.value).barcode;
+  var type=document.getElementById('sales-type').value;
+  var qty=Number(document.getElementById('sales-qty').value);
+  var price=document.getElementById('sales-price').value;
+  var semester=document.getElementById('sales-semester').value;
+  var studentId=document.getElementById('sales-student').value;
+  var payStatus=document.getElementById('sales-pay').value;
+  var memo=document.getElementById('sales-memo').value.trim();
+  if(!barcode) return toast('바코드를 입력하세요.',false);
+  if(!qty||qty<1) return toast('수량을 입력하세요.',false);
+  try{
+    var res=await call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:studentId,payStatus:payStatus,memo:memo});
+    toast(res.msg,res.ok);
+    if(res.ok){document.getElementById('sales-barcode').value='';updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');document.getElementById('sales-qty').value='1';document.getElementById('sales-price').value='';document.getElementById('sales-memo').value='';loadSalesHistory();}
+  }catch(e){toast('오류 발생',false);}
+}
+async function loadSalesHistory(){
+  var el=document.getElementById('sales-list');if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    var res=await call('getSalesHistory',{});salesCache=(res.data||[]).slice(0,60);
+    if(!salesCache.length){el.innerHTML='<div class="empty">이력이 없습니다</div>';return;}
+    var rows=salesCache.map(function(r,idx){
+      var pb=r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':'');
+      var isCanceled=r['유형']==='입고취소'||r['유형']==='출고취소';
+      var typeColor=r['유형']==='입고'?'b-blue':r['유형']==='출고'?'b-red':'b-yellow';
+      var cancelBtn=isCanceled?'<span style="color:var(--muted);font-size:11px">취소됨</span>':'<button class="btn btn-d btn-sm" data-idx="'+idx+'">취소</button>';
+      return '<tr style="'+(isCanceled?'opacity:.5':'')+'"><td><b>'+r['교재명']+'</b></td><td><span class="badge '+typeColor+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td><td>'+cancelBtn+'</td></tr>';
+    }).join('');
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>유형</th><th>수량</th><th>합계</th><th>학생</th><th>학기</th><th>반</th><th>입금</th><th>날짜</th><th>취소</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
+    var table=el.querySelector('table');
+    if(table){table.addEventListener('click',function(ev){var btn=ev.target.closest('button[data-idx]');if(!btn) return;var r=salesCache[Number(btn.getAttribute('data-idx'))];if(r) cancelSales(String(r['ID']),r['유형'],r['교재명'],r['수량']);});}
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+async function cancelSales(saleId,type,bookName,qty){
+  if(!confirm('['+bookName+'] '+type+' '+qty+'권을 취소할까요?')) return;
+  try{var res=await call('cancelSales',{saleId:saleId});toast(res.msg,res.ok);if(res.ok) loadSalesHistory();}catch(e){toast('오류 발생',false);}
 }
 
-async function doSales() {
-  const barcode = document.getElementById('sales-barcode').dataset.barcode;
-  const qty = document.getElementById('sales-qty').value;
-  const type = document.getElementById('sales-type').value;
-  const student = document.getElementById('sales-student-name').value;
-
-  if(!barcode) { toast('교재를 선택해주세요', false); return; }
-  
-  const res = await call('addSales', { barcode, qty, type, studentId: student, payStatus: '완납' });
-  toast(res.msg, res.ok);
+async function initBulkPage(){
+  var r=await call('getSemesters');semesters=r.data||[];
+  var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  document.getElementById('bulk-semester').innerHTML='<option value="">-- 학기 선택 --</option>'+semOpts;
+  document.getElementById('bulk-class').innerHTML='<option value="">-- 반 선택 --</option>';
+  document.getElementById('bulk-preview').textContent='학기와 반을 선택하면 인원이 표시됩니다.';
+  document.getElementById('bulk-student-list').innerHTML='';bulkAssigns=[];
+}
+async function updateBulkClasses(){
+  var sem=document.getElementById('bulk-semester').value;
+  document.getElementById('bulk-class').innerHTML='<option value="">-- 반 선택 --</option>';
+  document.getElementById('bulk-preview').textContent='반을 선택하면 인원이 표시됩니다.';
+  document.getElementById('bulk-student-list').innerHTML='';
+  if(!sem) return;
+  var r=await call('getClassesBySemester',{semester:sem});
+  document.getElementById('bulk-class').innerHTML='<option value="">-- 반 선택 --</option>'+(r.data||[]).map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  setClassOptions('bulk');syncClassSearchFromSelect('bulk');bulkAssigns=[];
+}
+async function updateBulkPreview(){
+  var sem=document.getElementById('bulk-semester').value;
+  var cls=document.getElementById('bulk-class').value;
+  var el=document.getElementById('bulk-preview');
+  if(!sem) return toast('학기를 선택하세요.',false);
+  if(!cls) return toast('반을 선택하세요.',false);
+  el.textContent='조회 중...';
+  var r=await call('getStudentsBySemesterClass',{semester:sem,classNum:cls});
+  bulkAssigns=r.data||[];
+  el.innerHTML='<span style="color:var(--accent2);font-weight:700">'+cls+' '+bulkAssigns.length+'명</span>에게 출고됩니다.';
+  document.getElementById('bulk-student-list').innerHTML=bulkAssigns.length?'<div class="twrap"><table><thead><tr><th>이름</th><th>학년</th><th>반</th></tr></thead><tbody>'+bulkAssigns.map(function(a){return '<tr><td><b>'+a['이름']+'</b></td><td>'+(a['학년']||'-')+'</td><td>'+a['반']+'</td></tr>';}).join('')+'</tbody></table></div>':'';
+}
+async function doBulk(){
+  if(!dataReady) return toast('데이터를 불러오는 중입니다.',false);
+  if(!bulkAssigns.length) return toast('학생 조회를 먼저 눌러주세요.',false);
+  var resolvedBulkBook=resolveBookInputValue(document.getElementById('bulk-barcode').value);
+  var barcode=resolvedBulkBook.barcode;
+  var semester=document.getElementById('bulk-semester').value;
+  var classNum=document.getElementById('bulk-class').value;
+  var price=document.getElementById('bulk-price').value;
+  var memo=document.getElementById('bulk-memo').value.trim();
+  if(!barcode) return toast('바코드를 입력하세요.',false);
+  if(!semester) return toast('학기를 선택하세요.',false);
+  if(!classNum) return toast('반을 선택하세요.',false);
+  if(!confirm('['+semester+'] ['+classNum+'] ('+bulkAssigns.length+'명) 전원 출고합니다. 계속할까요?')) return;
+  try{var res=await call('bulkSales',{barcode:barcode,semester:semester,classNum:classNum,price:price?Number(price):null,memo:memo});toast(res.msg,res.ok);}
+  catch(e){toast('오류 발생',false);}
 }
 
-// 초기화 실행
-window.onload = loadInitialData;
+async function initUnpaidPage(){
+  var r=await call('getSemesters');semesters=r.data||[];
+  var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+  document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
+  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';loadUnpaid();
+}
+async function updateUnpaidClasses(){
+  var sem=document.getElementById('unpaid-semester').value;
+  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
+  if(!sem) return;
+  var r=await call('getClassesBySemester',{semester:sem});
+  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>'+(r.data||[]).map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
+  setClassOptions('unpaid');syncClassSearchFromSelect('unpaid');
+}
+async function loadUnpaid(){
+  var el=document.getElementById('unpaid-list');
+  var sem=document.getElementById('unpaid-semester').value;
+  var cls=document.getElementById('unpaid-class').value;
+  el.innerHTML='<div class="loading"><div class="spinner"></div><br>불러오는 중...</div>';
+  try{
+    var res=await call('getUnpaid',{semester:sem||undefined,classNum:cls||undefined});var data=res.data||[];
+    var total=data.reduce(function(s,r){return s+Number(r['합계']);},0);
+    document.getElementById('unpaid-title').textContent='미납 목록 ('+data.length+'건)';
+    document.getElementById('unpaid-total').textContent=data.length?'합계 '+total.toLocaleString()+'원':'';
+    if(!data.length){el.innerHTML='<div class="empty">미납이 없습니다</div>';return;}
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>날짜</th><th>메모</th><th>처리</th></tr></thead><tbody>'+
+      data.map(function(r){return '<tr><td><b>'+(r['학생명']||'-')+'</b></td><td><span class="badge b-blue">'+(r['학기']||'-')+'</span></td><td>'+(r['반']||'-')+'</td><td>'+r['교재명']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td class="mono">'+r['날짜']+'</td><td style="color:var(--muted);font-size:12px">'+(r['메모']||'')+'</td><td><button class="btn btn-s btn-sm" onclick="markPaid(\''+r['ID']+'\')">완납</button></td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+async function markPaid(saleId){
+  try{var res=await call('markPaid',{saleId:saleId});toast(res.msg,res.ok);if(res.ok) loadUnpaid();}catch(e){toast('오류 발생',false);}
+}
+
+async function loadStock(){
+  var el=document.getElementById('stock-list');var stat=document.getElementById('stock-stats');
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    var res=await call('getStockStatus',{});var data=res.data||[];
+    stat.innerHTML='<div class="scard"><div class="sl">등록 교재</div><div class="sn" style="color:var(--accent)">'+data.length+'</div><div class="ss">종</div></div>'+
+      '<div class="scard"><div class="sl">판매 가능 재고</div><div class="sn" style="color:var(--accent2)">'+data.reduce(function(s,r){return s+Number(r['현재재고']);},0)+'</div><div class="ss">권</div></div>'+
+      '<div class="scard"><div class="sl">교사 대여 중</div><div class="sn" style="color:#9e7400">'+data.reduce(function(s,r){return s+Number(r['대여중']);},0)+'</div><div class="ss">권</div></div>'+
+      '<div class="scard"><div class="sl">재고 부족 (2권↓)</div><div class="sn" style="color:var(--warn)">'+data.filter(function(r){return Number(r['현재재고'])<=2;}).length+'</div><div class="ss">종</div></div>';
+    if(!data.length){el.innerHTML='<div class="empty">재고 데이터가 없습니다</div>';return;}
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>총입고</th><th>총출고</th><th>대여중</th><th>현재재고</th><th>최근업데이트</th></tr></thead><tbody>'+
+      data.map(function(r){var stock=Number(r['현재재고']);var badge=stock<=0?'b-red':stock<=2?'b-yellow':'b-green';return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['총입고']+'</td><td>'+r['총출고']+'</td><td><span class="badge b-yellow">'+r['대여중']+'</span></td><td><span class="badge '+badge+'">'+stock+'권</span></td><td class="mono" style="font-size:11px">'+r['최근업데이트']+'</td></tr>';}).join('')+
+      '</tbody></table></div>';
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+
+function renderHistoryFilter(){
+  var type=document.getElementById('history-type').value;
+  ['ft-teacher','ft-status'].forEach(function(id){document.getElementById(id).style.display=type==='loan'?'':'none';});
+  ['ft-stype','ft-sem','ft-student'].forEach(function(id){document.getElementById(id).style.display=type==='sales'?'':'none';});
+}
+async function loadHistory(){
+  var el=document.getElementById('history-list');var type=document.getElementById('history-type').value;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    var res,data;
+    if(type==='loan'){
+      res=await call('getLoanHistory',{teacherId:document.getElementById('filter-teacher').value||undefined,status:document.getElementById('filter-status').value||undefined});data=res.data||[];
+      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>선생님</th><th>대여일</th><th>반납예정</th><th>반납일</th><th>학기</th><th>상태</th></tr></thead><tbody>'+
+        data.map(function(r){return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['교사명']+'</td><td class="mono">'+r['대여일']+'</td><td class="mono">'+(r['반납예정일']||'-')+'</td><td class="mono">'+(r['반납일']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td><span class="badge '+(r['상태']==='대여중'?'b-yellow':'b-green')+'">'+r['상태']+'</span></td></tr>';}).join('')+
+        '</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
+    }else{
+      res=await call('getSalesHistory',{type:document.getElementById('filter-stype').value||undefined,semester:document.getElementById('filter-sem').value||undefined,studentId:document.getElementById('filter-student').value||undefined});data=res.data||[];
+      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>교재명</th><th>유형</th><th>수량</th><th>합계</th><th>학생</th><th>학기</th><th>반</th><th>입금</th><th>날짜</th></tr></thead><tbody>'+
+        data.map(function(r){var pb=r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':'');return '<tr><td><b>'+r['교재명']+'</b></td><td><span class="badge '+(r['유형']==='입고'?'b-blue':'b-red')+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td></tr>';}).join('')+
+        '</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
+    }
+  }catch(e){el.innerHTML='<div class="empty">조회 실패</div>';}
+}
+
+async function doAddBook(){
+  var barcode=normalizeBarcode(document.getElementById('book-barcode').value);
+  var name=document.getElementById('book-name').value.trim();
+  if(!barcode||!name) return toast('바코드와 교재명은 필수입니다.',false);
+  try{
+    var res=await call('addBook',{barcode:barcode,name:name,subject:document.getElementById('book-subject').value.trim(),publisher:document.getElementById('book-publisher').value.trim(),price:document.getElementById('book-price').value,note:document.getElementById('book-note').value.trim()});
+    toast(res.msg,res.ok);
+    if(res.ok){['book-barcode','book-name','book-subject','book-publisher','book-price','book-note'].forEach(function(id){document.getElementById(id).value='';});var bb=await call('getBooks');books=bb.data||[];initBarcodePage();}
+  }catch(e){toast('오류 발생',false);}
+}
+async function doAddTeacher(){
+  var id=document.getElementById('teacher-id').value.trim();var name=document.getElementById('teacher-name').value.trim();
+  if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
+  try{
+    var res=await call('addTeacher',{id:id,name:name,subject:document.getElementById('teacher-subject').value.trim(),contact:document.getElementById('teacher-contact').value.trim()});
+    toast(res.msg,res.ok);
+    if(res.ok){['teacher-id','teacher-name','teacher-subject','teacher-contact'].forEach(function(i){document.getElementById(i).value='';});var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();}
+  }catch(e){toast('오류 발생',false);}
+}
+async function doAddStudent(){
+  var id=document.getElementById('student-id').value.trim();var name=document.getElementById('student-name').value.trim();
+  if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
+  try{
+    var res=await call('addStudent',{id:id,name:name,contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim()});
+    toast(res.msg,res.ok);
+    if(res.ok){['student-id','student-name','student-contact','student-note'].forEach(function(i){document.getElementById(i).value='';});var sb=await call('getStudents');students=sb.data||[];populateSelects();loadStudentList();}
+  }catch(e){toast('오류 발생',false);}
+}
+async function loadStudentList(){
+  var el=document.getElementById('student-list');var cnt=document.getElementById('student-count');if(cnt) cnt.textContent=students.length;
+  if(!students.length){el.innerHTML='<div class="empty" style="padding:20px">등록된 학생이 없습니다.</div>';return;}
+  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
+    students.map(function(s){return '<tr><td class="mono">'+s['학생ID']+'</td><td><b>'+s['이름']+'</b></td><td class="mono">'+(s['학부모연락처']||'-')+'</td><td style="color:var(--muted);font-size:12px">'+(s['비고']||'')+'</td></tr>';}).join('')+
+    '</tbody></table></div>';
+}
+async function doInit(){
+  if(!confirm('구글 스프레드시트에 시트를 생성합니다. 계속할까요?')) return;
+  try{var res=await call('initSheets',{});toast(res.msg,res.ok);if(res.ok) setTimeout(init,500);}catch(e){toast('초기화 실패',false);}
+}
+async function searchBookByISBN(){
+  var isbn=document.getElementById('book-barcode').value.trim();if(!isbn) return;
+  var statusEl=document.getElementById('isbn-status');statusEl.style.color='var(--muted)';statusEl.textContent='조회 중...';
+  try{
+    var res=await call('searchBook',{isbn:isbn});
+    if(res.ok&&res.data){if(res.data.title&&!document.getElementById('book-name').value) document.getElementById('book-name').value=res.data.title;if(res.data.publisher&&!document.getElementById('book-publisher').value) document.getElementById('book-publisher').value=res.data.publisher;statusEl.style.color='var(--accent2)';statusEl.textContent='자동완성됨';}
+    else{statusEl.style.color='var(--muted)';statusEl.textContent='검색 결과 없음';}
+  }catch(e){statusEl.style.color='var(--muted)';statusEl.textContent='직접 입력해주세요';}
+}
+
+function switchStudentTab(tab){
+  document.querySelectorAll('.stab').forEach(function(t,i){var active=i===(tab==='manual'?0:1);t.classList.toggle('active',active);t.style.borderBottomColor=active?'var(--accent)':'transparent';t.style.color=active?'var(--accent)':'var(--muted)';});
+  document.getElementById('stab-manual').style.display=tab==='manual'?'':'none';
+  document.getElementById('stab-upload').style.display=tab==='upload'?'':'none';
+}
+(function(){
+  var dz=document.getElementById('drop-zone');
+  dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--accent)';});
+  dz.addEventListener('dragleave',function(){dz.style.borderColor='var(--border-soft)';});
+  dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='var(--border-soft)';var f=e.dataTransfer.files[0];if(f) handleFileUpload(f);});
+})();
+function handleFileUpload(file){if(!file) return;var ext=file.name.split('.').pop().toLowerCase();if(ext==='csv') readCSV(file);else if(ext==='xlsx'||ext==='xls') readXLSX(file);else toast('.xlsx, .xls, .csv 파일만 지원합니다.',false);}
+function readCSV(file){var reader=new FileReader();reader.onload=function(e){var text=e.target.result;if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});uploadedRows=lines.map(function(l){var result=[],cur='',inQ=false;for(var i=0;i<l.length;i++){if(l[i]==='"') inQ=!inQ;else if(l[i]===','&&!inQ){result.push(cur.trim());cur='';}else cur+=l[i];}result.push(cur.trim());return result;});onFileLoaded(file.name);};reader.readAsText(file,'UTF-8');}
+function readXLSX(file){if(window.XLSX){_parseXLSX(file);return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=function(){_parseXLSX(file);};s.onerror=function(){toast('XLSX 파서 로드 실패.',false);};document.head.appendChild(s);}
+function _parseXLSX(file){var reader=new FileReader();reader.onload=function(e){var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];uploadedRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(function(r){return r.some(function(c){return String(c).trim();});});onFileLoaded(file.name);};reader.readAsArrayBuffer(file);}
+function onFileLoaded(filename){
+  if(!uploadedRows.length){toast('파일이 비어있습니다.',false);return;}
+  fileHeaders=uploadedRows[0].map(function(h){return String(h).trim();});
+  document.getElementById('drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-size:14px;font-weight:700">'+filename+'</div><div style="font-size:12px;color:var(--muted);margin-top:4px">'+(uploadedRows.length-1)+'행 로드됨 · 클릭하여 파일 변경</div><input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this.files[0])">';
+  var opts='<option value="">-- 선택 --</option>'+fileHeaders.map(function(h,i){return '<option value="'+i+'">'+h+'</option>';}).join('');
+  var optsOpt='<option value="">사용 안 함</option>'+fileHeaders.map(function(h,i){return '<option value="'+i+'">'+h+'</option>';}).join('');
+  ['map-id','map-name'].forEach(function(id){document.getElementById(id).innerHTML=opts;});
+  ['map-grade','map-class','map-contact','map-note'].forEach(function(id){document.getElementById(id).innerHTML=optsOpt;});
+  loadMappingPreset();document.getElementById('mapping-section').style.display='';document.getElementById('preview-section').style.display='none';
+}
+function loadMappingPreset(){try{var saved=localStorage.getItem(MAPPING_KEY);if(!saved) return;var preset=JSON.parse(saved),applied=0;MAP_FIELDS.forEach(function(fid){var el=document.getElementById(fid);if(!el||preset[fid]===undefined) return;var savedHeader=preset[fid+'_header'];if(savedHeader){var idx=fileHeaders.indexOf(savedHeader);if(idx>=0){el.value=String(idx);applied++;return;}}el.value=String(preset[fid]);applied++;});if(applied>0) document.getElementById('mapping-preset-info').textContent='저장된 매핑이 자동 적용됐어요.';if(preset['semester']) document.getElementById('upload-semester').value=preset['semester'];}catch(e){}}
+function saveMappingPreset(){var preset={};MAP_FIELDS.forEach(function(fid){var el=document.getElementById(fid);preset[fid]=el.value;if(el.value!=='') preset[fid+'_header']=fileHeaders[Number(el.value)]||'';});preset['semester']=document.getElementById('upload-semester').value;localStorage.setItem(MAPPING_KEY,JSON.stringify(preset));document.getElementById('mapping-preset-info').textContent='매핑이 저장됐습니다.';toast('매핑 저장 완료',true);}
+function getColVal(row,selectId){var el=document.getElementById(selectId);if(!el||el.value==='') return '';return String(row[Number(el.value)]||'').trim();}
+function doPreview(){
+  var idIdx=document.getElementById('map-id').value;var nameIdx=document.getElementById('map-name').value;
+  if(idIdx===''||nameIdx===''){toast('학생 ID와 이름 컬럼은 필수입니다.',false);return;}
+  previewData=[];
+  for(var i=1;i<uploadedRows.length;i++){var row=uploadedRows[i];var id=String(row[Number(idIdx)]||'').trim();var nm=String(row[Number(nameIdx)]||'').trim();if(!id||!nm) continue;previewData.push({id:id,name:nm,grade:getColVal(row,'map-grade'),classNum:getColVal(row,'map-class'),contact:getColVal(row,'map-contact'),note:getColVal(row,'map-note')});}
+  if(!previewData.length){toast('유효한 데이터가 없습니다.',false);return;}
+  var showClass=document.getElementById('map-class').value!=='';
+  document.getElementById('preview-count').textContent=previewData.length+'명';
+  document.getElementById('preview-table').innerHTML='<div class="twrap"><table><thead><tr><th>학생ID</th><th>이름</th>'+(showClass?'<th>학년</th><th>반</th>':'')+'<th>연락처</th><th>비고</th></tr></thead><tbody>'+
+    previewData.slice(0,30).map(function(r){return '<tr><td class="mono">'+r.id+'</td><td><b>'+r.name+'</b></td>'+(showClass?'<td>'+r.grade+'</td><td>'+r.classNum+'</td>':'')+'<td class="mono">'+r.contact+'</td><td style="color:var(--muted);font-size:12px">'+r.note+'</td></tr>';}).join('')+
+    (previewData.length>30?'<tr><td colspan="'+(showClass?6:4)+'" style="color:var(--muted);text-align:center;font-size:12px">... 외 '+(previewData.length-30)+'명</td></tr>':'')+
+    '</tbody></table></div>';
+  document.getElementById('preview-section').style.display='';document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
+}
+async function doUpload(){
+  if(!previewData.length){toast('미리보기를 먼저 확인하세요.',false);return;}
+  var semester=document.getElementById('upload-semester').value.trim();
+  if(!semester){toast('학기를 입력해야 업로드할 수 있어요.',false);return;}
+  var rows=previewData.map(function(r){return {id:r.id,name:r.name,contact:r.contact,grade:r.grade,classNum:r.classNum,note:r.note};});
+  try{
+    var res=await call('bulkAddStudents',{rows:rows,semester:semester});toast(res.msg,res.ok);
+    if(res.ok){var sb=await call('getStudents');students=sb.data||[];var semR=await call('getSemesters');semesters=semR.data||[];populateSelects();loadStudentList();document.getElementById('preview-section').style.display='none';previewData=[];}
+  }catch(e){toast('업로드 실패',false);}
+}
+
+function initBarcodePage(){var sel=document.getElementById('bc-teacher-book');if(!sel) return;sel.innerHTML='<option value="">-- 교재 선택 --</option>'+books.map(function(b){return '<option value="'+b['바코드']+'" data-name="'+String(b['교재명']).replace(/"/g,'&quot;')+'">'+b['교재명']+'</option>';}).join('');}
+function generateBarcodes(mode){
+  var newBarcodes=[];
+  if(mode==='custom'){var prefix=document.getElementById('bc-prefix').value.trim().toUpperCase();var name=document.getElementById('bc-bookname').value.trim();var start=parseInt(document.getElementById('bc-start').value)||1;if(!prefix) return toast('코드 prefix를 입력하세요.',false);if(!name) return toast('교재명을 입력하세요.',false);newBarcodes.push({code:prefix+'-'+String(start).padStart(3,'0'),label:name,selected:true});document.getElementById('bc-start').value=start+1;document.getElementById('bc-bookname').value='';document.getElementById('bc-bookname').focus();}
+  else if(mode==='teacher'){var sel=document.getElementById('bc-teacher-book');var opt=sel.options[sel.selectedIndex];var isbn=sel.value;var bname=opt?opt.getAttribute('data-name'):'';var count=Math.min(parseInt(document.getElementById('bc-teacher-count').value)||1,50);var start=parseInt(document.getElementById('bc-teacher-start').value)||1;if(!isbn) return toast('교재를 선택하세요.',false);for(var i=0;i<count;i++){var num=String(start+i).padStart(2,'0');newBarcodes.push({code:'T-'+isbn.slice(-6)+'-'+num,label:'[교사용] '+bname+' '+num+'번',selected:true});}}
+  generatedBarcodes=generatedBarcodes.concat(newBarcodes);renderBarcodeGrid();
+}
+function renderBarcodeGrid(){
+  var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
+  if(!generatedBarcodes.length){result.style.display='none';return;}
+  result.style.display='';document.getElementById('barcode-count').textContent=generatedBarcodes.length+'개';
+  grid.innerHTML=generatedBarcodes.map(function(b,idx){return '<div style="background:linear-gradient(180deg,var(--surface),var(--card));border:2px solid '+(b.selected?'var(--accent)':'var(--border-soft)')+';border-radius:12px;padding:14px;cursor:pointer;text-align:center;box-shadow:var(--shadow)" onclick="toggleBarcode('+idx+')"><svg id="bc-svg-'+idx+'"></svg><div style="font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all">'+b.label+'</div><div style="font-size:10px;color:var(--accent);font-family:monospace;margin-top:2px">'+b.code+'</div><div style="font-size:10px;margin-top:6px;color:'+(b.selected?'var(--accent2)':'var(--muted)')+'">'+(b.selected?'선택됨':'클릭하여 선택')+'</div></div>';}).join('');
+  generatedBarcodes.forEach(function(b,idx){try{JsBarcode('#bc-svg-'+idx,b.code,{format:'CODE128',width:2,height:50,displayValue:true,fontSize:12,margin:4,background:'transparent',lineColor:'#2d2415'});}catch(e){}});
+}
+function toggleBarcode(idx){generatedBarcodes[idx].selected=!generatedBarcodes[idx].selected;renderBarcodeGrid();}
+function clearBarcodes(){if(!confirm('생성된 바코드를 모두 지울까요?')) return;generatedBarcodes=[];renderBarcodeGrid();}
+function printBarcodes(){
+  var selected=generatedBarcodes.filter(function(b){return b.selected;});if(!selected.length) return toast('출력할 바코드를 선택하세요.',false);
+  var labelHTML=selected.map(function(b){return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';}).join('');
+  var win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력</title><style>body{margin:0;padding:10mm;font-family:sans-serif}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}.label{border:0.5px solid #ccc;border-radius:3mm;padding:3mm 4mm;text-align:center;height:29mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center}.lname{font-size:7pt;color:#333;margin-bottom:2mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.lsvg{max-width:100%;height:16mm}.lcode{font-size:7pt;color:#666;font-family:monospace;margin-top:1mm}@media print{body{padding:5mm}@page{margin:5mm}}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head><body><div class="grid">'+labelHTML+'</div><script>window.onload=function(){'+
+    selected.map(function(b){var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.5,height:40,displayValue:false,margin:2,background:"transparent"});}catch(e){}';}).join('')+
+    'setTimeout(function(){window.print();},800);};<\/script></body></html>');
+  win.document.close();
+}
+
+// 카메라 (BarcodeDetector API)
+var _camTarget=null,_camAutoAction=false,_camBusy=false,_camStream=null,_camFrame=null,_detector=null;
+var _scanCanvas=document.createElement('canvas');
+var _scanCtx=_scanCanvas.getContext('2d',{willReadFrequently:true});
+var _lastDetectedCode='',_lastDetectedAt=0;
+
+function supportsBarcodeDetector(){return 'BarcodeDetector' in window;}
+async function buildDetector(){
+  if(!supportsBarcodeDetector()) return null;
+  var preferred=['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
+  try{if(typeof BarcodeDetector.getSupportedFormats==='function'){var supported=await BarcodeDetector.getSupportedFormats();var formats=preferred.filter(function(f){return supported.includes(f);});if(!formats.length) formats=preferred;return new BarcodeDetector({formats:formats});}}catch(e){}
+  return new BarcodeDetector({formats:preferred});
+}
+async function openCam(inputId,autoAction){
+  if(!dataReady){toast('데이터를 불러오는 중입니다. 잠시만 기다려주세요.',false);return;}
+  _camTarget=inputId;_camAutoAction=!!autoAction;_camBusy=false;_lastDetectedCode='';_lastDetectedAt=0;
+  var modal=document.getElementById('cam-modal');var video=document.getElementById('cam-video');var status=document.getElementById('cam-status-text');
+  modal.classList.add('open');
+  if(!supportsBarcodeDetector()){status.textContent='이 브라우저는 바코드 감지를 지원하지 않습니다. 안드로이드 크롬으로 열어주세요.';return;}
+  status.textContent='카메라 시작 중...';
+  try{
+    _detector=await buildDetector();
+    _camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
+    video.srcObject=_camStream;await video.play();
+    status.textContent='바코드를 네모 안에 크게 맞춰주세요';
+    _camFrame=requestAnimationFrame(scanLoop);
+  }catch(e){status.textContent='카메라 실행 실패: '+(e&&e.message?e.message:e);}
+}
+async function scanLoop(){
+  var video=document.getElementById('cam-video');
+  if(_camBusy) return;
+  if(!_detector||!_camStream||!video||video.readyState<2||!video.videoWidth){_camFrame=requestAnimationFrame(scanLoop);return;}
+  try{
+    var vw=video.videoWidth,vh=video.videoHeight;
+    var cropW=Math.floor(vw*0.68),cropH=Math.floor(vh*0.16);
+    var sx=Math.floor((vw-cropW)/2),sy=Math.floor((vh-cropH)/2);
+    _scanCanvas.width=cropW*2;_scanCanvas.height=cropH*2;
+    _scanCtx.drawImage(video,sx,sy,cropW,cropH,0,0,_scanCanvas.width,_scanCanvas.height);
+    var barcodes=await _detector.detect(_scanCanvas);
+    if(barcodes&&barcodes.length){
+      var raw=(barcodes[0].rawValue||'').trim();var now=Date.now();
+      if(raw&&(raw!==_lastDetectedCode||now-_lastDetectedAt>1500)){_lastDetectedCode=raw;_lastDetectedAt=now;handleDetectedCode(raw);return;}
+    }
+  }catch(e){}
+  _camFrame=requestAnimationFrame(scanLoop);
+}
+function handleDetectedCode(code){
+  _camBusy=true;if(navigator.vibrate) navigator.vibrate(120);
+  var input=document.getElementById(_camTarget);if(input) input.value=code;
+  document.getElementById('cam-status-text').textContent='인식됨: '+code;
+  setTimeout(function(){
+    closeCam();
+    if(_camAutoAction){if(_camTarget==='loan-barcode') queueLoanBarcode();if(_camTarget==='return-barcode') queueReturnBarcode();}
+  },220);
+}
+function closeCam(){
+  _camBusy=false;
+  if(_camFrame){cancelAnimationFrame(_camFrame);_camFrame=null;}
+  var video=document.getElementById('cam-video');
+  if(video){try{video.pause();}catch(e){}video.srcObject=null;}
+  if(_camStream){try{_camStream.getTracks().forEach(function(t){t.stop();});}catch(e){}_camStream=null;}
+  _detector=null;
+  document.getElementById('cam-modal').classList.remove('open');
+  document.getElementById('cam-status-text').textContent='카메라 시작 중...';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape') closeCam();});
+
+window.addEventListener('load',init);
 </script>
 </body>
 </html>
