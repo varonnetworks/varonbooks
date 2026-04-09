@@ -1528,7 +1528,18 @@ async function scanLoop(){
 }
 function handleDetectedCode(code){
   _camBusy=true;if(navigator.vibrate) navigator.vibrate(120);
-  var input=document.getElementById(_camTarget);if(input) input.value=code;
+  var input=document.getElementById(_camTarget);
+  if(input){
+    input.value=code;
+    input.dataset.selectedBarcode='';
+    // 교재 입력칸이면 바코드→교재명 변환 + 프리뷰
+    if(_camTarget==='sales-barcode'){
+      finalizeBookInput('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    }
+    if(_camTarget==='bulk-barcode'){
+      finalizeBookInput('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+    }
+  }
   document.getElementById('cam-status-text').textContent='인식됨: '+code;
   setTimeout(function(){
     closeCam();
