@@ -161,7 +161,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver15</span>
+    <span>정상어학원 교재 관리 ver16</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -226,10 +226,11 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="card">
     <div class="retro-strip"></div>
     <div class="card-title">판매 입출고 처리</div>
-    <div class="scan-row">
-      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" list="book-search-list" id="sales-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
+    <div class="scan-row" style="position:relative">
+      <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="sales-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
       <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
     </div>
+    <div id="sales-book-results" style="display:none;position:relative;z-index:40;background:#f3f5f8;border:1px solid #9aa8ba;border-radius:4px;box-shadow:none;max-height:220px;overflow-y:auto;margin:-4px 0 12px"></div>
     <div id="sales-book-preview" style="display:none;margin:0 0 12px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
       <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
       <div id="sales-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
@@ -277,9 +278,10 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="bulk-panel-title">교재 선택</div>
         <label class="fl">교재 바코드 / 교재명</label>
         <div class="bulk-book-row">
-          <div class="sinput-wrap bulk-book-input"><span class="sicon">📷</span><input class="sinput" list="book-search-list" id="bulk-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
+          <div class="sinput-wrap bulk-book-input"><span class="sicon">📷</span><input class="sinput" id="bulk-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off"></div>
           <button class="btn btn-cam bulk-cam-btn" onclick="openCam('bulk-barcode', false)">카메라</button>
         </div>
+        <div id="bulk-book-results" style="display:none;background:#f3f5f8;border:1px solid #9aa8ba;border-radius:4px;box-shadow:none;max-height:220px;overflow-y:auto;margin-top:6px"></div>
         <div id="bulk-book-preview" style="display:none;margin-top:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
           <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
           <div id="bulk-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
@@ -698,18 +700,89 @@ function resolveBookInputValue(value){
   return {barcode:normalizeBarcode(raw),book:null};
 }
 function populateBookSearchList(){
-  var list=document.getElementById('book-search-list');
-  if(!list) return;
-  list.innerHTML=(books||[]).map(function(b){
+  initBookSearchUI('sales-barcode','sales-book-results','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+  initBookSearchUI('bulk-barcode','bulk-book-results','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+}
+function initBookSearchUI(inputId,resultsId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);var results=document.getElementById(resultsId);
+  if(!input||!results||input.dataset.bookBound==='1') return;
+  input.dataset.bookBound='1';
+  input.addEventListener('input',function(){
+    input.dataset.selectedBarcode='';
+    renderBookResults(inputId,resultsId,input.value.trim());
+    updateBookPreview(inputId,wrapId,nameId,barcodeId);
+  });
+  input.addEventListener('focus',function(){
+    renderBookResults(inputId,resultsId,input.value.trim());
+  });
+  input.addEventListener('blur',function(){
+    setTimeout(function(){
+      finalizeBookInput(inputId,wrapId,nameId,barcodeId);
+      if(results) results.style.display='none';
+    },150);
+  });
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){
+      finalizeBookInput(inputId,wrapId,nameId,barcodeId);
+      if(results) results.style.display='none';
+    }
+  });
+}
+function renderBookResults(inputId,resultsId,keyword){
+  var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
+  if(!input||!box) return;
+  var list=(books||[]).filter(function(b){
+    var title=String(b['교재명']||'');
+    var barcode=String(b['바코드']||'');
+    if(!keyword) return true;
+    keyword=keyword.toLowerCase();
+    return title.toLowerCase().includes(keyword)||barcode.toLowerCase().includes(keyword);
+  }).slice(0,30);
+  if(!keyword && document.activeElement!==input){ box.style.display='none'; return; }
+  if(!list.length){
+    box.innerHTML='<div style="padding:9px 10px;font-size:12px;color:#5f6b77">검색 결과가 없습니다.</div>';
+    box.style.display='block';
+    return;
+  }
+  box.innerHTML=list.map(function(b){
     var title=escapeHtml(String(b['교재명']||''));
-    return '<option value="'+title+'"></option>';
+    var code=escapeHtml(String(b['바코드']||''));
+    var jsTitle=String(b['교재명']||'').replace(/\/g,'\\').replace(/'/g,"\'");
+    var jsCode=String(b['바코드']||'').replace(/\/g,'\\').replace(/'/g,"\'");
+    return '<button type="button" onclick="selectBookForInput(''+inputId+'',''+resultsId+'',''+jsTitle+'',''+jsCode+'')" style="width:100%;text-align:left;padding:9px 10px;border:none;border-bottom:1px solid #c8d0d9;background:#f3f5f8;cursor:pointer">'
+      +'<div style="font-size:13px;font-weight:700;color:#22303d">'+title+'</div>'
+      +'<div class="mono" style="font-size:11px;margin-top:2px;color:#5c6b7a">'+code+'</div></button>';
   }).join('');
+  box.style.display='block';
+}
+function selectBookForInput(inputId,resultsId,title,barcode){
+  var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
+  if(!input) return;
+  input.value=title;
+  input.dataset.selectedBarcode=barcode;
+  if(box) box.style.display='none';
+  if(inputId==='sales-barcode') updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+  if(inputId==='bulk-barcode') updateBookPreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
+}
+function finalizeBookInput(inputId,wrapId,nameId,barcodeId){
+  var input=document.getElementById(inputId);
+  if(!input) return;
+  var resolved=resolveBookInputValue(input.value||'');
+  if(resolved.book){
+    input.value=String(resolved.book['교재명']||'');
+    input.dataset.selectedBarcode=normalizeBarcode(resolved.book['바코드']);
+  }else if(!input.value.trim()){
+    input.dataset.selectedBarcode='';
+  }
+  updateBookPreview(inputId,wrapId,nameId,barcodeId);
 }
 function updateBookPreview(inputId,wrapId,nameId,barcodeId){
   var input=document.getElementById(inputId);var wrap=document.getElementById(wrapId);var nameEl=document.getElementById(nameId);var codeEl=document.getElementById(barcodeId);
   if(!input||!wrap||!nameEl||!codeEl) return;
-  var resolved=resolveBookInputValue(input.value||'');
-  var barcode=resolved.barcode; var found=resolved.book;
+  var selected=input.dataset.selectedBarcode||'';
+  var found=selected?findBookByBarcode(selected):null;
+  var resolved=found?{barcode:normalizeBarcode(found['바코드']),book:found}:resolveBookInputValue(input.value||'');
+  var barcode=resolved.barcode; found=resolved.book;
   if(!barcode){wrap.style.display='none';nameEl.textContent='';codeEl.textContent='';return;}
   wrap.style.display='block';
   if(found){nameEl.textContent=String(found['교재명']||'');nameEl.style.color='var(--text)';codeEl.textContent=barcode;}
@@ -847,12 +920,13 @@ function clearSalesStudent(){
   if(hidden) hidden.value='';if(input) input.value='';if(picked) picked.style.display='none';renderSalesStudentResults('');
 }
 document.addEventListener('click',function(e){var wrap=document.getElementById('sf-student');var box=document.getElementById('sales-student-results');if(!wrap||!box) return;if(!wrap.contains(e.target)) box.style.display='none';});
+document.addEventListener('click',function(e){['sales','bulk'].forEach(function(prefix){var input=document.getElementById(prefix+'-barcode');var box=document.getElementById(prefix+'-book-results');if(!input||!box) return;var area=input.closest('.card')||input.parentElement; if(!area.contains(e.target)) box.style.display='none';});});
 document.getElementById('sales-barcode').addEventListener('keydown',function(e){if(e.key==='Enter') doSales();});
 
 async function doSales(){
   if(!dataReady) return toast('데이터를 불러오는 중입니다.',false);
-  var resolvedSalesBook=resolveBookInputValue(document.getElementById('sales-barcode').value);
-  var barcode=resolvedSalesBook.barcode;
+  var salesInput=document.getElementById('sales-barcode');
+  var barcode=salesInput&&salesInput.dataset.selectedBarcode?normalizeBarcode(salesInput.dataset.selectedBarcode):resolveBookInputValue(salesInput.value).barcode;
   var type=document.getElementById('sales-type').value;
   var qty=Number(document.getElementById('sales-qty').value);
   var price=document.getElementById('sales-price').value;
