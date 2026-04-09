@@ -1462,7 +1462,14 @@ function handleDetectedCode(code){
       setTimeout(function(){
         var val=document.getElementById('book-barcode');
         if(val&&val.value.trim()) searchBookByISBN();
-      },100);
+        else{
+          // 한번 더 시도
+          setTimeout(function(){
+            var val2=document.getElementById('book-barcode');
+            if(val2&&val2.value.trim()) searchBookByISBN();
+          },400);
+        }
+      },200);
     }
     if(_camAutoAction){if(_savedTarget==='loan-barcode') queueLoanBarcode();if(_savedTarget==='return-barcode') queueReturnBarcode();}
   },220);
