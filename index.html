@@ -744,8 +744,19 @@ async function call(action, payload){
       return {ok:true,msg:rows.length+'명 업로드 완료'};
     }
     if(action==='searchBook'){
-      // 네이버 API는 Apps Script에서만 가능 → 건너뜀
-      return {ok:false,msg:'직접 입력해주세요.'};
+      var isbn=String(payload.isbn||'').trim().replace(/[^0-9]/g,'');
+      if(!isbn) return {ok:false,msg:'ISBN을 입력해주세요.'};
+      try{
+        var res=await fetch('https://www.googleapis.com/books/v1/volumes?q=isbn:'+isbn);
+        var data=await res.json();
+        if(!data.items||!data.items.length) return {ok:false,msg:'검색 결과가 없습니다.'};
+        var info=data.items[0].volumeInfo;
+        return {ok:true,data:{
+          title:info.title||'',
+          publisher:info.publisher||'',
+          authors:(info.authors||[]).join(', ')
+        }};
+      }catch(e){return {ok:false,msg:'검색 실패'};}
     }
     if(action==='initSheets'){
       return {ok:true,msg:'Supabase 테이블은 이미 생성되어 있습니다.'};
