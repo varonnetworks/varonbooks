@@ -161,7 +161,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver12</span>
+    <span>정상어학원 교재 관리 ver17</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -747,13 +747,26 @@ function renderBookResults(inputId,resultsId,keyword){
   box.innerHTML=list.map(function(b){
     var title=escapeHtml(String(b['교재명']||''));
     var code=escapeHtml(String(b['바코드']||''));
-    var jsTitle=String(b['교재명']||'').replace(/\/g,'\\').replace(/'/g,"\'");
-    var jsCode=String(b['바코드']||'').replace(/\/g,'\\').replace(/'/g,"\'");
-    return '<button type="button" onclick="selectBookForInput(''+inputId+'',''+resultsId+'',''+jsTitle+'',''+jsCode+'')" style="width:100%;text-align:left;padding:9px 10px;border:none;border-bottom:1px solid #c8d0d9;background:#f3f5f8;cursor:pointer">'
+    var payload=encodeURIComponent(JSON.stringify({title:String(b['교재명']||''),barcode:String(b['바코드']||'')}));
+    return '<button type="button" data-book="'+payload+'" style="width:100%;text-align:left;padding:9px 10px;border:none;border-bottom:1px solid #c8d0d9;background:#f3f5f8;cursor:pointer">'
       +'<div style="font-size:13px;font-weight:700;color:#22303d">'+title+'</div>'
       +'<div class="mono" style="font-size:11px;margin-top:2px;color:#5c6b7a">'+code+'</div></button>';
   }).join('');
   box.style.display='block';
+}
+
+function bindBookSearchResults(inputId,resultsId){
+  var box=document.getElementById(resultsId);
+  if(!box||box.dataset.bookSearchSelectBound==='1') return;
+  box.dataset.bookSearchSelectBound='1';
+  box.addEventListener('click',function(e){
+    var btn=e.target.closest('button[data-book]');
+    if(!btn) return;
+    try{
+      var data=JSON.parse(decodeURIComponent(btn.getAttribute('data-book')||''));
+      selectBookForInput(inputId,resultsId,data.title||'',data.barcode||'');
+    }catch(err){}
+  });
 }
 function selectBookForInput(inputId,resultsId,title,barcode){
   var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
