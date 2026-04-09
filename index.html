@@ -161,8 +161,8 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver17</span>
-    <span class="logo-badge">RETRO</span>
+    <span>정상어학원 교재 관리 ver2</span>
+    <span class="logo-badge">다슬</span>
   </div>
   <div class="hright">
     <div class="dot"></div>
@@ -759,14 +759,21 @@ function bindBookSearchResults(inputId,resultsId){
   var box=document.getElementById(resultsId);
   if(!box||box.dataset.bookSearchSelectBound==='1') return;
   box.dataset.bookSearchSelectBound='1';
-  box.addEventListener('click',function(e){
+
+  function handlePick(e){
     var btn=e.target.closest('button[data-book]');
     if(!btn) return;
+    e.preventDefault();
     try{
       var data=JSON.parse(decodeURIComponent(btn.getAttribute('data-book')||''));
       selectBookForInput(inputId,resultsId,data.title||'',data.barcode||'');
     }catch(err){}
-  });
+  }
+
+  box.addEventListener('pointerdown',handlePick);
+  box.addEventListener('mousedown',handlePick);
+  box.addEventListener('touchstart',handlePick,{passive:false});
+  box.addEventListener('click',handlePick);
 }
 function selectBookForInput(inputId,resultsId,title,barcode){
   var input=document.getElementById(inputId);var box=document.getElementById(resultsId);
