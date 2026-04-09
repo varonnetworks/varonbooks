@@ -131,7 +131,181 @@ td{padding:10px 13px;vertical-align:middle}
 #cam-guide-line{position:absolute;width:min(64vw,360px);height:2px;background:rgba(255,232,134,.98);box-shadow:0 0 12px rgba(255,225,120,.92);}
 #cam-status-text{font-weight:700;color:#644b16}
 #cam-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;background:#fff8dc;border:2px solid #c4a552;color:#6a4f14;font-size:12px;font-weight:700;}
-@media (max-width:768px){header{padding:0 14px;height:62px}nav{padding:0 10px}main{padding:14px}.card{padding:16px}.fgrid{grid-template-columns:1fr}.shead{align-items:flex-start}}
+
+
+/* 90s / 세기말 프로그램 느낌 보강 */
+:root{
+  --bg:#c6cfdc;
+  --bg2:#b8c1d0;
+  --surface:#f2f2f2;
+  --surface2:#e7edf8;
+  --card:#ece9d8;
+  --border:#6f7e95;
+  --border-soft:#9aa7bd;
+  --accent:#0b55c4;
+  --accent2:#118e4d;
+  --warn:#c43b33;
+  --yellow:#d6a100;
+  --text:#1a1a1a;
+  --muted:#4d5666;
+  --shadow:2px 2px 0 rgba(58,72,99,.22);
+  --inset:inset 1px 1px 0 rgba(255,255,255,.95), inset -1px -1px 0 rgba(124,136,156,.35);
+}
+body{
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0)),
+    linear-gradient(180deg, #cfd6e2, #b8c1cf);
+}
+body::before{display:none}
+header{
+  background:linear-gradient(180deg,#2f7be8,#0a51be);
+  border-bottom:1px solid #083b8b;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55), 0 2px 0 rgba(0,0,0,.08);
+  color:#fff;
+  height:58px;
+}
+.logo,.hright{color:#fff}
+.logo-mark{
+  width:28px;height:28px;border-radius:4px;
+  border:1px solid #083b8b;
+  background:linear-gradient(180deg,#fff,#dbe7ff);
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.95), inset -1px -1px 0 rgba(91,116,164,.35);
+  font-size:15px;
+}
+.logo-badge{
+  background:linear-gradient(180deg,#fff3b8,#e0b436);
+  color:#483400;
+  border:1px solid #9d7a14;
+  border-radius:4px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.8);
+}
+.hright{font-size:11px; opacity:.95}
+.dot{background:#5df29d;border-color:#16754b;animation:none}
+nav{
+  background:#d4d0c8;
+  border-top:1px solid #f8f8f8;
+  border-bottom:1px solid #8b95a5;
+  padding:4px 10px 0;
+  gap:4px;
+}
+.tab{
+  padding:9px 12px 8px;
+  background:linear-gradient(180deg,#fbfbfb,#dadada);
+  border:1px solid #8e99aa;
+  border-bottom:none;
+  border-radius:6px 6px 0 0;
+  color:#394253;
+  font-size:12px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.92);
+}
+.tab.active{
+  color:#083f99;
+  background:linear-gradient(180deg,#ffffff,#ece9d8);
+  border-bottom:1px solid #ece9d8;
+}
+main{max-width:1380px;padding:18px}
+.card,.scard{
+  background:linear-gradient(180deg,#f6f4ec,#ece9d8);
+  border:1px solid #8f99a7;
+  border-radius:6px;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.92), inset -1px -1px 0 rgba(140,148,160,.4), 2px 2px 0 rgba(0,0,0,.05);
+}
+.card{padding:16px 16px 14px}
+.card-title{
+  font-family:'IBM Plex Sans KR',sans-serif;
+  font-size:16px;
+  letter-spacing:0;
+  color:#083f99;
+  font-weight:700;
+  margin-bottom:10px;
+}
+.retro-strip{
+  height:20px;
+  border-radius:4px 4px 0 0;
+  margin:-16px -16px 12px;
+  background:linear-gradient(180deg,#2f7be8,#0a51be);
+  opacity:1;
+}
+.fl{font-size:11px;color:#344258}
+input[type=text],input[type=date],input[type=number],select{
+  background:#fff;
+  border:1px solid #7f9db9;
+  border-radius:3px;
+  box-shadow:inset 1px 1px 2px rgba(0,0,0,.08);
+  padding:8px 10px;
+  min-height:34px;
+}
+input:focus,select:focus{border-color:#2f7be8;box-shadow:0 0 0 2px rgba(47,123,232,.12), inset 1px 1px 2px rgba(0,0,0,.08)}
+.sinput{font-size:14px!important}
+.btn{
+  border-radius:3px;
+  border:1px solid #7f8998;
+  box-shadow:inset 1px 1px 0 rgba(255,255,255,.92), inset -1px -1px 0 rgba(120,129,142,.32), 1px 1px 0 rgba(0,0,0,.06);
+  padding:8px 14px;
+}
+.btn:active{transform:translateY(1px);box-shadow:inset 1px 1px 2px rgba(0,0,0,.12)}
+.btn-p{background:linear-gradient(180deg,#5ea0ff,#2a6ee2);border-color:#255ebb}
+.btn-s{background:linear-gradient(180deg,#47c986,#1da466);border-color:#11804e}
+.btn-d{background:linear-gradient(180deg,#ef867e,#d8584f);border-color:#b0433c}
+.btn-g{background:linear-gradient(180deg,#ffffff,#dedede);border-color:#8c96a4}
+.btn-y{background:linear-gradient(180deg,#ffd665,#e0ae28);border-color:#b18713}
+.btn-cam{background:linear-gradient(180deg,#fff6ca,#efd06c);border-color:#c19e2e}
+.twrap{border-radius:4px;background:#fff;border:1px solid #96a2b3}
+thead th{background:linear-gradient(180deg,#dff0d9,#b9d5b1);color:#24461f;border-bottom:1px solid #8ead87;font-size:11px}
+tbody tr:hover{background:rgba(47,123,232,.05)}
+.badge{border-radius:4px}
+#toast{border-radius:6px;background:#f4f1e7}
+#cam-top,#cam-bottom{background:linear-gradient(180deg,#f7f4ea,#dfd9c7)}
+#cam-chip{border-radius:4px;background:#f3f3f3}
+
+/* PC에서 판매/일괄출고 겹침 방지 */
+#page-sales .scan-row,
+#page-bulk .scan-row{align-items:flex-start}
+#page-sales .sinput-wrap,
+#page-bulk .sinput-wrap{min-width:320px}
+#page-sales .fgrid,
+#page-bulk .fgrid{grid-template-columns:repeat(12,minmax(0,1fr));gap:12px}
+#page-sales .fgrid > .fg:nth-child(1),
+#page-sales .fgrid > .fg:nth-child(2),
+#page-sales .fgrid > .fg:nth-child(3),
+#page-sales .fgrid > .fg:nth-child(4),
+#page-sales .fgrid > .fg:nth-child(6),
+#page-sales .fgrid > .fg:nth-child(7),
+#page-sales .fgrid > .fg:nth-child(8),
+#page-bulk .fgrid > .fg:nth-child(2),
+#page-bulk .fgrid > .fg:nth-child(3),
+#page-bulk .fgrid > .fg:nth-child(4),
+#page-bulk .fgrid > .fg:nth-child(5){grid-column:span 3}
+#page-sales .fgrid > .fg:nth-child(5),
+#page-bulk .fgrid > .fg:nth-child(1){grid-column:span 6}
+#page-sales #sales-book-preview-name,
+#page-bulk #bulk-book-preview-name{
+  white-space:normal;
+  word-break:keep-all;
+  overflow-wrap:anywhere;
+  line-height:1.35;
+}
+#page-sales #sales-book-preview,
+#page-bulk #bulk-book-preview{min-height:74px}
+#page-sales #sf-student > div:first-of-type,
+#page-bulk .fg{min-width:0}
+@media (max-width:1180px){
+  #page-sales .fgrid,
+  #page-bulk .fgrid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #page-sales .fgrid > .fg,
+  #page-bulk .fgrid > .fg{grid-column:span 1!important}
+}
+@media (max-width:768px){
+  header{padding:0 14px;height:54px}
+  nav{padding:4px 8px 0}
+  .tab{font-size:11px;padding:8px 10px 7px}
+  main{padding:14px}
+  .card{padding:14px}
+  .fgrid{grid-template-columns:1fr}
+  .shead{align-items:flex-start}
+  .retro-strip{margin:-14px -14px 10px}
+}
+
 </style>
 </head>
 <body>
@@ -139,7 +313,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver13</span>
+    <span>정상어학원 교재 관리 ver12</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
