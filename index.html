@@ -792,7 +792,6 @@ function normalizeBarcode(v){
   return String(v == null ? '' : v)
     .normalize('NFKC')
     .replace(/[\u200B-\u200D\uFEFF]/g,'')
-    .replace(/[^0-9A-Za-z]/g,'')
     .trim()
     .toUpperCase();
 }
