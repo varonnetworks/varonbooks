@@ -161,8 +161,8 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 ver2.0</span>
-    <span class="logo-badge">NAM</span>
+    <span>정상어학원 교재 관리 ver12</span>
+    <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
     <div class="dot"></div>
@@ -347,7 +347,21 @@ td{padding:10px 13px;vertical-align:middle}
 
 <div id="page-stock" class="page">
   <div id="stock-stats" class="sgrid"></div>
-  <div class="shead"><span class="stitle">교재별 재고</span><button class="btn btn-g" onclick="loadStock()">새로고침</button></div>
+  <div class="card" style="margin-bottom:12px">
+    <div class="fgrid" style="grid-template-columns:minmax(240px,1.6fr) auto auto;align-items:end">
+      <div class="fg">
+        <label class="fl">교재 검색</label>
+        <input type="text" id="stock-search" placeholder="교재명 또는 바코드 검색" oninput="applyStockFilter()">
+      </div>
+      <div class="fg" style="justify-content:flex-end">
+        <button type="button" id="stock-low-btn" class="btn btn-g" onclick="toggleLowStockFilter()">교재부족만 보기</button>
+      </div>
+      <div class="fg" style="justify-content:flex-end">
+        <button class="btn btn-g" onclick="loadStock()">새로고침</button>
+      </div>
+    </div>
+  </div>
+  <div class="shead"><span class="stitle">교재별 재고</span><span id="stock-filter-status" style="font-size:12px;color:var(--muted);font-weight:700"></span></div>
   <div id="stock-list"><div class="loading"><div class="spinner"></div></div></div>
 </div>
 
@@ -541,7 +555,8 @@ td{padding:10px 13px;vertical-align:middle}
 
 <script>
 var APPS_SCRIPT_URL='https://script.google.com/macros/s/AKfycbwDjKsqwVOqtpmbptlowSWffQHqfgqhOLSMZ4si_Pttc4MFku9JNZKrenSHW2k3xn-4/exec';
-var teachers=[],books=[],students=[],semesters=[],bulkAssigns=[],salesCache=[],generatedBarcodes=[];
+var teachers=[],books=[],students=[],semesters=[],bulkAssigns=[],salesCache=[],generatedBarcodes=[],stockCache=[];
+var stockLowOnly=false;
 var uploadedRows=[],fileHeaders=[],previewData=[];
 var MAPPING_KEY='jls_col_mapping';
 var MAP_FIELDS=['map-id','map-name','map-grade','map-class','map-contact','map-note'];
@@ -1077,16 +1092,51 @@ async function loadStock(){
   var el=document.getElementById('stock-list');var stat=document.getElementById('stock-stats');
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{
-    var res=await call('getStockStatus',{});var data=res.data||[];
-    stat.innerHTML='<div class="scard"><div class="sl">등록 교재</div><div class="sn" style="color:var(--accent)">'+data.length+'</div><div class="ss">종</div></div>'+
-      '<div class="scard"><div class="sl">판매 가능 재고</div><div class="sn" style="color:var(--accent2)">'+data.reduce(function(s,r){return s+Number(r['현재재고']);},0)+'</div><div class="ss">권</div></div>'+
-      '<div class="scard"><div class="sl">교사 대여 중</div><div class="sn" style="color:#9e7400">'+data.reduce(function(s,r){return s+Number(r['대여중']);},0)+'</div><div class="ss">권</div></div>'+
-      '<div class="scard"><div class="sl">재고 부족 (2권↓)</div><div class="sn" style="color:var(--warn)">'+data.filter(function(r){return Number(r['현재재고'])<=2;}).length+'</div><div class="ss">종</div></div>';
-    if(!data.length){el.innerHTML='<div class="empty">재고 데이터가 없습니다</div>';return;}
-    el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>총입고</th><th>총출고</th><th>대여중</th><th>현재재고</th><th>최근업데이트</th></tr></thead><tbody>'+
-      data.map(function(r){var stock=Number(r['현재재고']);var badge=stock<=0?'b-red':stock<=2?'b-yellow':'b-green';return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['총입고']+'</td><td>'+r['총출고']+'</td><td><span class="badge b-yellow">'+r['대여중']+'</span></td><td><span class="badge '+badge+'">'+stock+'권</span></td><td class="mono" style="font-size:11px">'+r['최근업데이트']+'</td></tr>';}).join('')+
-      '</tbody></table></div>';
+    var res=await call('getStockStatus',{});stockCache=res.data||[];
+    stat.innerHTML='<div class="scard"><div class="sl">등록 교재</div><div class="sn" style="color:var(--accent)">'+stockCache.length+'</div><div class="ss">종</div></div>'+
+      '<div class="scard"><div class="sl">판매 가능 재고</div><div class="sn" style="color:var(--accent2)">'+stockCache.reduce(function(s,r){return s+Number(r['현재재고']);},0)+'</div><div class="ss">권</div></div>'+
+      '<div class="scard"><div class="sl">교사 대여 중</div><div class="sn" style="color:#9e7400">'+stockCache.reduce(function(s,r){return s+Number(r['대여중']);},0)+'</div><div class="ss">권</div></div>'+
+      '<div class="scard"><div class="sl">재고 부족 (2권↓)</div><div class="sn" style="color:var(--warn)">'+stockCache.filter(function(r){return Number(r['현재재고'])<=2;}).length+'</div><div class="ss">종</div></div>';
+    var searchInput=document.getElementById('stock-search');
+    if(searchInput && !searchInput.dataset.boundEnter){
+      searchInput.dataset.boundEnter='1';
+      searchInput.addEventListener('keydown',function(e){if(e.key==='Enter') applyStockFilter();});
+    }
+    applyStockFilter();
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+
+function toggleLowStockFilter(){
+  stockLowOnly=!stockLowOnly;
+  var btn=document.getElementById('stock-low-btn');
+  if(btn){
+    btn.className='btn '+(stockLowOnly?'btn-y':'btn-g');
+    btn.textContent=stockLowOnly?'교재부족만 보는 중':'교재부족만 보기';
+  }
+  applyStockFilter();
+}
+
+function applyStockFilter(){
+  var el=document.getElementById('stock-list');
+  var status=document.getElementById('stock-filter-status');
+  var keyword=String((document.getElementById('stock-search')||{}).value||'').trim().toLowerCase();
+  var data=(stockCache||[]).filter(function(r){
+    var stock=Number(r['현재재고']);
+    var okKeyword=!keyword || String(r['교재명']||'').toLowerCase().includes(keyword) || String(r['바코드']||'').toLowerCase().includes(keyword);
+    var okLow=!stockLowOnly || stock<=2;
+    return okKeyword && okLow;
+  });
+  if(status){
+    var parts=[];
+    if(keyword) parts.push('검색: '+keyword);
+    if(stockLowOnly) parts.push('재고 부족만');
+    status.textContent=parts.length?('필터 적용 · '+parts.join(' / ')):'';
+  }
+  if(!stockCache.length){el.innerHTML='<div class="empty">재고 데이터가 없습니다</div>';return;}
+  if(!data.length){el.innerHTML='<div class="empty">조건에 맞는 교재가 없습니다</div>';return;}
+  el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>총입고</th><th>총출고</th><th>대여중</th><th>현재재고</th><th>최근업데이트</th></tr></thead><tbody>'+
+    data.map(function(r){var stock=Number(r['현재재고']);var badge=stock<=0?'b-red':stock<=2?'b-yellow':'b-green';return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['총입고']+'</td><td>'+r['총출고']+'</td><td><span class="badge b-yellow">'+r['대여중']+'</span></td><td><span class="badge '+badge+'">'+stock+'권</span></td><td class="mono" style="font-size:11px">'+r['최근업데이트']+'</td></tr>';}).join('')+
+    '</tbody></table></div>';
 }
 
 function renderHistoryFilter(){
