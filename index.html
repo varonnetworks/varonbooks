@@ -668,45 +668,6 @@ function getBookNameByBarcode(barcode){
   var found = books.find(function(b){ return String(b['바코드']||'').trim() === String(barcode).trim(); });
   return found ? String(found['교재명'] || '').trim() : '';
 }
-
-function findBookByBarcode(barcode){
-  return books.find(function(b){ return String(b['바코드']||'').trim() === String(barcode || '').trim(); }) || null;
-}
-function updateBookPreview(inputId, wrapId, nameId, barcodeId){
-  var input = document.getElementById(inputId);
-  var wrap = document.getElementById(wrapId);
-  var nameEl = document.getElementById(nameId);
-  var codeEl = document.getElementById(barcodeId);
-  if(!input || !wrap || !nameEl || !codeEl) return;
-
-  var barcode = String(input.value || '').trim();
-  if(!barcode){
-    wrap.style.display = 'none';
-    nameEl.textContent = '';
-    codeEl.textContent = '';
-    return;
-  }
-
-  var found = findBookByBarcode(barcode);
-  wrap.style.display = 'block';
-  if(found){
-    nameEl.textContent = String(found['교재명'] || '');
-    nameEl.style.color = 'var(--text)';
-  }else{
-    nameEl.textContent = '등록되지 않은 교재';
-    nameEl.style.color = 'var(--warn)';
-  }
-  codeEl.textContent = barcode;
-}
-function bindBarcodePreview(inputId, wrapId, nameId, barcodeId){
-  var input = document.getElementById(inputId);
-  if(!input) return;
-  var handler = function(){ updateBookPreview(inputId, wrapId, nameId, barcodeId); };
-  input.addEventListener('input', handler);
-  input.addEventListener('change', handler);
-  input.addEventListener('blur', handler);
-  handler();
-}
 function makeQueueItem(barcode){
   var title = getBookNameByBarcode(barcode);
   return {
@@ -962,7 +923,7 @@ document.addEventListener('click', function(e){
 document.getElementById('sales-barcode').addEventListener('keydown',function(e){ if(e.key==='Enter') doSales(); });
 
 async function doSales(){
-  var barcode=document.getElementById('sales-barcode').value.trim();
+  var barcode=normalizeBarcode(document.getElementById('sales-barcode').value);
   var type=document.getElementById('sales-type').value;
   var qty=Number(document.getElementById('sales-qty').value);
   var price=document.getElementById('sales-price').value;
@@ -1053,7 +1014,7 @@ async function updateBulkPreview(){
   document.getElementById('bulk-student-list').innerHTML=bulkAssigns.length?'<div class="twrap"><table><thead><tr><th>이름</th><th>학년</th><th>반</th></tr></thead><tbody>'+bulkAssigns.map(function(a){return '<tr><td><b>'+a['이름']+'</b></td><td>'+(a['학년']||'-')+'</td><td>'+a['반']+'</td></tr>';}).join('')+'</tbody></table></div>':'';
 }
 async function doBulk(){
-  var barcode=document.getElementById('bulk-barcode').value.trim();
+  var barcode=normalizeBarcode(document.getElementById('bulk-barcode').value);
   var semester=document.getElementById('bulk-semester').value;
   var classNum=document.getElementById('bulk-class').value;
   var price=document.getElementById('bulk-price').value;
@@ -1162,7 +1123,7 @@ async function loadHistory(){
 }
 
 async function doAddBook(){
-  var barcode=document.getElementById('book-barcode').value.trim();
+  var barcode=normalizeBarcode(document.getElementById('book-barcode').value);
   var name=document.getElementById('book-name').value.trim();
   if(!barcode || !name) return toast('바코드와 교재명은 필수입니다.', false);
   try{
