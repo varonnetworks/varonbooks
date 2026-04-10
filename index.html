@@ -182,7 +182,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -800,8 +800,9 @@ async function call(action,payload){
       var r=(await sbGet('sales_history','select=*&id=eq.'+payload.saleId))[0];
       if(!r) return {ok:false,msg:'해당 이력을 찾을 수 없습니다.'};
       if(r.pay_status==='완납') return {ok:false,msg:'완납 처리된 항목은 취소할 수 없습니다.'};
-      await sbPost('sales_history',{barcode:r.barcode,book_name:r.book_name,type:r.type==='입고'?'입고취소':'출고취소',qty:r.qty,unit_price:r.unit_price,total:r.total,sale_date:new Date().toISOString().slice(0,10),student_id:r.student_id,student_name:r.student_name,semester:r.semester,class_name:r.class_name,pay_status:null,memo:'취소',branch:currentBranch});
-      return {ok:true,msg:'취소 완료'};
+      var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      await fetch(SB_URL+'/sales_history?id=eq.'+payload.saleId,{method:'DELETE',headers:h});
+      return {ok:true,msg:'삭제 완료'};
     }
     if(action==='markPaid'){await sbPatch('sales_history','id=eq.'+payload.saleId,{pay_status:'완납'});return {ok:true,msg:'완납 처리되었습니다.'};}
     if(action==='getUnpaid'){
@@ -1304,9 +1305,10 @@ async function loadSalesHistory(){
     var rows=salesCache.map(function(r,idx){
       var pb=r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':'');
       var isCanceled=r['유형']==='입고취소'||r['유형']==='출고취소';
+      if(isCanceled) return ''; // 취소 행은 표시 안 함
       var typeColor=r['유형']==='입고'?'b-blue':r['유형']==='출고'?'b-red':'b-yellow';
-      var cancelBtn=isCanceled?'<span style="color:var(--muted);font-size:11px">취소됨</span>':'<button class="btn btn-d btn-sm" data-idx="'+idx+'">취소</button>';
-      return '<tr style="'+(isCanceled?'opacity:.5':'')+'"><td><b>'+r['교재명']+'</b></td><td><span class="badge '+typeColor+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td><td>'+cancelBtn+'</td></tr>';
+      var cancelBtn='<button class="btn btn-d btn-sm" data-idx="'+idx+'">삭제</button>';
+      return '<tr><td><b>'+r['교재명']+'</b></td><td><span class="badge '+typeColor+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td><td>'+cancelBtn+'</td></tr>';
     }).join('');
     el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>유형</th><th>수량</th><th>합계</th><th>학생</th><th>학기</th><th>반</th><th>입금</th><th>날짜</th><th>취소</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
     var table=el.querySelector('table');
@@ -1314,7 +1316,7 @@ async function loadSalesHistory(){
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 async function cancelSales(saleId,type,bookName,qty){
-  if(!confirm('['+bookName+'] '+type+' '+qty+'권을 취소할까요?')) return;
+  if(!confirm('['+bookName+'] '+type+' '+qty+'권을 목록에서 삭제할까요? (이 작업은 되돌릴 수 없습니다)')) return;
   try{var res=await call('cancelSales',{saleId:saleId});toast(res.msg,res.ok);if(res.ok) loadSalesHistory();}catch(e){toast('오류 발생',false);}
 }
 
