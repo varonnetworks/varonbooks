@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,13 +197,13 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 2.0</span>
+    <span>정상어학원 교재 관리 3.0</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
     <div class="dot"></div>
     <span id="branch-display"></span>
-    <span>최신 데이터 동기화 완료</span>
+    <span id="sync-status">데이터 불러오는 중...</span>
     <button class="btn btn-g btn-sm" onclick="doLogout()" style="font-size:11px;padding:4px 10px">로그아웃</button>
   </div>
 </header>
@@ -334,8 +334,8 @@ td{padding:10px 13px;vertical-align:middle}
           <div class="fg"><label class="fl">학년</label>
             <select id="bulk-division" onchange="updateBulkClasses()">
               <option value="">전체</option>
-              <option value="CHESS">CHESS (초등)</option>
-              <option value="ACE">ACE (중등)</option>
+              <option value="CHESS">CHESS (초등부)</option>
+              <option value="ACE">ACE (중등부)</option>
             </select>
           </div>
           <div class="fg"><label class="fl">학기</label><select id="bulk-semester" onchange="updateBulkClasses()"><option value="">-- 학기 선택 --</option></select></div>
@@ -375,8 +375,8 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg"><label class="fl">학년</label>
         <select id="unpaid-division" onchange="updateUnpaidClasses()">
           <option value="">전체</option>
-          <option value="CHESS">CHESS (초등)</option>
-          <option value="ACE">ACE (중등)</option>
+          <option value="CHESS">CHESS (초등부)</option>
+          <option value="ACE">ACE (중등부)</option>
         </select>
       </div>
       <div class="fg"><label class="fl">학기</label><select id="unpaid-semester" onchange="updateUnpaidClasses()"><option value="">전체 학기</option></select></div>
@@ -455,8 +455,8 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg" id="ft-division" style="display:none"><label class="fl">학년</label>
         <select id="filter-division">
           <option value="">전체</option>
-          <option value="CHESS">CHESS (초등)</option>
-          <option value="ACE">ACE (중등)</option>
+          <option value="CHESS">CHESS (초등부)</option>
+          <option value="ACE">ACE (중등부)</option>
         </select>
       </div>
       <div class="fg" id="ft-teacher"><label class="fl">선생님</label><select id="filter-teacher"><option value="">전체</option></select></div>
@@ -674,29 +674,29 @@ var currentBranch=''; // 로그인 후 설정됨
 function renderAccountSettings(){
   var el=document.getElementById('account-settings');
   if(!el) return;
-  el.innerHTML=BRANCH_KEYS.map(function(k){
-    var b=BRANCHES[k];
-    var isMine=k===currentBranch;
-    return '<div style="margin-bottom:14px;padding:12px;border-radius:8px;background:'+(isMine?'rgba(29,95,208,.06)':'#f8f9fb')+';border:1px solid '+(isMine?'var(--accent)':'var(--border-soft)')+';">'
-      +'<div style="font-size:12px;font-weight:700;color:'+(isMine?'var(--accent)':'var(--muted)')+';margin-bottom:8px">'+b.name+(isMine?' ← 내 분원':'')+'</div>'
-      +'<div class="fgrid" style="grid-template-columns:1fr 1fr;">'
-      +'<div class="fg"><label class="fl">계좌번호</label><input type="text" id="acc-num-'+k+'" value="'+escapeHtml(b.account||'')+'" placeholder="예: 국민 123-456-789"></div>'
-      +'<div class="fg"><label class="fl">예금주</label><input type="text" id="acc-holder-'+k+'" value="'+escapeHtml(b.accountHolder||'')+'" placeholder="예: 바론네트웍스"></div>'
-      +'</div></div>';
-  }).join('');
+  var k=currentBranch;
+  var b=BRANCHES[k];
+  if(!b) return;
+  el.innerHTML='<div style="padding:12px;border-radius:8px;background:rgba(29,95,208,.06);border:1px solid var(--accent);">'
+    +'<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:8px">'+b.name+' 입금계좌</div>'
+    +'<div class="fgrid" style="grid-template-columns:1fr 1fr;">'
+    +'<div class="fg"><label class="fl">계좌번호</label><input type="text" id="acc-num-'+k+'" value="'+escapeHtml(b.account||'')+'" placeholder="예: 국민 123-456-789"></div>'
+    +'<div class="fg"><label class="fl">예금주</label><input type="text" id="acc-holder-'+k+'" value="'+escapeHtml(b.accountHolder||'')+'" placeholder="예: 바론네트웍스"></div>'
+    +'</div></div>';
 }
 function saveAccountSettings(){
-  var saved={};
-  BRANCH_KEYS.forEach(function(k){
-    var num=document.getElementById('acc-num-'+k);
-    var holder=document.getElementById('acc-holder-'+k);
-    if(num&&holder){
-      BRANCHES[k].account=num.value.trim();
-      BRANCHES[k].accountHolder=holder.value.trim();
+  var k=currentBranch;
+  var num=document.getElementById('acc-num-'+k);
+  var holder=document.getElementById('acc-holder-'+k);
+  if(num&&holder){
+    BRANCHES[k].account=num.value.trim();
+    BRANCHES[k].accountHolder=holder.value.trim();
+    try{
+      var saved=JSON.parse(localStorage.getItem('jls_accounts')||'{}');
       saved[k]={account:BRANCHES[k].account,accountHolder:BRANCHES[k].accountHolder};
-    }
-  });
-  localStorage.setItem('jls_accounts',JSON.stringify(saved));
+      localStorage.setItem('jls_accounts',JSON.stringify(saved));
+    }catch(e){}
+  }
   toast('계좌 정보가 저장됐어요!',true);
 }
 
@@ -911,7 +911,7 @@ var dataReady=false;
 
 function setLoadingState(isReady,msg){
   dataReady=!!isReady;
-  var statusText=document.querySelector('.hright span:last-child');
+  var statusText=document.getElementById('sync-status');
   if(statusText) statusText.textContent=msg||(isReady?'데이터 준비 완료':'데이터 불러오는 중');
 }
 function readCache(){
@@ -1516,7 +1516,7 @@ async function loadStudentList(){
   renderAccountSettings();
   var el=document.getElementById('student-list');var cnt=document.getElementById('student-count');if(cnt) cnt.textContent=students.length;
   if(!students.length){el.innerHTML='<div class="empty" style="padding:20px">등록된 학생이 없습니다.</div>';return;}
-  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학원구분</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
+  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학년부</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
     students.map(function(s){
       var div=s['구분']||'CHESS';
       var badge=div==='ACE'?'b-blue':'b-green';
