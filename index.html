@@ -182,7 +182,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -579,6 +579,16 @@ td{padding:10px 13px;vertical-align:middle}
 
   <div class="card">
     <div class="retro-strip"></div>
+    <div class="card-title">💳 입금계좌 설정</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">문자 자동생성 시 사용되는 입금계좌를 분원별로 설정합니다. 본인 분원 계좌만 입력하면 돼요.</p>
+    <div id="account-settings"></div>
+    <div style="margin-top:12px">
+      <button class="btn btn-s" onclick="saveAccountSettings()">계좌 저장</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="retro-strip"></div>
     <div class="card-title">시스템 초기화</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">구글 스프레드시트에 필요한 시트를 자동 생성합니다. 최초 1회만 실행하면 됩니다.</p>
     <button class="btn btn-d" onclick="doInit()">시트 초기화 실행</button>
@@ -619,13 +629,51 @@ var SB_HEADERS={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':
 // 분원 설정
 var BRANCHES={
   'namdongtanjls': {name:'남동탄JLS', account:'국민 549801-01-260123', accountHolder:'바론네트웍스'},
-  'suwon_jls':     {name:'수원JLS',   account:'계좌번호 입력 필요', accountHolder:'예금주 입력 필요'},
-  'suwonjls2009':  {name:'장안JLS',   account:'계좌번호 입력 필요', accountHolder:'예금주 입력 필요'},
-  'seosuwonjls':   {name:'서수원JLS', account:'계좌번호 입력 필요', accountHolder:'예금주 입력 필요'},
-  'unjeongjls':    {name:'운정JLS',   account:'계좌번호 입력 필요', accountHolder:'예금주 입력 필요'}
+  'suwon_jls':     {name:'수원JLS',   account:'', accountHolder:''},
+  'suwonjls2009':  {name:'장안JLS',   account:'', accountHolder:''},
+  'seosuwonjls':   {name:'서수원JLS', account:'', accountHolder:''},
+  'unjeongjls':    {name:'운정JLS',   account:'', accountHolder:''}
 };
+// localStorage에 저장된 계좌 불러오기
+(function(){
+  try{
+    var saved=JSON.parse(localStorage.getItem('jls_accounts')||'{}');
+    Object.keys(saved).forEach(function(k){
+      if(BRANCHES[k]){BRANCHES[k].account=saved[k].account||'';BRANCHES[k].accountHolder=saved[k].accountHolder||'';}
+    });
+  }catch(e){}
+})();
 var BRANCH_KEYS=Object.keys(BRANCHES);
 var currentBranch=''; // 로그인 후 설정됨
+
+function renderAccountSettings(){
+  var el=document.getElementById('account-settings');
+  if(!el) return;
+  el.innerHTML=BRANCH_KEYS.map(function(k){
+    var b=BRANCHES[k];
+    var isMine=k===currentBranch;
+    return '<div style="margin-bottom:14px;padding:12px;border-radius:8px;background:'+(isMine?'rgba(29,95,208,.06)':'#f8f9fb')+';border:1px solid '+(isMine?'var(--accent)':'var(--border-soft)')+';">'
+      +'<div style="font-size:12px;font-weight:700;color:'+(isMine?'var(--accent)':'var(--muted)')+';margin-bottom:8px">'+b.name+(isMine?' ← 내 분원':'')+'</div>'
+      +'<div class="fgrid" style="grid-template-columns:1fr 1fr;">'
+      +'<div class="fg"><label class="fl">계좌번호</label><input type="text" id="acc-num-'+k+'" value="'+escapeHtml(b.account||'')+'" placeholder="예: 국민 123-456-789"></div>'
+      +'<div class="fg"><label class="fl">예금주</label><input type="text" id="acc-holder-'+k+'" value="'+escapeHtml(b.accountHolder||'')+'" placeholder="예: 바론네트웍스"></div>'
+      +'</div></div>';
+  }).join('');
+}
+function saveAccountSettings(){
+  var saved={};
+  BRANCH_KEYS.forEach(function(k){
+    var num=document.getElementById('acc-num-'+k);
+    var holder=document.getElementById('acc-holder-'+k);
+    if(num&&holder){
+      BRANCHES[k].account=num.value.trim();
+      BRANCHES[k].accountHolder=holder.value.trim();
+      saved[k]={account:BRANCHES[k].account,accountHolder:BRANCHES[k].accountHolder};
+    }
+  });
+  localStorage.setItem('jls_accounts',JSON.stringify(saved));
+  toast('계좌 정보가 저장됐어요!',true);
+}
 
 function doLogin(){
   var code=document.getElementById('login-input').value.trim();
@@ -1426,6 +1474,7 @@ async function doAddStudent(){
   }catch(e){toast('오류 발생',false);}
 }
 async function loadStudentList(){
+  renderAccountSettings();
   var el=document.getElementById('student-list');var cnt=document.getElementById('student-count');if(cnt) cnt.textContent=students.length;
   if(!students.length){el.innerHTML='<div class="empty" style="padding:20px">등록된 학생이 없습니다.</div>';return;}
   el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
