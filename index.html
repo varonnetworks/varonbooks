@@ -163,7 +163,11 @@ td{padding:10px 13px;vertical-align:middle}
 /* 전분원 재고 탭 */
 .allstock-table{min-width:700px;}
 .allstock-table th,.allstock-table td{padding:9px 11px;white-space:nowrap;}
-.branch-col{background:rgba(29,95,208,.06);}
+.allstock-table th:first-child,.allstock-table td:first-child{text-align:left;}
+.branch-col-odd{background:rgba(29,95,208,.09);text-align:center;}
+.branch-col-even{background:#ffffff;text-align:center;}
+.allstock-table thead .branch-col-odd{background:rgba(29,95,208,.18);color:#1a3a8a;font-weight:700;}
+.allstock-table thead .branch-col-even{background:rgba(29,95,208,.06);color:#1a3a8a;font-weight:700;}
 
 /* 문자 생성 */
 .sms-card{background:#fffdf5;border:2px solid #d4b84a;border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px;line-height:1.7;white-space:pre-wrap;word-break:keep-all;}
@@ -182,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -193,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 1.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
     <span class="logo-badge">RETRO</span>
   </div>
   <div class="hright">
@@ -1650,13 +1654,12 @@ function applyAllStockFilter(){
 function renderAllStock(data){
   var el=document.getElementById('allstock-list');
   if(!data.length){el.innerHTML='<div class="empty">데이터가 없습니다</div>';return;}
-  var branchCols=BRANCH_KEYS.map(function(k){return BRANCHES[k].name;});
-  var head='<tr><th>교재명</th>'+BRANCH_KEYS.map(function(k){return '<th class="branch-col">'+BRANCHES[k].name+'</th>';}).join('')+'</tr>';
+  var head='<tr><th>교재명</th>'+BRANCH_KEYS.map(function(k,i){return '<th class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'">'+BRANCHES[k].name+'</th>';}).join('')+'</tr>';
   var rows=data.map(function(r){
-    var cols=BRANCH_KEYS.map(function(k){
+    var cols=BRANCH_KEYS.map(function(k,i){
       var v=r[k]||0;
       var color=v<=0?'color:var(--warn);font-weight:700':v<=3?'color:var(--yellow);font-weight:700':'';
-      return '<td class="branch-col" style="text-align:center;'+color+'">'+v+'</td>';
+      return '<td class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'" style="'+color+'">'+v+'</td>';
     }).join('');
     return '<tr><td><b>'+escapeHtml(r['교재명'])+'</b></td>'+cols+'</tr>';
   }).join('');
