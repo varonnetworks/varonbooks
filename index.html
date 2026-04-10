@@ -742,7 +742,7 @@ async function call(action,payload){
   payload=payload||{};
   try{
     if(action==='getTeachers'){var d=await sbGet('teachers','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(t){return {'교사ID':t.teacher_id,'이름':t.name,'담당과목':t.subject||'','연락처':t.contact||''};})};}
-    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','정가':b.price||0,'비고':b.note||''};})};}
+    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','정가':b.price||0,'비고':b.note||''};})};}
     if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','비고':s.note||'','구분':s.division||'CHESS'};})};}
     if(action==='getSemesters'){var d=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var sems=[...new Set(d.map(function(r){return r.semester;}).filter(Boolean))];return {ok:true,data:sems};}
     if(action==='getClassesBySemester'){
@@ -756,7 +756,7 @@ async function call(action,payload){
       var d=await sbGet('students',params);return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학년':s.grade||'','반':s.class_name||'','구분':s.division||''};})};
     }    if(action==='loanBook'){
       var bc=String(payload.barcode||'').trim();
-      var book=(await sbGet('books','select=name&barcode=eq.'+encodeURIComponent(bc)+'&branch=eq.'+encodeURIComponent(currentBranch)))[0];
+      var book=(await sbGet('books','select=name&barcode=eq.'+encodeURIComponent(bc)))[0];
       var teacher=(await sbGet('teachers','select=name&teacher_id=eq.'+encodeURIComponent(payload.teacherId)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var active=await sbGet('loan_history','select=id&barcode=eq.'+encodeURIComponent(bc)+'&status=eq.대여중&branch=eq.'+encodeURIComponent(currentBranch));
@@ -780,7 +780,7 @@ async function call(action,payload){
     }
     if(action==='addSales'){
       var bc=String(payload.barcode||'').trim();
-      var book=(await sbGet('books','select=name,price&barcode=eq.'+encodeURIComponent(bc)+'&branch=eq.'+encodeURIComponent(currentBranch)))[0];
+      var book=(await sbGet('books','select=name,price&barcode=eq.'+encodeURIComponent(bc)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var qty=Number(payload.qty)||1;
@@ -819,7 +819,7 @@ async function call(action,payload){
     }
     if(action==='bulkSales'){
       var bc=String(payload.barcode||'').trim();
-      var book=(await sbGet('books','select=name,price&barcode=eq.'+encodeURIComponent(bc)+'&branch=eq.'+encodeURIComponent(currentBranch)))[0];
+      var book=(await sbGet('books','select=name,price&barcode=eq.'+encodeURIComponent(bc)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var sts=await sbGet('students','select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch));
@@ -828,7 +828,7 @@ async function call(action,payload){
       return {ok:true,msg:sts.length+'명 출고 완료'};
     }
     if(action==='getStockStatus'){
-      var bks=await sbGet('books','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));
+      var bks=await sbGet('books','select=*&order=name');
       var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
       var loans=await sbGet('loan_history','select=barcode,status&branch=eq.'+encodeURIComponent(currentBranch));
       var m={};
@@ -838,7 +838,7 @@ async function call(action,payload){
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
       return {ok:true,data:Object.values(m)};
     }
-    if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,price:payload.price?Number(payload.price):0,note:payload.note||null,branch:currentBranch});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
+    if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,price:payload.price?Number(payload.price):0,note:payload.note||null});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
     if(action==='addTeacher'){await sbPost('teachers',{teacher_id:payload.id,name:payload.name,subject:payload.subject||null,contact:payload.contact||null,branch:currentBranch});return {ok:true,msg:'선생님 등록 완료: '+payload.name};}
     if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,note:payload.note||null,branch:currentBranch});return {ok:true,msg:'학생 등록 완료: '+payload.name};}
     if(action==='bulkAddStudents'){var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,note:r.note||null,branch:currentBranch};});await sbPost('students',rows);return {ok:true,msg:rows.length+'명 업로드 완료'};}
