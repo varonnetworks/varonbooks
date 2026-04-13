@@ -855,7 +855,7 @@ async function call(action,payload){
       return {ok:true,msg:sts.length+'명 출고 완료'};
     }
     if(action==='getStockStatus'){
-      var bks=await sbGet('books','select=*&order=name');
+      var bks=await sbGet('books','select=*&order=name&note=not.in.(JLS자체교재,JLS교사용)');
       var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
       var loans=await sbGet('loan_history','select=barcode,status&branch=eq.'+encodeURIComponent(currentBranch));
       var m={};
@@ -870,8 +870,7 @@ async function call(action,payload){
     if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,note:payload.note||null,branch:currentBranch});return {ok:true,msg:'학생 등록 완료: '+payload.name};}
     if(action==='bulkAddStudents'){var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,note:r.note||null,branch:currentBranch};});await sbPost('students',rows);return {ok:true,msg:rows.length+'명 업로드 완료'};}
     if(action==='getAllStockStatus'){
-      // 전 분원 재고: branch 필터 없이 전체 조회
-      var bks=await sbGet('books','select=barcode,name,branch&order=name');
+      var bks=await sbGet('books','select=barcode,name,branch,note&order=name&note=not.in.(JLS자체교재,JLS교사용)');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
       // 교재명 기준으로 분원별 재고 집계
       var bookNames={};
