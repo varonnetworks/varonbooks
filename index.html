@@ -510,7 +510,6 @@ td{padding:10px 13px;vertical-align:middle}
       <span class="stitle">생성된 바코드 <span id="barcode-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="clearBarcodes()">초기화</button>
-        <button class="btn btn-y" onclick="downloadBarcodesExcel()">엑셀 저장</button>
         <button class="btn btn-s" onclick="printBarcodes()">선택 출력</button>
       </div>
     </div>
@@ -526,6 +525,7 @@ td{padding:10px 13px;vertical-align:middle}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" oninput="renderBarcodeHistory()">
       <button class="btn btn-g" onclick="loadBarcodeHistory()">새로고침</button>
+      <button class="btn btn-y" id="bc-history-excel-btn" onclick="downloadHistoryExcel()" style="display:none">엑셀 저장</button>
       <button class="btn btn-s" id="bc-history-print-btn" onclick="printSelectedHistory()" style="display:none">선택 출력</button>
     </div>
     <div id="bc-history-list"><div class="empty">바코드를 생성하면 여기에 이력이 쌓여요.</div></div>
@@ -810,13 +810,6 @@ async function call(action,payload){
       var bc=String(payload.barcode||'').trim();
       var book=(await sbGet('books','select=name,price&barcode=eq.'+encodeURIComponent(bc)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
-      // 출고 시 재고 확인
-      if(payload.type==='출고'){
-        var salesAll=await sbGet('sales_history','select=type,qty&barcode=eq.'+encodeURIComponent(bc)+'&branch=eq.'+encodeURIComponent(currentBranch));
-        var stock=salesAll.reduce(function(s,r){if(r.type==='입고') return s+Number(r.qty);if(r.type==='출고') return s-Number(r.qty);if(r.type==='입고취소') return s-Number(r.qty);if(r.type==='출고취소') return s+Number(r.qty);return s;},0);
-        var qty=Number(payload.qty)||1;
-        if(stock<qty) return {ok:false,msg:'⚠️ 재고 부족! 현재 재고: '+stock+'권 (요청: '+qty+'권)'};
-      }
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var qty=Number(payload.qty)||1;
       var studentName='',className='';
@@ -843,12 +836,7 @@ async function call(action,payload){
       await fetch(SB_URL+'/sales_history?id=eq.'+payload.saleId,{method:'DELETE',headers:h});
       return {ok:true,msg:'삭제 완료'};
     }
-    if(action==='markPaid'){
-      var patchData={pay_status:'완납'};
-      if(payload.memo) patchData.memo=payload.memo;
-      await sbPatch('sales_history','id=eq.'+payload.saleId,patchData);
-      return {ok:true,msg:'완납 처리되었습니다.'};
-    }
+    if(action==='markPaid'){await sbPatch('sales_history','id=eq.'+payload.saleId,{pay_status:'완납'});return {ok:true,msg:'완납 처리되었습니다.'};}
     if(action==='getUnpaid'){
       var params='select=*&pay_status=eq.미납&type=eq.출고&order=class_name.asc,student_name.asc&branch=eq.'+encodeURIComponent(currentBranch);
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
@@ -864,10 +852,6 @@ async function call(action,payload){
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var sts=await sbGet('students','select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch));
       if(!sts.length) return {ok:false,msg:'해당 반 학생이 없습니다.'};
-      // 재고 확인
-      var salesAll=await sbGet('sales_history','select=type,qty&barcode=eq.'+encodeURIComponent(bc)+'&branch=eq.'+encodeURIComponent(currentBranch));
-      var stock=salesAll.reduce(function(s,r){if(r.type==='입고') return s+Number(r.qty);if(r.type==='출고') return s-Number(r.qty);if(r.type==='입고취소') return s-Number(r.qty);if(r.type==='출고취소') return s+Number(r.qty);return s;},0);
-      if(stock<sts.length) return {ok:false,msg:'⚠️ 재고 부족! 현재 재고: '+stock+'권 / 필요: '+sts.length+'권'};
       await sbPost('sales_history',sts.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
       return {ok:true,msg:sts.length+'명 출고 완료'};
     }
@@ -1443,15 +1427,13 @@ async function loadUnpaid(){
     document.getElementById('unpaid-title').textContent=divLabel+'미납 목록 ('+data.length+'건)';
     document.getElementById('unpaid-total').textContent=data.length?'합계 '+total.toLocaleString()+'원':'';
     if(!data.length){el.innerHTML='<div class="empty">미납이 없습니다</div>';return;}
-    el.innerHTML='<div class="twrap"><table><thead><tr><th>회원코드</th><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>날짜</th><th>처리</th></tr></thead><tbody>'+
-      data.map(function(r){return '<tr><td class="mono" style="font-size:11px">'+(r['학생ID']||'-')+'</td><td><b>'+(r['학생명']||'-')+'</b></td><td><span class="badge b-blue">'+(r['학기']||'-')+'</span></td><td>'+(r['반']||'-')+'</td><td>'+r['교재명']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td class="mono">'+r['날짜']+'</td><td style="display:flex;gap:6px;align-items:center"><input type="text" placeholder="입금날짜(선택)" id="memo-'+r['ID']+'" style="width:110px;font-size:11px;padding:4px 6px"><button class="btn btn-s btn-sm" onclick="markPaid(\''+r['ID']+'\')">완납</button></td></tr>';}).join('')+
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>회원코드</th><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>날짜</th><th>메모</th><th>처리</th></tr></thead><tbody>'+
+      data.map(function(r){return '<tr><td class="mono" style="font-size:11px">'+(r['학생ID']||'-')+'</td><td><b>'+(r['학생명']||'-')+'</b></td><td><span class="badge b-blue">'+(r['학기']||'-')+'</span></td><td>'+(r['반']||'-')+'</td><td>'+r['교재명']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td class="mono">'+r['날짜']+'</td><td style="color:var(--muted);font-size:12px">'+(r['메모']||'')+'</td><td><button class="btn btn-s btn-sm" onclick="markPaid(\''+r['ID']+'\')">완납</button></td></tr>';}).join('')+
       '</tbody></table></div>';
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 async function markPaid(saleId){
-  var memoEl=document.getElementById('memo-'+saleId);
-  var memo=memoEl?memoEl.value.trim():'';
-  try{var res=await call('markPaid',{saleId:saleId,memo:memo});toast(res.msg,res.ok);if(res.ok) loadUnpaid();}catch(e){toast('오류 발생',false);}
+  try{var res=await call('markPaid',{saleId:saleId});toast(res.msg,res.ok);if(res.ok) loadUnpaid();}catch(e){toast('오류 발생',false);}
 }
 
 async function loadStock(){
@@ -1865,8 +1847,9 @@ function renderBarcodeHistory(){
   var data=_bcHistoryCache.filter(function(r){
     return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
   });
-  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';return;}
+  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';document.getElementById('bc-history-excel-btn').style.display='none';return;}
   document.getElementById('bc-history-print-btn').style.display='';
+  document.getElementById('bc-history-excel-btn').style.display='';
   el.innerHTML='<div class="twrap"><table><thead><tr><th><input type="checkbox" id="bc-hist-all" onchange="toggleAllHistory(this.checked)"></th><th>교재명</th><th>바코드</th><th>생성일시</th><th>삭제</th></tr></thead><tbody>'+
     data.map(function(r){
       var dt=(r.created_at||'').replace('T',' ').slice(0,16);
@@ -1881,6 +1864,27 @@ function renderBarcodeHistory(){
 function toggleAllHistory(checked){
   document.querySelectorAll('.bc-hist-chk').forEach(function(c){c.checked=checked;});
 }
+function downloadHistoryExcel(){
+  var kw=(document.getElementById('bc-history-search')||{}).value||'';
+  kw=kw.trim().toLowerCase();
+  var data=_bcHistoryCache.filter(function(r){
+    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
+  });
+  if(!data.length) return toast('저장할 이력이 없습니다.',false);
+  var rows=[['교재명','바코드','생성일시']];
+  data.forEach(function(r){
+    var dt=(r.created_at||'').replace('T',' ').slice(0,16);
+    rows.push([r.label,r.code,dt]);
+  });
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var bom='\uFEFF';
+  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='바코드이력_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
+  URL.revokeObjectURL(url);
+  toast('엑셀 파일로 저장됐어요!',true);
+}
 function renderBarcodeGrid(){
   var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
   if(!generatedBarcodes.length){result.style.display='none';return;}
@@ -1890,20 +1894,6 @@ function renderBarcodeGrid(){
 }
 function toggleBarcode(idx){generatedBarcodes[idx].selected=!generatedBarcodes[idx].selected;renderBarcodeGrid();}
 function clearBarcodes(){if(!confirm('생성된 바코드를 모두 지울까요?')) return;generatedBarcodes=[];renderBarcodeGrid();}
-function downloadBarcodesExcel(){
-  if(!generatedBarcodes.length) return toast('생성된 바코드가 없습니다.',false);
-  var rows=[['교재명','바코드','생성일']];
-  var today=new Date().toISOString().slice(0,10);
-  generatedBarcodes.forEach(function(b){rows.push([b.label,b.code,today]);});
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='바코드_'+today+'.csv';a.click();
-  URL.revokeObjectURL(url);
-  toast('엑셀 파일로 저장됐어요!',true);
-}
 async function deleteBarcodeHistory(id){
   if(!confirm('이 바코드 이력을 삭제할까요?')) return;
   var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
