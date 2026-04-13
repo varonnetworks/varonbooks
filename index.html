@@ -484,11 +484,25 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="card">
     <div class="retro-strip"></div>
     <div class="card-title">교사용 교재 바코드</div>
-    <div class="fgrid">
-      <div class="fg"><label class="fl">교재 선택</label><select id="bc-teacher-book"><option value="">-- 교재 선택 --</option></select></div>
-      <div class="fg"><label class="fl">권수</label><input type="number" id="bc-teacher-count" value="1" min="1" max="50"></div>
+    <div class="fgrid" style="margin-bottom:12px">
+      <div class="fg">
+        <label class="fl">레벨 검색</label>
+        <input type="text" id="bc-teacher-search" placeholder="예: DSA1, LSB, T Map..." oninput="filterTeacherBooks()">
+      </div>
+      <div class="fg"><label class="fl">권수 (교재당)</label><input type="number" id="bc-teacher-count" value="1" min="1" max="50"></div>
       <div class="fg"><label class="fl">시작 번호</label><input type="number" id="bc-teacher-start" value="1" min="1"></div>
-      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="generateBarcodes('teacher')">생성</button></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+      <label style="font-size:12px;font-weight:700;color:var(--muted);display:flex;align-items:center;gap:6px;cursor:pointer">
+        <input type="checkbox" id="bc-teacher-all" onchange="toggleAllTeacherBooks(this.checked)"> 전체선택
+      </label>
+      <span id="bc-teacher-selected-count" style="font-size:12px;color:var(--accent);font-weight:700"></span>
+    </div>
+    <div id="bc-teacher-booklist" style="max-height:260px;overflow-y:auto;border:1px solid var(--border-soft);border-radius:6px;background:#fff;margin-bottom:12px">
+      <div class="empty" style="padding:16px">교재 목록 로딩 중...</div>
+    </div>
+    <div style="display:flex;justify-content:flex-end">
+      <button class="btn btn-p" onclick="generateBarcodes('teacher')">선택 교재 바코드 생성</button>
     </div>
   </div>
   <div id="barcode-result" style="display:none">
@@ -501,6 +515,19 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
     <div style="font-size:12px;color:var(--muted);margin-bottom:12px">카드를 클릭해서 선택/해제하세요.</div>
     <div id="barcode-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
+  </div>
+
+  <!-- 바코드 이력 -->
+  <div class="card" style="margin-top:20px">
+    <div class="retro-strip"></div>
+    <div class="card-title">🗂️ 바코드 생성 이력</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">생성된 바코드가 자동 저장됩니다. 오염·분실 시 여기서 다시 출력하세요.</p>
+    <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
+      <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" oninput="renderBarcodeHistory()">
+      <button class="btn btn-g" onclick="loadBarcodeHistory()">새로고침</button>
+      <button class="btn btn-s" id="bc-history-print-btn" onclick="printSelectedHistory()" style="display:none">선택 출력</button>
+    </div>
+    <div id="bc-history-list"><div class="empty">바코드를 생성하면 여기에 이력이 쌓여요.</div></div>
   </div>
 </div>
 
@@ -1736,12 +1763,124 @@ async function doUpload(){
   }catch(e){toast('업로드 실패',false);}
 }
 
-function initBarcodePage(){var sel=document.getElementById('bc-teacher-book');if(!sel) return;sel.innerHTML='<option value="">-- 교재 선택 --</option>'+books.map(function(b){return '<option value="'+b['바코드']+'" data-name="'+String(b['교재명']).replace(/"/g,'&quot;')+'">'+b['교재명']+'</option>';}).join('');}
+function initBarcodePage(){
+  renderTeacherBookList('');
+  loadBarcodeHistory();
+}
+function renderTeacherBookList(keyword){
+  var el=document.getElementById('bc-teacher-booklist');
+  if(!el) return;
+  var list=(books||[]).filter(function(b){
+    if(!keyword) return true;
+    return String(b['교재명']||'').toLowerCase().includes(keyword.toLowerCase())||
+           String(b['바코드']||'').toLowerCase().includes(keyword.toLowerCase());
+  });
+  if(!list.length){el.innerHTML='<div class="empty" style="padding:16px">검색 결과가 없습니다.</div>';return;}
+  el.innerHTML=list.map(function(b){
+    var code=escapeHtml(String(b['바코드']||''));
+    var name=escapeHtml(String(b['교재명']||''));
+    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'#f3f5fb\'" onmouseout="this.style.background=\'\'">'
+      +'<input type="checkbox" class="bc-teacher-chk" data-code="'+code+'" data-name="'+name+'" onchange="updateTeacherSelectedCount()">'
+      +'<span style="flex:1">'+name+'</span>'
+      +'<span class="mono" style="font-size:11px;color:var(--muted)">'+code+'</span>'
+      +'</label>';
+  }).join('');
+  updateTeacherSelectedCount();
+}
+function filterTeacherBooks(){
+  var kw=document.getElementById('bc-teacher-search').value.trim();
+  renderTeacherBookList(kw);
+}
+function toggleAllTeacherBooks(checked){
+  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){c.checked=checked;});
+  updateTeacherSelectedCount();
+}
+function updateTeacherSelectedCount(){
+  var cnt=document.querySelectorAll('.bc-teacher-chk:checked').length;
+  var el=document.getElementById('bc-teacher-selected-count');
+  if(el) el.textContent=cnt?cnt+'개 선택됨':'';
+  var allChk=document.getElementById('bc-teacher-all');
+  var total=document.querySelectorAll('.bc-teacher-chk').length;
+  if(allChk) allChk.checked=cnt>0&&cnt===total;
+}
 function generateBarcodes(mode){
   var newBarcodes=[];
   if(mode==='custom'){var prefix=document.getElementById('bc-prefix').value.trim().toUpperCase();var name=document.getElementById('bc-bookname').value.trim();var start=parseInt(document.getElementById('bc-start').value)||1;if(!prefix) return toast('코드 prefix를 입력하세요.',false);if(!name) return toast('교재명을 입력하세요.',false);newBarcodes.push({code:prefix+'-'+String(start).padStart(3,'0'),label:name,selected:true});document.getElementById('bc-start').value=start+1;document.getElementById('bc-bookname').value='';document.getElementById('bc-bookname').focus();}
-  else if(mode==='teacher'){var sel=document.getElementById('bc-teacher-book');var opt=sel.options[sel.selectedIndex];var isbn=sel.value;var bname=opt?opt.getAttribute('data-name'):'';var count=Math.min(parseInt(document.getElementById('bc-teacher-count').value)||1,50);var start=parseInt(document.getElementById('bc-teacher-start').value)||1;if(!isbn) return toast('교재를 선택하세요.',false);for(var i=0;i<count;i++){var num=String(start+i).padStart(2,'0');newBarcodes.push({code:'T-'+isbn.slice(-6)+'-'+num,label:'[교사용] '+bname+' '+num+'번',selected:true});}}
-  generatedBarcodes=generatedBarcodes.concat(newBarcodes);renderBarcodeGrid();
+  else if(mode==='teacher'){
+    var checked=document.querySelectorAll('.bc-teacher-chk:checked');
+    if(!checked.length) return toast('교재를 하나 이상 선택하세요.',false);
+    var count=Math.min(parseInt(document.getElementById('bc-teacher-count').value)||1,50);
+    var start=parseInt(document.getElementById('bc-teacher-start').value)||1;
+    checked.forEach(function(chk){
+      var isbn=chk.getAttribute('data-code');
+      var bname=chk.getAttribute('data-name');
+      for(var i=0;i<count;i++){
+        var num=String(start+i).padStart(2,'0');
+        newBarcodes.push({code:'T-'+isbn.slice(-6)+'-'+num,label:'[교사용] '+bname+' '+num+'번',selected:true});
+      }
+    });
+  }
+  generatedBarcodes=generatedBarcodes.concat(newBarcodes);
+  renderBarcodeGrid();
+  // DB에 저장
+  if(newBarcodes.length){
+    sbPost('barcode_history',newBarcodes.map(function(b){return {code:b.code,label:b.label,branch:currentBranch};}))
+    .then(function(){loadBarcodeHistory();})
+    .catch(function(){});
+  }
+}
+
+var _bcHistoryCache=[];
+async function loadBarcodeHistory(){
+  var el=document.getElementById('bc-history-list');
+  if(!el) return;
+  try{
+    var d=await sbGet('barcode_history','select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=created_at.desc&limit=500');
+    _bcHistoryCache=d||[];
+    renderBarcodeHistory();
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+function renderBarcodeHistory(){
+  var el=document.getElementById('bc-history-list');
+  var kw=(document.getElementById('bc-history-search')||{}).value||'';
+  kw=kw.trim().toLowerCase();
+  var data=_bcHistoryCache.filter(function(r){
+    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
+  });
+  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';return;}
+  document.getElementById('bc-history-print-btn').style.display='';
+  el.innerHTML='<div class="twrap"><table><thead><tr><th><input type="checkbox" id="bc-hist-all" onchange="toggleAllHistory(this.checked)"></th><th>교재명</th><th>바코드</th><th>생성일시</th><th>삭제</th></tr></thead><tbody>'+
+    data.map(function(r){
+      var dt=(r.created_at||'').replace('T',' ').slice(0,16);
+      return '<tr><td><input type="checkbox" class="bc-hist-chk" data-code="'+escapeHtml(r.code)+'" data-label="'+escapeHtml(r.label)+'"></td>'
+        +'<td><b>'+escapeHtml(r.label)+'</b></td>'
+        +'<td class="mono" style="font-size:12px">'+escapeHtml(r.code)+'</td>'
+        +'<td class="mono" style="font-size:11px;color:var(--muted)">'+dt+'</td>'
+        +'<td><button class="btn btn-d btn-sm" onclick="deleteBarcodeHistory('+r.id+')">삭제</button></td></tr>';
+    }).join('')+
+    '</tbody></table></div>';
+}
+function toggleAllHistory(checked){
+  document.querySelectorAll('.bc-hist-chk').forEach(function(c){c.checked=checked;});
+}
+function printSelectedHistory(){
+  var selected=[];
+  document.querySelectorAll('.bc-hist-chk:checked').forEach(function(c){
+    selected.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
+  });
+  if(!selected.length) return toast('출력할 바코드를 선택하세요.',false);
+  var labelHTML=selected.map(function(b){return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';}).join('');
+  var win=window.open('','_blank');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력</title><style>body{margin:0;padding:10mm;font-family:sans-serif}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}.label{border:0.5px solid #ccc;border-radius:3mm;padding:3mm 4mm;text-align:center;height:29mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center}.lname{font-size:7pt;color:#333;margin-bottom:2mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.lsvg{max-width:100%;height:16mm}.lcode{font-size:7pt;color:#666;font-family:monospace;margin-top:1mm}@media print{body{padding:5mm}@page{margin:5mm}}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head><body><div class="grid">'+labelHTML+'</div><script>window.onload=function(){'+
+    selected.map(function(b){var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.5,height:40,displayValue:false,margin:2,background:"transparent"});}catch(e){}';}).join('')+
+    'setTimeout(function(){window.print();},800);};<\/script></body></html>');
+  win.document.close();
+}
+async function deleteBarcodeHistory(id){
+  if(!confirm('이 바코드 이력을 삭제할까요?')) return;
+  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+  await fetch(SB_URL+'/barcode_history?id=eq.'+id,{method:'DELETE',headers:h});
+  loadBarcodeHistory();
 }
 function renderBarcodeGrid(){
   var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
