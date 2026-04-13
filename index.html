@@ -1862,25 +1862,6 @@ function renderBarcodeHistory(){
 function toggleAllHistory(checked){
   document.querySelectorAll('.bc-hist-chk').forEach(function(c){c.checked=checked;});
 }
-function printSelectedHistory(){
-  var selected=[];
-  document.querySelectorAll('.bc-hist-chk:checked').forEach(function(c){
-    selected.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
-  });
-  if(!selected.length) return toast('출력할 바코드를 선택하세요.',false);
-  var labelHTML=selected.map(function(b){return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';}).join('');
-  var win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력</title><style>body{margin:0;padding:10mm;font-family:sans-serif}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}.label{border:0.5px solid #ccc;border-radius:3mm;padding:3mm 4mm;text-align:center;height:29mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center}.lname{font-size:7pt;color:#333;margin-bottom:2mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.lsvg{max-width:100%;height:16mm}.lcode{font-size:7pt;color:#666;font-family:monospace;margin-top:1mm}@media print{body{padding:5mm}@page{margin:5mm}}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head><body><div class="grid">'+labelHTML+'</div><script>window.onload=function(){'+
-    selected.map(function(b){var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.5,height:40,displayValue:false,margin:2,background:"transparent"});}catch(e){}';}).join('')+
-    'setTimeout(function(){window.print();},800);};<\/script></body></html>');
-  win.document.close();
-}
-async function deleteBarcodeHistory(id){
-  if(!confirm('이 바코드 이력을 삭제할까요?')) return;
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-  await fetch(SB_URL+'/barcode_history?id=eq.'+id,{method:'DELETE',headers:h});
-  loadBarcodeHistory();
-}
 function renderBarcodeGrid(){
   var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
   if(!generatedBarcodes.length){result.style.display='none';return;}
@@ -1890,14 +1871,45 @@ function renderBarcodeGrid(){
 }
 function toggleBarcode(idx){generatedBarcodes[idx].selected=!generatedBarcodes[idx].selected;renderBarcodeGrid();}
 function clearBarcodes(){if(!confirm('생성된 바코드를 모두 지울까요?')) return;generatedBarcodes=[];renderBarcodeGrid();}
-function printBarcodes(){
-  var selected=generatedBarcodes.filter(function(b){return b.selected;});if(!selected.length) return toast('출력할 바코드를 선택하세요.',false);
-  var labelHTML=selected.map(function(b){return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';}).join('');
+async function deleteBarcodeHistory(id){
+  if(!confirm('이 바코드 이력을 삭제할까요?')) return;
+  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+  await fetch(SB_URL+'/barcode_history?id=eq.'+id,{method:'DELETE',headers:h});
+  loadBarcodeHistory();
+}
+// 공통 출력 함수 - 애니라벨 V3410 (47x26.9mm, 4열x10행)
+function printLabelWindow(items){  if(!items.length) return toast('출력할 바코드를 선택하세요.',false);
+  var labelHTML=items.map(function(b){
+    return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';
+  }).join('');
   var win=window.open('','_blank');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력</title><style>body{margin:0;padding:10mm;font-family:sans-serif}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:3mm}.label{border:0.5px solid #ccc;border-radius:3mm;padding:3mm 4mm;text-align:center;height:29mm;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center}.lname{font-size:7pt;color:#333;margin-bottom:2mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%}.lsvg{max-width:100%;height:16mm}.lcode{font-size:7pt;color:#666;font-family:monospace;margin-top:1mm}@media print{body{padding:5mm}@page{margin:5mm}}</style><script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head><body><div class="grid">'+labelHTML+'</div><script>window.onload=function(){'+
-    selected.map(function(b){var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.5,height:40,displayValue:false,margin:2,background:"transparent"});}catch(e){}';}).join('')+
-    'setTimeout(function(){window.print();},800);};<\/script></body></html>');
+  var style='body{margin:0;padding:0;font-family:sans-serif}'
+    +'.grid{display:grid;grid-template-columns:repeat(4,47mm);grid-auto-rows:26.9mm;gap:0;margin:13mm 9mm}'
+    +'.label{width:47mm;height:26.9mm;box-sizing:border-box;padding:1mm 2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}'
+    +'.lname{font-size:5.5pt;color:#333;margin-bottom:0.5mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;line-height:1.1}'
+    +'.lsvg{max-width:43mm;height:13mm}'
+    +'.lcode{font-size:5.5pt;color:#444;font-family:monospace;margin-top:0.3mm;letter-spacing:0}'
+    +'@media print{body{margin:0}@page{size:A4;margin:0}}';
+  var jscodes=items.map(function(b){
+    var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');
+    return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.2,height:36,displayValue:false,margin:1,background:"transparent"});}catch(e){}';
+  }).join('');
+  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력 - V3410</title><style>'+style+'</style>'
+    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head>'
+    +'<body><div class="grid">'+labelHTML+'</div>'
+    +'<script>window.onload=function(){'+jscodes+'setTimeout(function(){window.print();},800);};<\/script></body></html>');
   win.document.close();
+}
+function printSelectedHistory(){
+  var selected=[];
+  document.querySelectorAll('.bc-hist-chk:checked').forEach(function(c){
+    selected.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
+  });
+  printLabelWindow(selected);
+}
+function printBarcodes(){
+  var selected=generatedBarcodes.filter(function(b){return b.selected;});
+  printLabelWindow(selected);
 }
 
 // 카메라 (BarcodeDetector API)
