@@ -1643,11 +1643,20 @@ async function generateSmsAll(){
   var sem=document.getElementById('unpaid-semester').value;
   var cls=document.getElementById('unpaid-class').value;
   var div=document.getElementById('unpaid-division').value;
+  var payFilter=document.getElementById('unpaid-pay-filter').value||'미납';
+  var nameSearch=(document.getElementById('unpaid-name-search').value||'').trim().toLowerCase();
   if(!sem){toast('먼저 학기를 선택하고 조회해주세요.',false);return;}
-  var res=await call('getUnpaid',{semester:sem,classNum:cls,division:div||undefined});
+  var res=await call('getUnpaid',{semester:sem,classNum:cls||undefined,division:div||undefined,payStatus:payFilter});
   var data=res.data||[];
+  if(nameSearch){
+    data=data.filter(function(r){
+      return (r['학생명']||'').toLowerCase().includes(nameSearch);
+    });
+  }
+  data=data.filter(function(r){
+    return r['입금상태']==='미납';
+  });
   if(!data.length){toast('미납 데이터가 없습니다.',false);return;}
-  // 학생별로 묶기
   var byStudent={};
   data.forEach(function(r){
     var key=r['학생ID']||r['학생명'];
