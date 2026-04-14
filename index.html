@@ -212,7 +212,7 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab active" onclick="showTab('loan', this)"><span class="tab-ico">📖</span><span class="tab-txt">대여·반납</span></div>
   <div class="tab" onclick="showTab('sales', this)"><span class="tab-ico">🛒</span><span class="tab-txt">판매 입출고</span></div>
   <div class="tab" onclick="showTab('bulk', this)"><span class="tab-ico">🏫</span><span class="tab-txt">반별 일괄출고</span></div>
-  <div class="tab" onclick="showTab('unpaid', this)"><span class="tab-ico">💰</span><span class="tab-txt">미납 관리</span></div>
+  <div class="tab" onclick="showTab('unpaid', this)"><span class="tab-ico">💰</span><span class="tab-txt">납입 내역</span></div>
   <div class="tab" onclick="showTab('stock', this)"><span class="tab-ico">📦</span><span class="tab-txt">재고 현황</span></div>
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
@@ -370,7 +370,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="page-unpaid" class="page">
   <div class="card">
     <div class="retro-strip"></div>
-    <div class="card-title">미납 조회 필터</div>
+    <div class="card-title">납입 내역 조회</div>
     <div class="fgrid">
       <div class="fg"><label class="fl">학년</label>
         <select id="unpaid-division" onchange="updateUnpaidClasses()">
@@ -385,11 +385,19 @@ td{padding:10px 13px;vertical-align:middle}
         <select id="unpaid-class" onchange="syncClassSearchFromSelect('unpaid')"><option value="">전체 반</option></select>
         <input type="text" id="unpaid-class-search" placeholder="반 검색" style="margin-top:6px">
       </div>
-      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadUnpaid()">조회</button></div>
+      <div class="fg"><label class="fl">입금 상태</label>
+        <select id="unpaid-pay-filter">
+          <option value="미납">미납만</option>
+          <option value="">전체 (미납+완납)</option>
+          <option value="완납">완납만</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">학생 이름 검색</label><input type="text" id="unpaid-name-search" placeholder="이름 입력"></div>
+      <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="loadUnpaid()">조회</button></div>
     </div>
   </div>
   <div class="shead">
-    <span class="stitle" id="unpaid-title">미납 목록</span>
+    <span class="stitle" id="unpaid-title">납입 내역</span>
     <div style="display:flex;gap:8px;flex-wrap:wrap">
       <span id="unpaid-total" style="font-size:13px;color:var(--warn);font-weight:700;align-self:center"></span>
       <button class="btn btn-y" onclick="generateSmsAll()">📱 문자 일괄생성</button>
@@ -836,14 +844,15 @@ async function call(action,payload){
       await fetch(SB_URL+'/sales_history?id=eq.'+payload.saleId,{method:'DELETE',headers:h});
       return {ok:true,msg:'삭제 완료'};
     }
-    if(action==='markPaid'){await sbPatch('sales_history','id=eq.'+payload.saleId,{pay_status:'완납'});return {ok:true,msg:'완납 처리되었습니다.'};}
+    if(action==='markPaid'){var patchBody={pay_status:'완납'};if(payload.paidDate) patchBody.paid_date=payload.paidDate;if(payload.memo!==undefined) patchBody.memo=payload.memo;await sbPatch('sales_history','id=eq.'+payload.saleId,patchBody);return {ok:true,msg:'완납 처리되었습니다.'};}
     if(action==='getUnpaid'){
-      var params='select=*&pay_status=eq.미납&type=eq.출고&order=class_name.asc,student_name.asc&branch=eq.'+encodeURIComponent(currentBranch);
+      var params='select=*&type=eq.출고&order=class_name.asc,student_name.asc&branch=eq.'+encodeURIComponent(currentBranch);
+      if(payload.payStatus) params+='&pay_status=eq.'+encodeURIComponent(payload.payStatus);
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
       if(payload.classNum) params+='&class_name=eq.'+encodeURIComponent(payload.classNum);
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
       var d=await sbGet('sales_history',params);
-      return {ok:true,data:d.map(function(r){return {'ID':r.id,'바코드':r.barcode,'교재명':r.book_name,'학생ID':r.student_id||'','학생명':r.student_name||'','학기':r.semester||'','반':r.class_name||'','합계':r.total,'날짜':r.sale_date,'메모':r.memo||''};})};
+      return {ok:true,data:d.map(function(r){return {'ID':r.id,'바코드':r.barcode,'교재명':r.book_name,'학생ID':r.student_id||'','학생명':r.student_name||'','학기':r.semester||'','반':r.class_name||'','합계':r.total,'날짜':r.sale_date,'입금상태':r.pay_status||'미납','메모':r.memo||'','입금일':r.paid_date||''};})};
     }
     if(action==='bulkSales'){
       var bc=String(payload.barcode||'').trim();
@@ -1423,611 +1432,61 @@ async function loadUnpaid(){
   var sem=document.getElementById('unpaid-semester').value;
   var cls=document.getElementById('unpaid-class').value;
   var div=document.getElementById('unpaid-division').value;
+  var payFilter=document.getElementById('unpaid-pay-filter').value;
+  var nameSearch=(document.getElementById('unpaid-name-search').value||'').trim().toLowerCase();
   el.innerHTML='<div class="loading"><div class="spinner"></div><br>불러오는 중...</div>';
   try{
-    var res=await call('getUnpaid',{semester:sem||undefined,classNum:cls||undefined,division:div||undefined});var data=res.data||[];
-    var total=data.reduce(function(s,r){return s+Number(r['합계']);},0);
+    var res=await call('getUnpaid',{semester:sem||undefined,classNum:cls||undefined,division:div||undefined,payStatus:payFilter||undefined});
+    var data=res.data||[];
+    if(nameSearch) data=data.filter(function(r){return (r['학생명']||'').toLowerCase().includes(nameSearch);});
+    var unpaidData=data.filter(function(r){return r['입금상태']==='미납';});
+    var unpaidTotal=unpaidData.reduce(function(s,r){return s+Number(r['합계']);},0);
     var divLabel=div?'['+div+'] ':'';
-    document.getElementById('unpaid-title').textContent=divLabel+'미납 목록 ('+data.length+'건)';
-    document.getElementById('unpaid-total').textContent=data.length?'합계 '+total.toLocaleString()+'원':'';
-    if(!data.length){el.innerHTML='<div class="empty">미납이 없습니다</div>';return;}
-    el.innerHTML='<div class="twrap"><table><thead><tr><th>회원코드</th><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>날짜</th><th>메모</th><th>처리</th></tr></thead><tbody>'+
-      data.map(function(r){return '<tr><td class="mono" style="font-size:11px">'+(r['학생ID']||'-')+'</td><td><b>'+(r['학생명']||'-')+'</b></td><td><span class="badge b-blue">'+(r['학기']||'-')+'</span></td><td>'+(r['반']||'-')+'</td><td>'+r['교재명']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td class="mono">'+r['날짜']+'</td><td style="color:var(--muted);font-size:12px">'+(r['메모']||'')+'</td><td><button class="btn btn-s btn-sm" onclick="markPaid(\''+r['ID']+'\')">완납</button></td></tr>';}).join('')+
+    document.getElementById('unpaid-title').textContent=divLabel+'납입 내역 ('+data.length+'건)';
+    document.getElementById('unpaid-total').textContent=unpaidData.length?'미납 합계 '+unpaidTotal.toLocaleString()+'원':'';
+    if(!data.length){el.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
+    el.innerHTML='<div class="twrap"><table><thead><tr><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>출고일</th><th>상태</th><th>입금일</th><th>메모</th><th>처리</th></tr></thead><tbody>'+
+      data.map(function(r){
+        var isPaid=r['입금상태']==='완납';
+        var statusBadge=isPaid?'<span class="badge b-green">완납</span>':'<span class="badge b-red">미납</span>';
+        var paidDateInput='<input type="date" data-id="'+r['ID']+'" class="paid-date-input" style="width:116px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" value="'+(r['입금일']||'')+'">';
+        var memoInput='<input type="text" data-id="'+r['ID']+'" class="paid-memo-input" style="width:90px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" placeholder="메모" value="'+escapeHtml(r['메모']||'')+'">';
+        var actionBtn=isPaid
+          ?'<button class="btn btn-d btn-sm" onclick="cancelPaid(''+r['ID']+'')">취소</button>'
+          :'<button class="btn btn-s btn-sm" onclick="markPaidRow(''+r['ID']+'')">완납</button>';
+        return '<tr style="'+(isPaid?'opacity:.65':'')+'"><td><b>'+(r['학생명']||'-')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+(r['학생ID']||'')+'</div></td>'
+          +'<td><span class="badge b-blue">'+(r['학기']||'-')+'</span></td>'
+          +'<td style="font-size:12px">'+(r['반']||'-')+'</td>'
+          +'<td>'+r['교재명']+'</td>'
+          +'<td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td>'
+          +'<td class="mono" style="font-size:11px">'+r['날짜']+'</td>'
+          +'<td>'+statusBadge+'</td>'
+          +'<td>'+paidDateInput+'</td>'
+          +'<td>'+memoInput+'</td>'
+          +'<td>'+actionBtn+'</td>'
+          +'</tr>';
+      }).join('')+
       '</tbody></table></div>';
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
-async function markPaid(saleId){
-  try{var res=await call('markPaid',{saleId:saleId});toast(res.msg,res.ok);if(res.ok) loadUnpaid();}catch(e){toast('오류 발생',false);}
+function markPaidRow(saleId){
+  var dateEl=document.querySelector('.paid-date-input[data-id="'+saleId+'"]');
+  var memoEl=document.querySelector('.paid-memo-input[data-id="'+saleId+'"]');
+  var paidDate=dateEl?dateEl.value:'';
+  var memo=memoEl?memoEl.value:'';
+  markPaid(saleId,paidDate,memo);
 }
-
-async function loadStock(){
-  var el=document.getElementById('stock-list');var stat=document.getElementById('stock-stats');
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+async function markPaid(saleId,paidDate,memo){
   try{
-    var res=await call('getStockStatus',{});stockCache=res.data||[];
-    stat.innerHTML='<div class="scard"><div class="sl">등록 교재</div><div class="sn" style="color:var(--accent)">'+stockCache.length+'</div><div class="ss">종</div></div>'+
-      '<div class="scard"><div class="sl">판매 가능 재고</div><div class="sn" style="color:var(--accent2)">'+stockCache.reduce(function(s,r){return s+Number(r['현재재고']);},0)+'</div><div class="ss">권</div></div>'+
-      '<div class="scard"><div class="sl">교사 대여 중</div><div class="sn" style="color:#9e7400">'+stockCache.reduce(function(s,r){return s+Number(r['대여중']);},0)+'</div><div class="ss">권</div></div>'+
-      '<div class="scard"><div class="sl">재고 부족 (2권↓)</div><div class="sn" style="color:var(--warn)">'+stockCache.filter(function(r){return Number(r['현재재고'])<=2;}).length+'</div><div class="ss">종</div></div>';
-    var searchInput=document.getElementById('stock-search');
-    if(searchInput && !searchInput.dataset.boundEnter){
-      searchInput.dataset.boundEnter='1';
-      searchInput.addEventListener('keydown',function(e){if(e.key==='Enter') applyStockFilter();});
-    }
-    applyStockFilter();
-  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
-}
-
-function toggleLowStockFilter(){
-  stockLowOnly=!stockLowOnly;
-  var btn=document.getElementById('stock-low-btn');
-  if(btn){
-    btn.className='btn '+(stockLowOnly?'btn-y':'btn-g');
-    btn.textContent=stockLowOnly?'교재부족만 보는 중':'교재부족만 보기';
-  }
-  applyStockFilter();
-}
-
-function applyStockFilter(){
-  var el=document.getElementById('stock-list');
-  var status=document.getElementById('stock-filter-status');
-  var keyword=String((document.getElementById('stock-search')||{}).value||'').trim().toLowerCase();
-  var data=(stockCache||[]).filter(function(r){
-    var stock=Number(r['현재재고']);
-    var okKeyword=!keyword || String(r['교재명']||'').toLowerCase().includes(keyword) || String(r['바코드']||'').toLowerCase().includes(keyword);
-    var okLow=!stockLowOnly || stock<=2;
-    return okKeyword && okLow;
-  });
-  if(status){
-    var parts=[];
-    if(keyword) parts.push('검색: '+keyword);
-    if(stockLowOnly) parts.push('재고 부족만');
-    status.textContent=parts.length?('필터 적용 · '+parts.join(' / ')):'';
-  }
-  if(!stockCache.length){el.innerHTML='<div class="empty">재고 데이터가 없습니다</div>';return;}
-  if(!data.length){el.innerHTML='<div class="empty">조건에 맞는 교재가 없습니다</div>';return;}
-  el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>현재재고</th><th>총입고</th><th>총출고</th></tr></thead><tbody>'+
-    data.map(function(r){var stock=Number(r['현재재고']);var badge=stock<=0?'b-red':stock<=2?'b-yellow':'b-green';return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td><span class="badge '+badge+'">'+stock+'권</span></td><td>'+r['총입고']+'</td><td>'+r['총출고']+'</td></tr>';}).join('')+
-    '</tbody></table></div>';
-}
-
-function renderHistoryFilter(){
-  var type=document.getElementById('history-type').value;
-  ['ft-teacher','ft-status'].forEach(function(id){document.getElementById(id).style.display=type==='loan'?'':'none';});
-  ['ft-stype','ft-sem','ft-student','ft-division'].forEach(function(id){document.getElementById(id).style.display=type==='sales'?'':'none';});
-}
-async function loadHistory(){
-  var el=document.getElementById('history-list');var type=document.getElementById('history-type').value;
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  try{
-    var res,data;
-    if(type==='loan'){
-      res=await call('getLoanHistory',{teacherId:document.getElementById('filter-teacher').value||undefined,status:document.getElementById('filter-status').value||undefined});data=res.data||[];
-      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>교재명</th><th>바코드</th><th>선생님</th><th>대여일</th><th>반납예정</th><th>반납일</th><th>학기</th><th>상태</th></tr></thead><tbody>'+
-        data.map(function(r){return '<tr><td><b>'+r['교재명']+'</b></td><td class="mono">'+r['바코드']+'</td><td>'+r['교사명']+'</td><td class="mono">'+r['대여일']+'</td><td class="mono">'+(r['반납예정일']||'-')+'</td><td class="mono">'+(r['반납일']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td><span class="badge '+(r['상태']==='대여중'?'b-yellow':'b-green')+'">'+r['상태']+'</span></td></tr>';}).join('')+
-        '</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
-    }else{
-      res=await call('getSalesHistory',{type:document.getElementById('filter-stype').value||undefined,semester:document.getElementById('filter-sem').value||undefined,studentId:document.getElementById('filter-student').value||undefined});data=res.data||[];
-      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>교재명</th><th>유형</th><th>수량</th><th>합계</th><th>학생</th><th>학기</th><th>반</th><th>입금</th><th>날짜</th></tr></thead><tbody>'+
-        data.map(function(r){var pb=r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':'');return '<tr><td><b>'+r['교재명']+'</b></td><td><span class="badge '+(r['유형']==='입고'?'b-blue':'b-red')+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td></tr>';}).join('')+
-        '</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
-    }
-  }catch(e){el.innerHTML='<div class="empty">조회 실패</div>';}
-}
-
-async function doAddBook(){
-  var barcode=normalizeBarcode(document.getElementById('book-barcode').value);
-  var name=document.getElementById('book-name').value.trim();
-  if(!barcode||!name) return toast('바코드와 교재명은 필수입니다.',false);
-  try{
-    var res=await call('addBook',{barcode:barcode,name:name,subject:document.getElementById('book-subject').value.trim(),publisher:document.getElementById('book-publisher').value.trim(),price:document.getElementById('book-price').value,note:document.getElementById('book-note').value.trim()});
-    toast(res.msg,res.ok);
-    if(res.ok){['book-barcode','book-name','book-subject','book-publisher','book-price','book-note'].forEach(function(id){document.getElementById(id).value='';});var bb=await call('getBooks');books=bb.data||[];initBarcodePage();}
+    var res=await call('markPaid',{saleId:saleId,paidDate:paidDate||undefined,memo:memo!==undefined?memo:undefined});
+    toast(res.msg,res.ok);if(res.ok) loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
-async function doAddTeacher(){
-  var id=document.getElementById('teacher-id').value.trim();var name=document.getElementById('teacher-name').value.trim();
-  if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
+async function cancelPaid(saleId){
+  if(!confirm('완납을 미납으로 되돌릴까요?')) return;
   try{
-    var res=await call('addTeacher',{id:id,name:name,subject:document.getElementById('teacher-subject').value.trim(),contact:document.getElementById('teacher-contact').value.trim()});
-    toast(res.msg,res.ok);
-    if(res.ok){['teacher-id','teacher-name','teacher-subject','teacher-contact'].forEach(function(i){document.getElementById(i).value='';});var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();}
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    await fetch(SB_URL+'/sales_history?id=eq.'+saleId,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null})});
+    toast('미납으로 변경됐어요.',true);loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
-async function doAddStudent(){
-  var id=document.getElementById('student-id').value.trim();var name=document.getElementById('student-name').value.trim();
-  if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
-  try{
-    var res=await call('addStudent',{id:id,name:name,contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim()});
-    toast(res.msg,res.ok);
-    if(res.ok){['student-id','student-name','student-contact','student-note'].forEach(function(i){document.getElementById(i).value='';});var sb=await call('getStudents');students=sb.data||[];populateSelects();loadStudentList();}
-  }catch(e){toast('오류 발생',false);}
-}
-async function loadStudentList(){
-  renderAccountSettings();
-  var el=document.getElementById('student-list');var cnt=document.getElementById('student-count');if(cnt) cnt.textContent=students.length;
-  if(!students.length){el.innerHTML='<div class="empty" style="padding:20px">등록된 학생이 없습니다.</div>';return;}
-  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학년부</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
-    students.map(function(s){
-      var div=s['구분']||'CHESS';
-      var badge=div==='ACE'?'b-blue':'b-green';
-      return '<tr><td class="mono" style="font-size:11px">'+s['학생ID']+'</td><td><b>'+s['이름']+'</b></td><td style="font-size:12px">'+(s['반']||'-')+'</td>'
-        +'<td><span class="badge '+badge+'" style="cursor:pointer" onclick="toggleDivision(\''+s['학생ID']+'\',\''+div+'\',this)">'+div+'</span></td>'
-        +'<td class="mono">'+(s['학부모연락처']||'-')+'</td><td style="color:var(--muted);font-size:12px">'+(s['비고']||'')+'</td></tr>';
-    }).join('')+
-    '</tbody></table></div>';
-}
-async function toggleDivision(studentId, currentDiv, el){
-  var newDiv=currentDiv==='ACE'?'CHESS':'ACE';
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-  try{
-    await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify({division:newDiv})});
-    el.textContent=newDiv;
-    el.className='badge '+(newDiv==='ACE'?'b-blue':'b-green');
-    el.onclick=function(){toggleDivision(studentId,newDiv,el);};
-    // 로컬 데이터도 업데이트
-    var st=students.find(function(s){return s['학생ID']===studentId;});
-    if(st) st['구분']=newDiv;
-    toast(el.closest('tr').querySelector('td:nth-child(2)').textContent+' → '+newDiv+' 변경됨',true);
-  }catch(e){toast('변경 실패',false);}
-}
-async function doInit(){
-  if(!confirm('구글 스프레드시트에 시트를 생성합니다. 계속할까요?')) return;
-  try{var res=await call('initSheets',{});toast(res.msg,res.ok);if(res.ok) setTimeout(init,500);}catch(e){toast('초기화 실패',false);}
-}
-
-// ===== 문자 생성 =====
-var _unpaidForSms=[];
-async function generateSmsAll(){
-  var sem=document.getElementById('unpaid-semester').value;
-  var cls=document.getElementById('unpaid-class').value;
-  var div=document.getElementById('unpaid-division').value;
-  if(!sem){toast('먼저 학기를 선택하고 조회해주세요.',false);return;}
-  var res=await call('getUnpaid',{semester:sem,classNum:cls,division:div||undefined});
-  var data=res.data||[];
-  if(!data.length){toast('미납 데이터가 없습니다.',false);return;}
-  // 학생별로 묶기
-  var byStudent={};
-  data.forEach(function(r){
-    var key=r['학생ID']||r['학생명'];
-    if(!byStudent[key]) byStudent[key]={studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],books:[],total:0};
-    byStudent[key].books.push(r['교재명']);
-    byStudent[key].total+=Number(r['합계']||0);
-  });
-  _unpaidForSms=Object.values(byStudent);
-  var branchInfo=BRANCHES[currentBranch]||{};
-  var branchName=branchInfo.name||'JLS';
-  var semLabel=(sem||'').replace('년','년 ').replace('봄','봄학기').replace('가을','가을학기');
-  var account=branchInfo.account||'계좌번호 미설정';
-  var accountHolder=branchInfo.accountHolder||'';
-  var divLabel=div?'['+div+'] ':'';
-  var list=document.getElementById('sms-list');
-  list.innerHTML='';
-  _unpaidForSms.forEach(function(s,idx){
-    var books=s.books.join(', ');
-    var msg='['+branchName+' - '+semLabel+' 부교재비 입금안내]\n'
-      +'안녕하세요. 교실에서 배포된 '+semLabel+' 부교재비 안내드립니다.\n'
-      +'▶ 학생명 : '+s.name+'\n'
-      +'▶ 반명 : '+s.class+'\n'
-      +'▶ 교재명 : '+books+'\n'
-      +'▶ 총교재비 : '+Number(s.total).toLocaleString()+'원\n'
-      +'동명이인이 있는 경우가 있사오니 반드시 [학생이름 / 학부모님 연락처 뒷 4자리]로 입금 부탁드립니다. 예) 홍길동0503\n'
-      +'학부모님 이름으로 입금하신 경우 반드시 학원으로 전화 부탁드립니다.\n'
-      +'▶ 입금계좌 : ['+account+'] '+accountHolder+'\n'
-      +'감사합니다.';
-    var el=document.createElement('div');
-    el.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">'+divLabel+s.name+' · '+s.class+' <span class="mono" style="font-size:10px;color:#888">'+s.studentId+'</span></div>'
-      +'<div class="sms-card">'+escapeHtml(msg)+'</div>'
-      +'<div class="sms-actions"><button class="btn btn-g btn-sm" onclick="copySms('+idx+')">복사</button></div>';
-    el.dataset.smsText=msg;
-    el.dataset.idx=idx;
-    list.appendChild(el);
-  });
-  document.getElementById('sms-count').textContent=_unpaidForSms.length+'명';
-  document.getElementById('sms-result').style.display='';
-  document.getElementById('sms-result').scrollIntoView({behavior:'smooth'});
-}
-function copySms(idx){
-  var divs=document.getElementById('sms-list').children;
-  var msg=divs[idx].dataset.smsText;
-  navigator.clipboard.writeText(msg).then(function(){toast('클립보드에 복사됐어요!',true);}).catch(function(){toast('복사 실패. 직접 선택해주세요.',false);});
-}
-function downloadSmsExcel(){
-  if(!_unpaidForSms.length){toast('생성된 문자가 없습니다.',false);return;}
-  var branchInfo=BRANCHES[currentBranch]||{};
-  var branchName=branchInfo.name||'JLS';
-  var sem=document.getElementById('unpaid-semester').value||'';
-  var div=document.getElementById('unpaid-division').value||'';
-  var semLabel=(sem||'').replace('년','년 ').replace('봄','봄학기').replace('가을','가을학기');
-  var account=branchInfo.account||'계좌번호 미설정';
-  var accountHolder=branchInfo.accountHolder||'';
-  var rows=[['회원코드','학생명','반','교재명','총금액','문자내용']];
-  _unpaidForSms.forEach(function(s){
-    var books=s.books.join(', ');
-    var msg='['+branchName+' - '+semLabel+' 부교재비 입금안내]\n'
-      +'안녕하세요. 교실에서 배포된 '+semLabel+' 부교재비 안내드립니다.\n'
-      +'▶ 학생명 : '+s.name+'\n'
-      +'▶ 반명 : '+s.class+'\n'
-      +'▶ 교재명 : '+books+'\n'
-      +'▶ 총교재비 : '+Number(s.total).toLocaleString()+'원\n'
-      +'동명이인이 있는 경우가 있사오니 반드시 [학생이름 / 학부모님 연락처 뒷 4자리]로 입금 부탁드립니다. 예) 홍길동0503\n'
-      +'학부모님 이름으로 입금하신 경우 반드시 학원으로 전화 부탁드립니다.\n'
-      +'▶ 입금계좌 : ['+account+'] '+accountHolder+'\n'
-      +'감사합니다.';
-    rows.push([s.studentId||'',s.name,s.class,books,s.total,msg]);
-  });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  var divSuffix=div?'_'+div:'';
-  a.href=url;a.download=branchName+'_미납문자_'+sem+divSuffix+'.csv';a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ===== 전분원 재고 =====
-var _allStockCache=[];
-async function loadAllStock(){
-  var el=document.getElementById('allstock-list');
-  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
-  try{
-    var res=await call('getAllStockStatus');
-    _allStockCache=res.data||[];
-    renderAllStock(_allStockCache);
-  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
-}
-function applyAllStockFilter(){
-  var kw=document.getElementById('allstock-search').value.trim().toLowerCase();
-  var filtered=_allStockCache.filter(function(r){return !kw||r['교재명'].toLowerCase().includes(kw);});
-  renderAllStock(filtered);
-}
-function renderAllStock(data){
-  var el=document.getElementById('allstock-list');
-  if(!data.length){el.innerHTML='<div class="empty">데이터가 없습니다</div>';return;}
-  // 내 분원 맨 앞, 나머지 가나다순
-  var orderedKeys=[currentBranch].concat(
-    BRANCH_KEYS.filter(function(k){return k!==currentBranch;})
-    .sort(function(a,b){return BRANCHES[a].name.localeCompare(BRANCHES[b].name,'ko');})
-  );
-  var head='<tr><th>교재명</th>'+orderedKeys.map(function(k,i){
-    var isMine=k===currentBranch;
-    return '<th class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'" style="'+(isMine?'font-weight:800;':'')+'">'+BRANCHES[k].name+(isMine?' ★':'')+'</th>';
-  }).join('')+'</tr>';
-  var rows=data.map(function(r){
-    var cols=orderedKeys.map(function(k,i){
-      var v=r[k]||0;
-      var color=v<=0?'color:var(--warn);font-weight:700':v<=3?'color:var(--yellow);font-weight:700':'';
-      return '<td class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'" style="'+color+'">'+v+'</td>';
-    }).join('');
-    return '<tr><td><b>'+escapeHtml(r['교재명'])+'</b></td>'+cols+'</tr>';
-  }).join('');
-  el.innerHTML='<div class="twrap"><table class="allstock-table"><thead>'+head+'</thead><tbody>'+rows+'</tbody></table></div>';
-}
-async function searchBookByISBN(){
-  var isbn=document.getElementById('book-barcode').value.trim();if(!isbn) return;
-  var statusEl=document.getElementById('isbn-status');statusEl.style.color='var(--muted)';statusEl.textContent='조회 중...';
-  try{
-    var res=await call('searchBook',{isbn:isbn});
-    if(res.ok&&res.data){if(res.data.title&&!document.getElementById('book-name').value) document.getElementById('book-name').value=res.data.title;if(res.data.publisher&&!document.getElementById('book-publisher').value) document.getElementById('book-publisher').value=res.data.publisher;statusEl.style.color='var(--accent2)';statusEl.textContent='자동완성됨';}
-    else{statusEl.style.color='var(--muted)';statusEl.textContent='검색 결과 없음';}
-  }catch(e){statusEl.style.color='var(--muted)';statusEl.textContent='직접 입력해주세요';}
-}
-
-function switchStudentTab(tab){
-  document.querySelectorAll('.stab').forEach(function(t,i){var active=i===(tab==='manual'?0:1);t.classList.toggle('active',active);t.style.borderBottomColor=active?'var(--accent)':'transparent';t.style.color=active?'var(--accent)':'var(--muted)';});
-  document.getElementById('stab-manual').style.display=tab==='manual'?'':'none';
-  document.getElementById('stab-upload').style.display=tab==='upload'?'':'none';
-}
-(function(){
-  var dz=document.getElementById('drop-zone');
-  dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--accent)';});
-  dz.addEventListener('dragleave',function(){dz.style.borderColor='var(--border-soft)';});
-  dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='var(--border-soft)';var f=e.dataTransfer.files[0];if(f) handleFileUpload(f);});
-})();
-function handleFileUpload(file){if(!file) return;var ext=file.name.split('.').pop().toLowerCase();if(ext==='csv') readCSV(file);else if(ext==='xlsx'||ext==='xls') readXLSX(file);else toast('.xlsx, .xls, .csv 파일만 지원합니다.',false);}
-function readCSV(file){var reader=new FileReader();reader.onload=function(e){var text=e.target.result;if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);var lines=text.split(/\r?\n/).filter(function(l){return l.trim();});uploadedRows=lines.map(function(l){var result=[],cur='',inQ=false;for(var i=0;i<l.length;i++){if(l[i]==='"') inQ=!inQ;else if(l[i]===','&&!inQ){result.push(cur.trim());cur='';}else cur+=l[i];}result.push(cur.trim());return result;});onFileLoaded(file.name);};reader.readAsText(file,'UTF-8');}
-function readXLSX(file){if(window.XLSX){_parseXLSX(file);return;}var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=function(){_parseXLSX(file);};s.onerror=function(){toast('XLSX 파서 로드 실패.',false);};document.head.appendChild(s);}
-function _parseXLSX(file){var reader=new FileReader();reader.onload=function(e){var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});var ws=wb.Sheets[wb.SheetNames[0]];uploadedRows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''}).filter(function(r){return r.some(function(c){return String(c).trim();});});onFileLoaded(file.name);};reader.readAsArrayBuffer(file);}
-function onFileLoaded(filename){
-  if(!uploadedRows.length){toast('파일이 비어있습니다.',false);return;}
-  fileHeaders=uploadedRows[0].map(function(h){return String(h).trim();});
-  document.getElementById('drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div><div style="font-size:14px;font-weight:700">'+filename+'</div><div style="font-size:12px;color:var(--muted);margin-top:4px">'+(uploadedRows.length-1)+'행 로드됨 · 클릭하여 파일 변경</div><input type="file" id="file-input" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileUpload(this.files[0])">';
-  var opts='<option value="">-- 선택 --</option>'+fileHeaders.map(function(h,i){return '<option value="'+i+'">'+h+'</option>';}).join('');
-  var optsOpt='<option value="">사용 안 함</option>'+fileHeaders.map(function(h,i){return '<option value="'+i+'">'+h+'</option>';}).join('');
-  ['map-id','map-name'].forEach(function(id){document.getElementById(id).innerHTML=opts;});
-  ['map-grade','map-class','map-contact','map-note'].forEach(function(id){document.getElementById(id).innerHTML=optsOpt;});
-  loadMappingPreset();document.getElementById('mapping-section').style.display='';document.getElementById('preview-section').style.display='none';
-}
-function loadMappingPreset(){try{var saved=localStorage.getItem(MAPPING_KEY);if(!saved) return;var preset=JSON.parse(saved),applied=0;MAP_FIELDS.forEach(function(fid){var el=document.getElementById(fid);if(!el||preset[fid]===undefined) return;var savedHeader=preset[fid+'_header'];if(savedHeader){var idx=fileHeaders.indexOf(savedHeader);if(idx>=0){el.value=String(idx);applied++;return;}}el.value=String(preset[fid]);applied++;});if(applied>0) document.getElementById('mapping-preset-info').textContent='저장된 매핑이 자동 적용됐어요.';if(preset['semester']) document.getElementById('upload-semester').value=preset['semester'];}catch(e){}}
-function saveMappingPreset(){var preset={};MAP_FIELDS.forEach(function(fid){var el=document.getElementById(fid);preset[fid]=el.value;if(el.value!=='') preset[fid+'_header']=fileHeaders[Number(el.value)]||'';});preset['semester']=document.getElementById('upload-semester').value;localStorage.setItem(MAPPING_KEY,JSON.stringify(preset));document.getElementById('mapping-preset-info').textContent='매핑이 저장됐습니다.';toast('매핑 저장 완료',true);}
-function getColVal(row,selectId){var el=document.getElementById(selectId);if(!el||el.value==='') return '';return String(row[Number(el.value)]||'').trim();}
-function doPreview(){
-  var idIdx=document.getElementById('map-id').value;var nameIdx=document.getElementById('map-name').value;
-  if(idIdx===''||nameIdx===''){toast('학생 ID와 이름 컬럼은 필수입니다.',false);return;}
-  previewData=[];
-  for(var i=1;i<uploadedRows.length;i++){var row=uploadedRows[i];var id=String(row[Number(idIdx)]||'').trim();var nm=String(row[Number(nameIdx)]||'').trim();if(!id||!nm) continue;previewData.push({id:id,name:nm,grade:getColVal(row,'map-grade'),classNum:getColVal(row,'map-class'),contact:getColVal(row,'map-contact'),note:getColVal(row,'map-note')});}
-  if(!previewData.length){toast('유효한 데이터가 없습니다.',false);return;}
-  var showClass=document.getElementById('map-class').value!=='';
-  document.getElementById('preview-count').textContent=previewData.length+'명';
-  document.getElementById('preview-table').innerHTML='<div class="twrap"><table><thead><tr><th>학생ID</th><th>이름</th>'+(showClass?'<th>학년</th><th>반</th>':'')+'<th>연락처</th><th>비고</th></tr></thead><tbody>'+
-    previewData.slice(0,30).map(function(r){return '<tr><td class="mono">'+r.id+'</td><td><b>'+r.name+'</b></td>'+(showClass?'<td>'+r.grade+'</td><td>'+r.classNum+'</td>':'')+'<td class="mono">'+r.contact+'</td><td style="color:var(--muted);font-size:12px">'+r.note+'</td></tr>';}).join('')+
-    (previewData.length>30?'<tr><td colspan="'+(showClass?6:4)+'" style="color:var(--muted);text-align:center;font-size:12px">... 외 '+(previewData.length-30)+'명</td></tr>':'')+
-    '</tbody></table></div>';
-  document.getElementById('preview-section').style.display='';document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
-}
-async function doUpload(){
-  if(!previewData.length){toast('미리보기를 먼저 확인하세요.',false);return;}
-  var semester=document.getElementById('upload-semester').value.trim();
-  if(!semester){toast('학기를 입력해야 업로드할 수 있어요.',false);return;}
-  var rows=previewData.map(function(r){return {id:r.id,name:r.name,contact:r.contact,grade:r.grade,classNum:r.classNum,note:r.note};});
-  try{
-    var res=await call('bulkAddStudents',{rows:rows,semester:semester});toast(res.msg,res.ok);
-    if(res.ok){var sb=await call('getStudents');students=sb.data||[];var semR=await call('getSemesters');semesters=semR.data||[];populateSelects();loadStudentList();document.getElementById('preview-section').style.display='none';previewData=[];}
-  }catch(e){toast('업로드 실패',false);}
-}
-
-function initBarcodePage(){
-  renderTeacherBookList('');
-  loadBarcodeHistory();
-}
-function renderTeacherBookList(keyword){
-  var el=document.getElementById('bc-teacher-booklist');
-  if(!el) return;
-  var list=(books||[]).filter(function(b){
-    if(!keyword) return true;
-    return String(b['교재명']||'').toLowerCase().includes(keyword.toLowerCase())||
-           String(b['바코드']||'').toLowerCase().includes(keyword.toLowerCase());
-  });
-  if(!list.length){el.innerHTML='<div class="empty" style="padding:16px">검색 결과가 없습니다.</div>';return;}
-  el.innerHTML=list.map(function(b){
-    var code=escapeHtml(String(b['바코드']||''));
-    var name=escapeHtml(String(b['교재명']||''));
-    return '<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'#f3f5fb\'" onmouseout="this.style.background=\'\'">'
-      +'<input type="checkbox" class="bc-teacher-chk" data-code="'+code+'" data-name="'+name+'" onchange="updateTeacherSelectedCount()">'
-      +'<span style="flex:1">'+name+'</span>'
-      +'<span class="mono" style="font-size:11px;color:var(--muted)">'+code+'</span>'
-      +'</label>';
-  }).join('');
-  updateTeacherSelectedCount();
-}
-function filterTeacherBooks(){
-  var kw=document.getElementById('bc-teacher-search').value.trim();
-  renderTeacherBookList(kw);
-}
-function toggleAllTeacherBooks(checked){
-  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){c.checked=checked;});
-  updateTeacherSelectedCount();
-}
-function updateTeacherSelectedCount(){
-  var cnt=document.querySelectorAll('.bc-teacher-chk:checked').length;
-  var el=document.getElementById('bc-teacher-selected-count');
-  if(el) el.textContent=cnt?cnt+'개 선택됨':'';
-  var allChk=document.getElementById('bc-teacher-all');
-  var total=document.querySelectorAll('.bc-teacher-chk').length;
-  if(allChk) allChk.checked=cnt>0&&cnt===total;
-}
-function generateBarcodes(mode){
-  var newBarcodes=[];
-  if(mode==='custom'){var prefix=document.getElementById('bc-prefix').value.trim().toUpperCase();var name=document.getElementById('bc-bookname').value.trim();var start=parseInt(document.getElementById('bc-start').value)||1;if(!prefix) return toast('코드 prefix를 입력하세요.',false);if(!name) return toast('교재명을 입력하세요.',false);newBarcodes.push({code:prefix+'-'+String(start).padStart(3,'0'),label:name,selected:true});document.getElementById('bc-start').value=start+1;document.getElementById('bc-bookname').value='';document.getElementById('bc-bookname').focus();}
-  else if(mode==='teacher'){
-    var checked=document.querySelectorAll('.bc-teacher-chk:checked');
-    if(!checked.length) return toast('교재를 하나 이상 선택하세요.',false);
-    var count=Math.min(parseInt(document.getElementById('bc-teacher-count').value)||1,50);
-    var start=parseInt(document.getElementById('bc-teacher-start').value)||1;
-    checked.forEach(function(chk){
-      var isbn=chk.getAttribute('data-code');
-      var bname=chk.getAttribute('data-name');
-      for(var i=0;i<count;i++){
-        var num=String(start+i).padStart(2,'0');
-        newBarcodes.push({code:'T-'+isbn.slice(-6)+'-'+num,label:'[교사용] '+bname+' '+num+'번',selected:true});
-      }
-    });
-  }
-  generatedBarcodes=generatedBarcodes.concat(newBarcodes);
-  renderBarcodeGrid();
-  // DB에 저장
-  if(newBarcodes.length){
-    sbPost('barcode_history',newBarcodes.map(function(b){return {code:b.code,label:b.label,branch:currentBranch};}))
-    .then(function(){loadBarcodeHistory();})
-    .catch(function(){});
-  }
-}
-
-var _bcHistoryCache=[];
-async function loadBarcodeHistory(){
-  var el=document.getElementById('bc-history-list');
-  if(!el) return;
-  try{
-    var d=await sbGet('barcode_history','select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=created_at.desc&limit=500');
-    _bcHistoryCache=d||[];
-    renderBarcodeHistory();
-  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
-}
-function renderBarcodeHistory(){
-  var el=document.getElementById('bc-history-list');
-  var kw=(document.getElementById('bc-history-search')||{}).value||'';
-  kw=kw.trim().toLowerCase();
-  var data=_bcHistoryCache.filter(function(r){
-    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
-  });
-  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';document.getElementById('bc-history-excel-btn').style.display='none';return;}
-  document.getElementById('bc-history-print-btn').style.display='';
-  document.getElementById('bc-history-excel-btn').style.display='';
-  el.innerHTML='<div class="twrap"><table><thead><tr><th><input type="checkbox" id="bc-hist-all" onchange="toggleAllHistory(this.checked)"></th><th>교재명</th><th>바코드</th><th>생성일시</th><th>삭제</th></tr></thead><tbody>'+
-    data.map(function(r){
-      var dt=(r.created_at||'').replace('T',' ').slice(0,16);
-      return '<tr><td><input type="checkbox" class="bc-hist-chk" data-code="'+escapeHtml(r.code)+'" data-label="'+escapeHtml(r.label)+'"></td>'
-        +'<td><b>'+escapeHtml(r.label)+'</b></td>'
-        +'<td class="mono" style="font-size:12px">'+escapeHtml(r.code)+'</td>'
-        +'<td class="mono" style="font-size:11px;color:var(--muted)">'+dt+'</td>'
-        +'<td><button class="btn btn-d btn-sm" onclick="deleteBarcodeHistory('+r.id+')">삭제</button></td></tr>';
-    }).join('')+
-    '</tbody></table></div>';
-}
-function toggleAllHistory(checked){
-  document.querySelectorAll('.bc-hist-chk').forEach(function(c){c.checked=checked;});
-}
-function downloadHistoryExcel(){
-  var kw=(document.getElementById('bc-history-search')||{}).value||'';
-  kw=kw.trim().toLowerCase();
-  var data=_bcHistoryCache.filter(function(r){
-    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
-  });
-  if(!data.length) return toast('저장할 이력이 없습니다.',false);
-  var rows=[['교재명','바코드','생성일시']];
-  data.forEach(function(r){
-    var dt=(r.created_at||'').replace('T',' ').slice(0,16);
-    rows.push([r.label,r.code,dt]);
-  });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='바코드이력_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  URL.revokeObjectURL(url);
-  toast('엑셀 파일로 저장됐어요!',true);
-}
-function renderBarcodeGrid(){
-  var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
-  if(!generatedBarcodes.length){result.style.display='none';return;}
-  result.style.display='';document.getElementById('barcode-count').textContent=generatedBarcodes.length+'개';
-  grid.innerHTML=generatedBarcodes.map(function(b,idx){return '<div style="background:linear-gradient(180deg,var(--surface),var(--card));border:2px solid '+(b.selected?'var(--accent)':'var(--border-soft)')+';border-radius:12px;padding:14px;cursor:pointer;text-align:center;box-shadow:var(--shadow)" onclick="toggleBarcode('+idx+')"><svg id="bc-svg-'+idx+'"></svg><div style="font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all">'+b.label+'</div><div style="font-size:10px;color:var(--accent);font-family:monospace;margin-top:2px">'+b.code+'</div><div style="font-size:10px;margin-top:6px;color:'+(b.selected?'var(--accent2)':'var(--muted)')+'">'+(b.selected?'선택됨':'클릭하여 선택')+'</div></div>';}).join('');
-  generatedBarcodes.forEach(function(b,idx){try{JsBarcode('#bc-svg-'+idx,b.code,{format:'CODE128',width:2,height:50,displayValue:true,fontSize:12,margin:4,background:'transparent',lineColor:'#2d2415'});}catch(e){}});
-}
-function toggleBarcode(idx){generatedBarcodes[idx].selected=!generatedBarcodes[idx].selected;renderBarcodeGrid();}
-function clearBarcodes(){if(!confirm('생성된 바코드를 모두 지울까요?')) return;generatedBarcodes=[];renderBarcodeGrid();}
-async function deleteBarcodeHistory(id){
-  if(!confirm('이 바코드 이력을 삭제할까요?')) return;
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-  await fetch(SB_URL+'/barcode_history?id=eq.'+id,{method:'DELETE',headers:h});
-  loadBarcodeHistory();
-}
-// 공통 출력 함수 - 애니라벨 V3410 (47x26.9mm, 4열x10행)
-function printLabelWindow(items){  if(!items.length) return toast('출력할 바코드를 선택하세요.',false);
-  var labelHTML=items.map(function(b){
-    return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';
-  }).join('');
-  var win=window.open('','_blank');
-  var style='body{margin:0;padding:0;font-family:sans-serif}'
-    +'.grid{display:grid;grid-template-columns:repeat(4,47mm);grid-auto-rows:26.9mm;gap:0;margin:13mm 9mm}'
-    +'.label{width:47mm;height:26.9mm;box-sizing:border-box;padding:1mm 2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}'
-    +'.lname{font-size:5.5pt;color:#333;margin-bottom:0.5mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;line-height:1.1}'
-    +'.lsvg{max-width:43mm;height:13mm}'
-    +'.lcode{font-size:5.5pt;color:#444;font-family:monospace;margin-top:0.3mm;letter-spacing:0}'
-    +'@media print{body{margin:0}@page{size:A4;margin:0}}';
-  var jscodes=items.map(function(b){
-    var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');
-    return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.2,height:36,displayValue:false,margin:1,background:"transparent"});}catch(e){}';
-  }).join('');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력 - V3410</title><style>'+style+'</style>'
-    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head>'
-    +'<body><div class="grid">'+labelHTML+'</div>'
-    +'<script>window.onload=function(){'+jscodes+'setTimeout(function(){window.print();},800);};<\/script></body></html>');
-  win.document.close();
-}
-function printSelectedHistory(){
-  var selected=[];
-  document.querySelectorAll('.bc-hist-chk:checked').forEach(function(c){
-    selected.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
-  });
-  printLabelWindow(selected);
-}
-function printBarcodes(){
-  var selected=generatedBarcodes.filter(function(b){return b.selected;});
-  printLabelWindow(selected);
-}
-
-// 카메라 (BarcodeDetector API)
-var _camTarget=null,_camAutoAction=false,_camBusy=false,_camStream=null,_camFrame=null,_detector=null;
-var _scanCanvas=document.createElement('canvas');
-var _scanCtx=_scanCanvas.getContext('2d',{willReadFrequently:true});
-var _lastDetectedCode='',_lastDetectedAt=0;
-
-function supportsBarcodeDetector(){return 'BarcodeDetector' in window;}
-async function buildDetector(){
-  if(!supportsBarcodeDetector()) return null;
-  var preferred=['ean_13','ean_8','upc_a','upc_e','code_128','code_39'];
-  try{if(typeof BarcodeDetector.getSupportedFormats==='function'){var supported=await BarcodeDetector.getSupportedFormats();var formats=preferred.filter(function(f){return supported.includes(f);});if(!formats.length) formats=preferred;return new BarcodeDetector({formats:formats});}}catch(e){}
-  return new BarcodeDetector({formats:preferred});
-}
-async function openCam(inputId,autoAction){
-  if(!dataReady){toast('데이터를 불러오는 중입니다. 잠시만 기다려주세요.',false);return;}
-  _camTarget=inputId;_camAutoAction=!!autoAction;_camBusy=false;_lastDetectedCode='';_lastDetectedAt=0;
-  var modal=document.getElementById('cam-modal');var video=document.getElementById('cam-video');var status=document.getElementById('cam-status-text');
-  modal.classList.add('open');
-  if(!supportsBarcodeDetector()){status.textContent='이 브라우저는 바코드 감지를 지원하지 않습니다. 안드로이드 크롬으로 열어주세요.';return;}
-  status.textContent='카메라 시작 중...';
-  try{
-    _detector=await buildDetector();
-    _camStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1920},height:{ideal:1080}},audio:false});
-    video.srcObject=_camStream;await video.play();
-    status.textContent='바코드를 네모 안에 크게 맞춰주세요';
-    _camFrame=requestAnimationFrame(scanLoop);
-  }catch(e){status.textContent='카메라 실행 실패: '+(e&&e.message?e.message:e);}
-}
-async function scanLoop(){
-  var video=document.getElementById('cam-video');
-  if(_camBusy) return;
-  if(!_detector||!_camStream||!video||video.readyState<2||!video.videoWidth){_camFrame=requestAnimationFrame(scanLoop);return;}
-  try{
-    var vw=video.videoWidth,vh=video.videoHeight;
-    var cropW=Math.floor(vw*0.68),cropH=Math.floor(vh*0.16);
-    var sx=Math.floor((vw-cropW)/2),sy=Math.floor((vh-cropH)/2);
-    _scanCanvas.width=cropW*2;_scanCanvas.height=cropH*2;
-    _scanCtx.drawImage(video,sx,sy,cropW,cropH,0,0,_scanCanvas.width,_scanCanvas.height);
-    var barcodes=await _detector.detect(_scanCanvas);
-    if(barcodes&&barcodes.length){
-      var raw=(barcodes[0].rawValue||'').trim();var now=Date.now();
-      if(raw&&(raw!==_lastDetectedCode||now-_lastDetectedAt>1500)){_lastDetectedCode=raw;_lastDetectedAt=now;handleDetectedCode(raw);return;}
-    }
-  }catch(e){}
-  _camFrame=requestAnimationFrame(scanLoop);
-}
-function handleDetectedCode(code){
-  _camBusy=true;if(navigator.vibrate) navigator.vibrate(120);
-  var input=document.getElementById(_camTarget);
-  if(input){
-    input.value=code;
-    input.dataset.selectedBarcode='';
-    if(_camTarget==='sales-barcode') finalizeBookInput('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
-    if(_camTarget==='bulk-barcode') finalizeBookInput('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
-  }
-  document.getElementById('cam-status-text').textContent='인식됨: '+code;
-  var _savedTarget=_camTarget;
-  setTimeout(function(){
-    closeCam();
-    if(_savedTarget==='book-barcode'){
-      // closeCam 후 input 값이 살아있는지 확인 후 검색
-      setTimeout(function(){
-        var val=document.getElementById('book-barcode');
-        if(val&&val.value.trim()) searchBookByISBN();
-        else{
-          // 한번 더 시도
-          setTimeout(function(){
-            var val2=document.getElementById('book-barcode');
-            if(val2&&val2.value.trim()) searchBookByISBN();
-          },400);
-        }
-      },200);
-    }
-    if(_camAutoAction){if(_savedTarget==='loan-barcode') queueLoanBarcode();if(_savedTarget==='return-barcode') queueReturnBarcode();}
-  },220);
-}
-function closeCam(){
-  _camBusy=false;
-  if(_camFrame){cancelAnimationFrame(_camFrame);_camFrame=null;}
-  var video=document.getElementById('cam-video');
-  if(video){try{video.pause();}catch(e){}video.srcObject=null;}
-  if(_camStream){try{_camStream.getTracks().forEach(function(t){t.stop();});}catch(e){}_camStream=null;}
-  _detector=null;
-  document.getElementById('cam-modal').classList.remove('open');
-  document.getElementById('cam-status-text').textContent='카메라 시작 중...';
-}
-document.addEventListener('keydown',function(e){if(e.key==='Escape') closeCam();});
-
-window.addEventListener('load',init);
-</script>
-</body>
-</html>
