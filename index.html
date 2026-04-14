@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 2.0</span>
+    <span>정상어학원 교재 관리 1.0</span>
 
   </div>
   <div class="hright">
@@ -1527,9 +1527,9 @@ async function markPaid(saleId,paidDate,memo){
 async function cancelPaid(saleId){
   if(!confirm('완납을 미납으로 되돌릴까요?')) return;
   try{
-    var memoEl=document.getElementById('pmemo-'+saleId);
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    await fetch(SB_URL+'/sales_history?id=eq.'+saleId,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null,memo:memoEl?memoEl.value.trim()||null:null})});
+    var res=await fetch(SB_URL+'/sales_history?id=eq.'+encodeURIComponent(saleId),{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null})});
+    if(!res.ok){var err=await res.text();console.error('cancelPaid error:',res.status,err);toast('취소 실패 ('+res.status+')',false);return;}
     toast('미납으로 변경됐어요.',true);loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
@@ -1733,21 +1733,25 @@ function downloadSmsExcel(){
   var sem=document.getElementById('unpaid-semester').value||'';
   var div=document.getElementById('unpaid-division').value||'';
   var semLabel=(sem||'').replace('년','년 ').replace('봄','봄학기').replace('가을','가을학기');
+  var account=branchInfo.account||'계좌번호 미설정';
+  var accountHolder=branchInfo.accountHolder||'';
   var rows=[['회원코드','학생명','반','교재명','총금액','문자내용']];
   _unpaidForSms.forEach(function(s){
-    var msg=buildSmsMsg(currentBranch,s,semLabel);
-    rows.push([s.studentId||'',s.name,s.class,s.books.join(', '),s.total,msg]);
+    var books=s.books.join(', ');
+    var msg=typeof buildSmsMsg==='function'?buildSmsMsg(currentBranch,s,semLabel)
+      :'['+branchName+' - '+semLabel+' 부교재비 입금안내]\n▶ 학생명 : '+s.name+'\n▶ 반명 : '+s.class+'\n▶ 교재명 : '+books+'\n▶ 총교재비 : '+Number(s.total).toLocaleString()+'원\n▶ 입금계좌 : ['+account+'] '+accountHolder+'\n감사합니다.';
+    rows.push([s.studentId||'',s.name,s.class,books,s.total,msg]);
   });
   var divSuffix=div?'_'+div:'';
-  function doXlsx(){
+  function doSmsXlsx(){
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:14},{wch:10},{wch:22},{wch:30},{wch:10},{wch:80}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'미납문자');
     XLSX.writeFile(wb,branchName+'_미납문자_'+sem+divSuffix+'.xlsx');
   }
-  if(window.XLSX){doXlsx();}
-  else{var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=doXlsx;document.head.appendChild(sc);}
+  if(window.XLSX){doSmsXlsx();}
+  else{var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=doSmsXlsx;document.head.appendChild(sc);}
 }
 
 // ===== 전분원 재고 =====
@@ -1964,14 +1968,16 @@ function downloadHistoryExcel(){
     var dt=(r.created_at||'').replace('T',' ').slice(0,16);
     rows.push([r.label,r.code,dt]);
   });
-  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
-  var bom='\uFEFF';
-  var blob=new Blob([bom+csv],{type:'text/csv;charset=utf-8'});
-  var url=URL.createObjectURL(blob);
-  var a=document.createElement('a');
-  a.href=url;a.download='바코드이력_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-  URL.revokeObjectURL(url);
-  toast('엑셀 파일로 저장됐어요!',true);
+  function doHistXlsx(){
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:30},{wch:20},{wch:18}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'바코드이력');
+    XLSX.writeFile(wb,'바코드이력_'+new Date().toISOString().slice(0,10)+'.xlsx');
+    toast('엑셀 파일로 저장됐어요!',true);
+  }
+  if(window.XLSX){doHistXlsx();}
+  else{var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=doHistXlsx;document.head.appendChild(sc);}
 }
 function renderBarcodeGrid(){
   var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
