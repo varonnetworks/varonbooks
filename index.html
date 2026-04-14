@@ -1419,7 +1419,8 @@ async function initUnpaidPage(){
   var r=await call('getSemesters');semesters=r.data||[];
   var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
   document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
-  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';loadUnpaid();
+  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
+  // 자동 조회 안 함 - 조회 버튼으로만 실행
 }
 async function updateUnpaidClasses(){
   var sem=document.getElementById('unpaid-semester').value;
@@ -1445,7 +1446,7 @@ async function loadUnpaid(){
     var unpaidData=data.filter(function(r){return r['입금상태']==='미납';});
     var unpaidTotal=unpaidData.reduce(function(s,r){return s+Number(r['합계']);},0);
     var divLabel=div?'['+div+'] ':'';
-    document.getElementById('unpaid-title').textContent=divLabel+'납입 내역 ('+data.length+'건)';
+    document.getElementById('unpaid-title').textContent=divLabel+'납입 내역 ('+data.length+'건) - '+(payFilter==='미납'?'미납':payFilter==='완납'?'완납':'전체');
     document.getElementById('unpaid-total').textContent=unpaidData.length?'미납 합계 '+unpaidTotal.toLocaleString()+'원':'';
     if(!data.length){el.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
     el.innerHTML='<div class="twrap"><table><thead><tr><th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>출고일</th><th>상태</th><th>입금일</th><th>메모</th><th>처리</th></tr></thead><tbody>'+
