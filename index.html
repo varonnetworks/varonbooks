@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 2.0</span>
+    <span>정상어학원 교재 관리 3.0</span>
 
   </div>
   <div class="hright">
@@ -531,8 +531,8 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="card-title">🗂️ 바코드 생성 이력</div>
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">생성된 바코드가 자동 저장됩니다. 오염·분실 시 여기서 다시 출력하세요.</p>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
-      <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" oninput="renderBarcodeHistory()">
-      <button class="btn btn-g" onclick="loadBarcodeHistory()">새로고침</button>
+      <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" onkeydown="if(event.key==='Enter') loadBarcodeHistory()">
+      <button class="btn btn-p" onclick="loadBarcodeHistory()">검색</button>
       <button class="btn btn-y" id="bc-history-excel-btn" onclick="downloadHistoryExcel()" style="display:none">엑셀 저장</button>
       <button class="btn btn-s" id="bc-history-print-btn" onclick="printSelectedHistory()" style="display:none">선택 출력</button>
     </div>
@@ -1650,18 +1650,50 @@ async function doAddStudent(){
 }
 async function loadStudentList(){
   renderAccountSettings();
-  var el=document.getElementById('student-list');var cnt=document.getElementById('student-count');if(cnt) cnt.textContent=students.length;
+  var el=document.getElementById('student-list');
+  var cnt=document.getElementById('student-count');
+  if(cnt) cnt.textContent=students.length;
+  var searchWrap=document.getElementById('student-search-wrap');
+  if(!searchWrap){
+    searchWrap=document.createElement('div');
+    searchWrap.id='student-search-wrap';
+    searchWrap.style.cssText='display:flex;gap:8px;margin-bottom:12px;align-items:center;flex-wrap:wrap';
+    searchWrap.innerHTML='<input type="text" id="student-search-input" placeholder="학생 이름 또는 ID 검색" style="max-width:260px" onkeydown="if(event.key===\'Enter\') searchStudentList()">'
+      +'<button class="btn btn-p btn-sm" onclick="searchStudentList()">검색</button>'
+      +'<button class="btn btn-g btn-sm" onclick="showAllStudents()">전체 목록 보기</button>';
+    el.parentNode.insertBefore(searchWrap, el);
+  }
+  el.innerHTML='<div class="empty" style="padding:20px">학생 이름을 검색하거나 전체 목록 보기를 눌러주세요.</div>';
+}
+function searchStudentList(){
+  var kw=(document.getElementById('student-search-input')||{}).value||'';
+  kw=kw.trim().toLowerCase();
+  var el=document.getElementById('student-list');
+  if(!kw){el.innerHTML='<div class="empty" style="padding:20px">검색어를 입력해주세요.</div>';return;}
+  var filtered=students.filter(function(s){
+    return (s['이름']||'').toLowerCase().includes(kw)||(s['학생ID']||'').toLowerCase().includes(kw);
+  });
+  if(!filtered.length){el.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';return;}
+  renderStudentTable(el,filtered);
+}
+function showAllStudents(){
+  var el=document.getElementById('student-list');
   if(!students.length){el.innerHTML='<div class="empty" style="padding:20px">등록된 학생이 없습니다.</div>';return;}
+  renderStudentTable(el,students);
+}
+function renderStudentTable(el,list){
   el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학년부</th><th>학부모 연락처</th><th>비고</th></tr></thead><tbody>'+
-    students.map(function(s){
+    list.map(function(s){
       var div=s['구분']||'CHESS';
       var badge=div==='ACE'?'b-blue':'b-green';
+      var sid=s['학생ID'].replace(/'/g,"\'");
       return '<tr><td class="mono" style="font-size:11px">'+s['학생ID']+'</td><td><b>'+s['이름']+'</b></td><td style="font-size:12px">'+(s['반']||'-')+'</td>'
-        +'<td><span class="badge '+badge+'" style="cursor:pointer" onclick="toggleDivision(\''+s['학생ID']+'\',\''+div+'\',this)">'+div+'</span></td>'
+        +'<td><span class="badge '+badge+'" style="cursor:pointer" data-sid="'+s['학생ID']+'" data-div="'+div+'" onclick="toggleDivision(this.dataset.sid,this.dataset.div,this)">'+div+'</span></td>'
         +'<td class="mono">'+(s['학부모연락처']||'-')+'</td><td style="color:var(--muted);font-size:12px">'+(s['비고']||'')+'</td></tr>';
     }).join('')+
     '</tbody></table></div>';
 }
+
 async function toggleDivision(studentId, currentDiv, el){
   var newDiv=currentDiv==='ACE'?'CHESS':'ACE';
   var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
@@ -1937,19 +1969,36 @@ var _bcHistoryCache=[];
 async function loadBarcodeHistory(){
   var el=document.getElementById('bc-history-list');
   if(!el) return;
+  var kw=(document.getElementById('bc-history-search')||{}).value||'';
+  kw=kw.trim();
+  if(!kw){
+    // 검색어 없으면 안내만
+    el.innerHTML='<div class="empty" style="padding:20px">교재명 또는 코드를 검색하면 결과가 표시됩니다.<br><button class="btn btn-g btn-sm" style="margin-top:10px" onclick="loadAllBarcodeHistory()">전체 목록 보기</button></div>';
+    document.getElementById('bc-history-print-btn').style.display='none';
+    document.getElementById('bc-history-excel-btn').style.display='none';
+    return;
+  }
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
   try{
-    var d=await sbGet('barcode_history','select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=created_at.desc&limit=500');
+    var encoded=encodeURIComponent('%'+kw+'%');
+    var d=await sbGet('barcode_history','select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&or=(label.ilike.'+encoded+',code.ilike.'+encoded+')&order=created_at.desc');
+    _bcHistoryCache=d||[];
+    renderBarcodeHistory();
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+async function loadAllBarcodeHistory(){
+  var el=document.getElementById('bc-history-list');
+  if(!el) return;
+  el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
+  try{
+    var d=await sbGet('barcode_history','select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=created_at.desc');
     _bcHistoryCache=d||[];
     renderBarcodeHistory();
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 function renderBarcodeHistory(){
   var el=document.getElementById('bc-history-list');
-  var kw=(document.getElementById('bc-history-search')||{}).value||'';
-  kw=kw.trim().toLowerCase();
-  var data=_bcHistoryCache.filter(function(r){
-    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
-  });
+  var data=_bcHistoryCache;
   if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';document.getElementById('bc-history-excel-btn').style.display='none';return;}
   document.getElementById('bc-history-print-btn').style.display='';
   document.getElementById('bc-history-excel-btn').style.display='';
