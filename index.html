@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 1.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
 
   </div>
   <div class="hright">
@@ -887,6 +887,14 @@ async function call(action,payload){
       var pb={pay_status:'완납'};
       if(payload.paidDate!==undefined){
         var pd=String(payload.paidDate||'').trim();
+        if(pd){
+          // 4/14 또는 4-14 형식 → 2026-04-14 변환
+          var m=pd.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+          if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
+          // 26.4.14 또는 26/4/14 형식
+          var m2=pd.match(/^(\d{2})[\/\.\-](\d{1,2})[\/\.\-](\d{1,2})$/);
+          if(m2) pd='20'+m2[1]+'-'+String(m2[2]).padStart(2,'0')+'-'+String(m2[3]).padStart(2,'0');
+        }
         pb.paid_date=pd||null;
       }
       if(payload.memo!==undefined) pb.memo=String(payload.memo||'').trim()||null;
