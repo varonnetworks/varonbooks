@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 3.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
 
   </div>
   <div class="hright">
@@ -563,6 +563,24 @@ td{padding:10px 13px;vertical-align:middle}
 
   <div class="card">
     <div class="retro-strip"></div>
+    <div class="card-title">교재 가격 수정</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">이미 등록된 교재의 정가를 수정합니다. 이후 출고 시 새 가격이 적용됩니다.</p>
+    <div class="fgrid">
+      <div class="fg" style="grid-column:span 2">
+        <label class="fl">교재 검색</label>
+        <div style="position:relative">
+          <input type="text" id="price-edit-search" placeholder="교재명 또는 바코드 검색" autocomplete="off" oninput="renderPriceEditResults()">
+          <div id="price-edit-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;background:#fffdf5;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
+        </div>
+        <div id="price-edit-picked" style="display:none;margin-top:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:10px;background:#fff8e8;font-size:13px;font-weight:700"></div>
+      </div>
+      <div class="fg"><label class="fl">새 정가 (원)</label><input type="number" id="price-edit-value" placeholder="새 가격 입력"></div>
+      <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="doEditPrice()">가격 수정</button></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="retro-strip"></div>
     <div class="card-title">선생님 등록</div>
     <div class="fgrid">
       <div class="fg"><label class="fl">교사 ID *</label><input type="text" id="teacher-id" placeholder="예: T001"></div>
@@ -749,13 +767,35 @@ function renderAccountSettings(){
     +'<div style="padding:12px;border-radius:8px;background:rgba(29,95,208,.06);border:1px solid var(--accent);">'
     +'<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">'+b.name+' 문자 양식</div>'
     +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">사용 가능한 변수: <code>{학생명}</code> <code>{반명}</code> <code>{교재명}</code> <code>{총교재비}</code> <code>{입금계좌}</code> <code>{학기}</code> <code>{분원명}</code><br>교재가 여러 권이면 {교재명}에 자동으로 이어서 표시되고 {총교재비}는 합산 금액입니다.</div>'
-    +'<textarea id="sms-template-'+k+'" style="width:100%;height:200px;font-size:12px;font-family:monospace;padding:10px;border:1px solid var(--border-soft);border-radius:6px;resize:vertical;line-height:1.6">'+escapeHtml(tmpl)+'</textarea>'
-    +'<div style="margin-top:6px"><button class="btn btn-g btn-sm" onclick="resetSmsTemplate()">기본값으로 초기화</button></div></div>';
+    +'<textarea id="sms-template-'+k+'" oninput="updateSmsPreview()" style="width:100%;height:200px;font-size:12px;font-family:monospace;padding:10px;border:1px solid var(--border-soft);border-radius:6px;resize:vertical;line-height:1.6">'+escapeHtml(tmpl)+'</textarea>'
+    +'<div style="margin-top:6px;display:flex;gap:8px;flex-wrap:wrap"><button class="btn btn-g btn-sm" onclick="resetSmsTemplate()">기본값으로 초기화</button></div>'
+    +'<div style="margin-top:10px;font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px">📱 미리보기 (샘플)</div>'
+    +'<div id="sms-preview-box" style="background:#fffdf5;border:2px solid #d4b84a;border-radius:8px;padding:12px;font-size:12px;line-height:1.7;white-space:pre-wrap;word-break:keep-all;color:var(--text)"></div>'
+    +'</div>';
+  setTimeout(updateSmsPreview, 50);
 }
 function resetSmsTemplate(){
   var ta=document.getElementById('sms-template-'+currentBranch);
   if(ta) ta.value=DEFAULT_SMS_TEMPLATE;
   toast('기본 양식으로 초기화됐어요. 저장하려면 [계좌 저장] 버튼을 눌러주세요.',true);
+  updateSmsPreview();
+}
+function updateSmsPreview(){
+  var box=document.getElementById('sms-preview-box');
+  if(!box) return;
+  var ta=document.getElementById('sms-template-'+currentBranch);
+  if(!ta) return;
+  var b=BRANCHES[currentBranch]||{};
+  var accountStr='['+(b.account||'계좌번호 미설정')+'] '+(b.accountHolder||'');
+  var preview=ta.value
+    .replace(/{분원명}/g, b.name||'남동탄')
+    .replace(/{학기}/g, '26년 봄학기')
+    .replace(/{학생명}/g, '홍길동')
+    .replace(/{반명}/g, '[A1]SP2/TTH/A2_E6/')
+    .replace(/{교재명}/g, 'R Map Basic B-2')
+    .replace(/{총교재비}/g, '16,000원')
+    .replace(/{입금계좌}/g, accountStr);
+  box.textContent=preview;
 }
 function saveAccountSettings(){
   var k=currentBranch;
@@ -1618,6 +1658,61 @@ async function loadHistory(){
   }catch(e){el.innerHTML='<div class="empty">조회 실패</div>';}
 }
 
+var _priceEditBarcode='';
+function renderPriceEditResults(){
+  var kw=(document.getElementById('price-edit-search').value||'').trim().toLowerCase();
+  var box=document.getElementById('price-edit-results');
+  if(!kw){box.style.display='none';return;}
+  var list=(books||[]).filter(function(b){
+    return String(b['교재명']||'').toLowerCase().includes(kw)||String(b['바코드']||'').toLowerCase().includes(kw);
+  }).slice(0,20);
+  if(!list.length){box.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">검색 결과 없음</div>';box.style.display='block';return;}
+  box.innerHTML=list.map(function(b){
+    var payload=encodeURIComponent(JSON.stringify({barcode:b['바코드'],name:b['교재명'],price:b['정가']}));
+    return '<button type="button" data-book="'+payload+'" style="width:100%;text-align:left;padding:9px 12px;border:none;border-bottom:1px solid #ecd89b;background:#fffdf5;cursor:pointer">'
+      +'<div style="font-size:13px;font-weight:700">'+escapeHtml(b['교재명'])+'</div>'
+      +'<div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">'+escapeHtml(b['바코드'])+' · 현재 정가: '+Number(b['정가']||0).toLocaleString()+'원</div>'
+      +'</button>';
+  }).join('');
+  box.style.display='block';
+  box.querySelectorAll('button[data-book]').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      try{
+        var d=JSON.parse(decodeURIComponent(btn.getAttribute('data-book')));
+        _priceEditBarcode=d.barcode;
+        document.getElementById('price-edit-search').value=d.name;
+        document.getElementById('price-edit-value').value=d.price||'';
+        document.getElementById('price-edit-picked').style.display='block';
+        document.getElementById('price-edit-picked').textContent=d.name+' · 현재 정가: '+Number(d.price||0).toLocaleString()+'원';
+        box.style.display='none';
+      }catch(err){}
+    });
+  });
+}
+document.addEventListener('click',function(e){
+  var box=document.getElementById('price-edit-results');
+  var wrap=document.getElementById('price-edit-search');
+  if(box&&wrap&&!wrap.contains(e.target)&&!box.contains(e.target)) box.style.display='none';
+});
+async function doEditPrice(){
+  if(!_priceEditBarcode) return toast('교재를 먼저 선택해주세요.',false);
+  var newPrice=document.getElementById('price-edit-value').value;
+  if(!newPrice&&newPrice!=='0') return toast('새 가격을 입력해주세요.',false);
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    var res=await fetch(SB_URL+'/books?barcode=eq.'+encodeURIComponent(_priceEditBarcode),{method:'PATCH',headers:h,body:JSON.stringify({price:Number(newPrice)})});
+    if(!res.ok){var err=await res.text();toast('수정 실패: '+err,false);return;}
+    toast('가격이 수정됐어요! ('+Number(newPrice).toLocaleString()+'원)',true);
+    // 로컬 캐시 업데이트
+    var bk=books.find(function(b){return b['바코드']===_priceEditBarcode;});
+    if(bk) bk['정가']=Number(newPrice);
+    _priceEditBarcode='';
+    document.getElementById('price-edit-search').value='';
+    document.getElementById('price-edit-value').value='';
+    document.getElementById('price-edit-picked').style.display='none';
+  }catch(e){toast('오류 발생',false);}
+}
 async function doAddBook(){
   var barcode=normalizeBarcode(document.getElementById('book-barcode').value);
   var name=document.getElementById('book-name').value.trim();
