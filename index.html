@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 3.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
 
   </div>
   <div class="hright">
@@ -711,49 +711,28 @@ var BRANCHES={
 var BRANCH_KEYS=Object.keys(BRANCHES);
 var currentBranch=''; // 로그인 후 설정됨
 
-var DEFAULT_SMS_TEMPLATE = '[{분원명} - {학기} 부교재비 입금안내]\n'
-  +'안녕하세요. 교실에서 배포된 {학기} 부교재비 안내드립니다.\n'
-  +'▶ 학생명 : {학생명}\n'
-  +'▶ 반명 : {반명}\n'
-  +'▶ 교재명 : {교재명}\n'
-  +'▶ 총교재비 : {총교재비}\n'
-  +'동명이인이 있는 경우가 있사오니 반드시 [학생이름 / 학부모님 연락처 뒷 4자리]로 입금 부탁드립니다. 예) 홍길동0503\n'
-  +'학부모님 이름으로 입금하신 경우 반드시 학원으로 전화 부탁드립니다.\n'
-  +'▶ 입금계좌 : {입금계좌}\n'
-  +'감사합니다.';
-
-// localStorage에서 문자 양식 불러오기
+var DEFAULT_SMS_TEMPLATE='[{분원명} - {학기} 부교재비 입금안내]\n안녕하세요. 교실에서 배포된 {학기} 부교재비 안내드립니다.\n▶ 학생명 : {학생명}\n▶ 반명 : {반명}\n▶ 교재명 : {교재명}\n▶ 총교재비 : {총교재비}\n동명이인이 있는 경우가 있사오니 반드시 [학생이름 / 학부모님 연락처 뒷 4자리]로 입금 부탁드립니다. 예) 홍길동0503\n학부모님 이름으로 입금하신 경우 반드시 학원으로 전화 부탁드립니다.\n▶ 입금계좌 : {입금계좌}\n감사합니다.';
 (function(){
   try{
     var saved=JSON.parse(localStorage.getItem('jls_sms_templates')||'{}');
-    Object.keys(saved).forEach(function(k){
-      if(BRANCHES[k]) BRANCHES[k].smsTemplate=saved[k];
-    });
+    Object.keys(saved).forEach(function(k){if(BRANCHES[k]) BRANCHES[k].smsTemplate=saved[k];});
   }catch(e){}
 })();
-
-function getSmsTemplate(branchKey){
-  return (BRANCHES[branchKey]&&BRANCHES[branchKey].smsTemplate)||DEFAULT_SMS_TEMPLATE;
-}
-function buildSmsMsg(branchKey, studentInfo, semLabel){
+function getSmsTemplate(k){return (BRANCHES[k]&&BRANCHES[k].smsTemplate)||DEFAULT_SMS_TEMPLATE;}
+function buildSmsMsg(branchKey,studentInfo,semLabel){
   var b=BRANCHES[branchKey]||{};
-  var account=b.account||'계좌번호 미설정';
-  var accountHolder=b.accountHolder||'';
-  var accountStr='['+account+'] '+accountHolder;
-  var branchName=b.name||'JLS';
+  var accountStr='['+( b.account||'계좌번호 미설정')+'] '+(b.accountHolder||'');
   var books=studentInfo.books.join(', ');
   var total=Number(studentInfo.total).toLocaleString()+'원';
-  var template=getSmsTemplate(branchKey);
-  return template
-    .replace(/{분원명}/g, branchName)
-    .replace(/{학기}/g, semLabel)
-    .replace(/{학생명}/g, studentInfo.name)
-    .replace(/{반명}/g, studentInfo.class)
-    .replace(/{교재명}/g, books)
-    .replace(/{총교재비}/g, total)
-    .replace(/{입금계좌}/g, accountStr);
+  return getSmsTemplate(branchKey)
+    .replace(/{분원명}/g,b.name||'JLS')
+    .replace(/{학기}/g,semLabel)
+    .replace(/{학생명}/g,studentInfo.name)
+    .replace(/{반명}/g,studentInfo.class)
+    .replace(/{교재명}/g,books)
+    .replace(/{총교재비}/g,total)
+    .replace(/{입금계좌}/g,accountStr);
 }
-
 function renderAccountSettings(){
   var el=document.getElementById('account-settings');
   if(!el) return;
@@ -768,16 +747,13 @@ function renderAccountSettings(){
     +'<div class="fg"><label class="fl">예금주</label><input type="text" id="acc-holder-'+k+'" value="'+escapeHtml(b.accountHolder||'')+'" placeholder="예: 바론네트웍스"></div>'
     +'</div></div>'
     +'<div style="padding:12px;border-radius:8px;background:rgba(29,95,208,.06);border:1px solid var(--accent);">'
-    +'<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:6px">'+b.name+' 문자 양식</div>'
-    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">사용 가능한 변수: <code>{학생명}</code> <code>{반명}</code> <code>{교재명}</code> <code>{총교재비}</code> <code>{입금계좌}</code> <code>{학기}</code> <code>{분원명}</code></div>'
+    +'<div style="font-size:12px;font-weight:700;color:var(--accent);margin-bottom:4px">'+b.name+' 문자 양식</div>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:8px">사용 가능한 변수: <code>{학생명}</code> <code>{반명}</code> <code>{교재명}</code> <code>{총교재비}</code> <code>{입금계좌}</code> <code>{학기}</code> <code>{분원명}</code><br>교재가 여러 권이면 {교재명}에 자동으로 이어서 표시되고 {총교재비}는 합산 금액입니다.</div>'
     +'<textarea id="sms-template-'+k+'" style="width:100%;height:200px;font-size:12px;font-family:monospace;padding:10px;border:1px solid var(--border-soft);border-radius:6px;resize:vertical;line-height:1.6">'+escapeHtml(tmpl)+'</textarea>'
-    +'<div style="margin-top:6px;display:flex;gap:8px">'
-    +'<button class="btn btn-g btn-sm" onclick="resetSmsTemplate()">기본값으로 초기화</button>'
-    +'</div></div>';
+    +'<div style="margin-top:6px"><button class="btn btn-g btn-sm" onclick="resetSmsTemplate()">기본값으로 초기화</button></div></div>';
 }
 function resetSmsTemplate(){
-  var k=currentBranch;
-  var ta=document.getElementById('sms-template-'+k);
+  var ta=document.getElementById('sms-template-'+currentBranch);
   if(ta) ta.value=DEFAULT_SMS_TEMPLATE;
   toast('기본 양식으로 초기화됐어요. 저장하려면 [계좌 저장] 버튼을 눌러주세요.',true);
 }
@@ -786,20 +762,15 @@ function saveAccountSettings(){
   var num=document.getElementById('acc-num-'+k);
   var holder=document.getElementById('acc-holder-'+k);
   var tmplEl=document.getElementById('sms-template-'+k);
-  if(num&&holder){
-    BRANCHES[k].account=num.value.trim();
-    BRANCHES[k].accountHolder=holder.value.trim();
-  }
-  if(tmplEl){
-    BRANCHES[k].smsTemplate=tmplEl.value;
-  }
+  if(num&&holder){BRANCHES[k].account=num.value.trim();BRANCHES[k].accountHolder=holder.value.trim();}
+  if(tmplEl) BRANCHES[k].smsTemplate=tmplEl.value;
   try{
     var saved=JSON.parse(localStorage.getItem('jls_accounts')||'{}');
     saved[k]={account:BRANCHES[k].account,accountHolder:BRANCHES[k].accountHolder};
     localStorage.setItem('jls_accounts',JSON.stringify(saved));
-    var tmplSaved=JSON.parse(localStorage.getItem('jls_sms_templates')||'{}');
-    if(tmplEl) tmplSaved[k]=tmplEl.value;
-    localStorage.setItem('jls_sms_templates',JSON.stringify(tmplSaved));
+    var ts=JSON.parse(localStorage.getItem('jls_sms_templates')||'{}');
+    if(tmplEl) ts[k]=tmplEl.value;
+    localStorage.setItem('jls_sms_templates',JSON.stringify(ts));
   }catch(e){}
   toast('설정이 저장됐어요!',true);
 }
@@ -941,11 +912,9 @@ async function call(action,payload){
     if(action==='getStockStatus'){
       var bks=await sbGet('books','select=*&order=name&note=not.in.(JLS자체교재,JLS교사용)');
       var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
-      var loans=await sbGet('loan_history','select=barcode,status&branch=eq.'+encodeURIComponent(currentBranch));
       var m={};
-      bks.forEach(function(b){m[b.barcode]={교재명:b.name,바코드:b.barcode,총입고:0,총출고:0,대여중:0,현재재고:0,최근업데이트:''};});
+      bks.forEach(function(b){m[b.barcode]={교재명:b.name,바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
       sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
-      loans.forEach(function(l){if(m[l.barcode]&&l.status==='대여중') m[l.barcode].대여중+=1;});
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
       return {ok:true,data:Object.values(m)};
     }
@@ -1558,8 +1527,9 @@ async function markPaid(saleId,paidDate,memo){
 async function cancelPaid(saleId){
   if(!confirm('완납을 미납으로 되돌릴까요?')) return;
   try{
+    var memoEl=document.getElementById('pmemo-'+saleId);
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    await fetch(SB_URL+'/sales_history?id=eq.'+saleId,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null})});
+    await fetch(SB_URL+'/sales_history?id=eq.'+saleId,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null,memo:memoEl?memoEl.value.trim()||null:null})});
     toast('미납으로 변경됐어요.',true);loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
@@ -1570,7 +1540,6 @@ async function loadStock(){
     var res=await call('getStockStatus',{});stockCache=res.data||[];
     stat.innerHTML='<div class="scard"><div class="sl">등록 교재</div><div class="sn" style="color:var(--accent)">'+stockCache.length+'</div><div class="ss">종</div></div>'+
       '<div class="scard"><div class="sl">판매 가능 재고</div><div class="sn" style="color:var(--accent2)">'+stockCache.reduce(function(s,r){return s+Number(r['현재재고']);},0)+'</div><div class="ss">권</div></div>'+
-      '<div class="scard"><div class="sl">교사 대여 중</div><div class="sn" style="color:#9e7400">'+stockCache.reduce(function(s,r){return s+Number(r['대여중']);},0)+'</div><div class="ss">권</div></div>'+
       '<div class="scard"><div class="sl">재고 부족 (2권↓)</div><div class="sn" style="color:var(--warn)">'+stockCache.filter(function(r){return Number(r['현재재고'])<=2;}).length+'</div><div class="ss">종</div></div>';
     var searchInput=document.getElementById('stock-search');
     if(searchInput && !searchInput.dataset.boundEnter){
@@ -1764,11 +1733,8 @@ function downloadSmsExcel(){
   var sem=document.getElementById('unpaid-semester').value||'';
   var div=document.getElementById('unpaid-division').value||'';
   var semLabel=(sem||'').replace('년','년 ').replace('봄','봄학기').replace('가을','가을학기');
-  var account=branchInfo.account||'계좌번호 미설정';
-  var accountHolder=branchInfo.accountHolder||'';
   var rows=[['회원코드','학생명','반','교재명','총금액','문자내용']];
   _unpaidForSms.forEach(function(s){
-    var books=s.books.join(', ');
     var msg=buildSmsMsg(currentBranch,s,semLabel);
     rows.push([s.studentId||'',s.name,s.class,s.books.join(', '),s.total,msg]);
   });
@@ -1781,7 +1747,7 @@ function downloadSmsExcel(){
     XLSX.writeFile(wb,branchName+'_미납문자_'+sem+divSuffix+'.xlsx');
   }
   if(window.XLSX){doXlsx();}
-  else{var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=doXlsx;document.head.appendChild(s);}
+  else{var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=doXlsx;document.head.appendChild(sc);}
 }
 
 // ===== 전분원 재고 =====
