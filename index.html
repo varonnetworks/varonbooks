@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 3.0</span>
+    <span>정상어학원 교재 관리 1.0</span>
 
   </div>
   <div class="hright">
@@ -1198,7 +1198,7 @@ function renderReturnQueue(){renderQueue('return-queue-wrap',returnQueue,'return
 function pushUnique(queue,code){
   code=String(code||'').trim();if(!code) return false;
   if(queue.some(function(item){return item.barcode===code;})) return false;
-  queue.push(makeQueueItem(code));return true;
+  queue.unshift(makeQueueItem(code));return true;
 }
 function queueLoanBarcode(){
   var input=document.getElementById('loan-barcode');var barcode=input.value.trim();
@@ -1223,15 +1223,19 @@ async function processLoanQueue(){
   var semester=document.getElementById('loan-semester').value.trim();
   if(!loanQueue.length) return toast('대여 목록이 비어 있습니다.',false);
   if(!teacherId) return toast('선생님을 먼저 선택하세요.',false);
-  var items=loanQueue.slice();var successCount=0;
-  for(var i=0;i<items.length;i++){
-    var barcode=items[i].barcode;
+  var items=loanQueue.slice();
+  toast('대여 처리 중... ('+items.length+'권)',true);
+  var results=await Promise.all(items.map(async function(item){
     try{
-      var res=await call('loanBook',{barcode:barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
-      addLoanLog(barcode,res.msg,res.ok);
-      if(res.ok){successCount++;loanQueue=loanQueue.filter(function(x){return x.barcode!==barcode;});renderLoanQueue();}
-    }catch(e){addLoanLog(barcode,'오류 발생',false);}
-  }
+      var res=await call('loanBook',{barcode:item.barcode,teacherId:teacherId,returnDate:returnDate,semester:semester});
+      addLoanLog(item.barcode,res.msg,res.ok);
+      return {barcode:item.barcode,ok:res.ok};
+    }catch(e){addLoanLog(item.barcode,'오류 발생',false);return {barcode:item.barcode,ok:false};}
+  }));
+  var successCount=results.filter(function(r){return r.ok;}).length;
+  var succeeded=results.filter(function(r){return r.ok;}).map(function(r){return r.barcode;});
+  loanQueue=loanQueue.filter(function(x){return !succeeded.includes(x.barcode);});
+  renderLoanQueue();
   if(successCount) loadActiveLoan();
   toast('대여 처리 완료: '+successCount+' / '+items.length,successCount>0);
 }
