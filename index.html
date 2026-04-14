@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 1.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
 
   </div>
   <div class="hright">
@@ -810,8 +810,8 @@ var returnQueue=[];
 
 // Supabase REST API 헬퍼
 function sbGet(table,params){return fetch(SB_URL+'/'+table+'?'+params,{headers:SB_HEADERS}).then(function(r){return r.json();});}
-function sbPost(table,body){return fetch(SB_URL+'/'+table,{method:'POST',headers:SB_HEADERS,body:JSON.stringify(body)}).then(function(r){return r.json();});}
-function sbPatch(table,params,body){var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});return fetch(SB_URL+'/'+table+'?'+params,{method:'PATCH',headers:h,body:JSON.stringify(body)}).then(function(r){return r.ok?{ok:true}:{ok:false};});}
+function sbPost(table,body){return fetch(SB_URL+'/'+table,{method:'POST',headers:SB_HEADERS,body:JSON.stringify(body)}).then(function(r){if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t);});return r.status===204?{}:r.json();});}
+function sbPatch(table,params,body){var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});return fetch(SB_URL+'/'+table+'?'+params,{method:'PATCH',headers:h,body:JSON.stringify(body)}).then(function(r){if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t);});return {ok:true};});}
 
 async function call(action,payload){
   payload=payload||{};
@@ -1528,7 +1528,7 @@ async function cancelPaid(saleId){
   if(!confirm('완납을 미납으로 되돌릴까요?')) return;
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var res=await fetch(SB_URL+'/sales_history?id=eq.'+encodeURIComponent(saleId),{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null})});
+    var res=await fetch(SB_URL+'/sales_history?id=eq.'+saleId,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납',paid_date:null})});
     if(!res.ok){var err=await res.text();console.error('cancelPaid error:',res.status,err);toast('취소 실패 ('+res.status+')',false);return;}
     toast('미납으로 변경됐어요.',true);loadUnpaid();
   }catch(e){toast('오류 발생',false);}
