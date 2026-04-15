@@ -600,6 +600,42 @@ td{padding:10px 13px;vertical-align:middle}
       </div>
       <div id="bank-upload-status"></div>
     </div>
+
+    <!-- 통장 내역 조회 -->
+    <div class="card" style="margin-top:0">
+      <div class="retro-strip"></div>
+      <div class="card-title">🔍 통장 내역 조회</div>
+      <div class="fgrid" style="margin-bottom:12px;align-items:end">
+        <div class="fg">
+          <label class="fl">시작일</label>
+          <input type="date" id="bank-date-from">
+        </div>
+        <div class="fg">
+          <label class="fl">종료일</label>
+          <input type="date" id="bank-date-to">
+        </div>
+        <div class="fg">
+          <label class="fl">입금/출금</label>
+          <select id="bank-type-filter">
+            <option value="">전체</option>
+            <option value="deposit">입금만</option>
+            <option value="withdraw">출금만</option>
+          </select>
+        </div>
+        <div class="fg" style="grid-column:span 2">
+          <label class="fl">검색 (입금자 · 출금내용)</label>
+          <input type="text" id="bank-search" placeholder="이름, 내용 검색" onkeydown="if(event.key==='Enter') loadBankHistory()">
+        </div>
+        <div class="fg" style="justify-content:flex-end">
+          <button class="btn btn-p" onclick="loadBankHistory()">조회</button>
+        </div>
+      </div>
+      <div class="shead" style="margin-bottom:8px">
+        <span class="stitle" style="font-size:13px" id="bank-result-title"></span>
+        <span style="font-size:12px;color:var(--muted)" id="bank-result-summary"></span>
+      </div>
+      <div id="bank-list"></div>
+    </div>
   </div>
 
   <!-- 상세 드릴다운 (분원별 클릭) -->
@@ -3466,10 +3502,18 @@ async function loadBankHistory(){
     var params='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=tx_datetime.desc&limit=500';
     if(from) params+='&tx_datetime=gte.'+encodeURIComponent(from.replace(/-/g,'.'));
     if(to) params+='&tx_datetime=lte.'+encodeURIComponent(to.replace(/-/g,'.')+'Z');
-    if(search) params+='&counterpart=ilike.'+encodeURIComponent('%'+search+'%');
     if(typeFilter==='deposit') params+='&deposit=gt.0';
     else if(typeFilter==='withdraw') params+='&withdraw=gt.0';
     var data=await sbGet('bank_transactions',params);
+    // 검색어: 입금자(counterpart) + 적요(summary) + 내용(memo) 통합 검색
+    if(search){
+      var kw=search.toLowerCase();
+      data=data.filter(function(r){
+        return (r.counterpart||'').toLowerCase().includes(kw)
+          ||(r.summary||'').toLowerCase().includes(kw)
+          ||(r.memo||'').toLowerCase().includes(kw);
+      });
+    }
     if(!data.length){el.innerHTML='<div class="empty">조회 결과가 없습니다</div>';return;}
     var totalDeposit=data.reduce(function(s,r){return s+Number(r.deposit||0);},0);
     var totalWithdraw=data.reduce(function(s,r){return s+Number(r.withdraw||0);},0);
