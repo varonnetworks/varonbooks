@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 1.0</span>
+    <span>정상어학원 교재 관리 2.0</span>
 
   </div>
   <div class="hright">
@@ -403,7 +403,7 @@ td{padding:10px 13px;vertical-align:middle}
       </div>
       <div class="fg"><label class="fl">입금 상태</label>
         <select id="unpaid-pay-filter">
-          <option value="미납">미납만</option>
+          <option value="미납">미납+부분납</option>
           <option value="">전체 (미납+완납)</option>
           <option value="완납">완납만</option>
         </select>
@@ -988,21 +988,35 @@ async function call(action,payload){
       if(payload.classNum) params+='&class_name=eq.'+encodeURIComponent(payload.classNum);
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
       var d=await sbGet('sales_history',params);
-      // payments 합산
-      var pmtParams='select=student_id,semester,paid_amount&branch=eq.'+encodeURIComponent(currentBranch);
+      // payments 합산 (내역 포함)
+      var pmtParams='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=paid_date.asc';
       if(payload.semester) pmtParams+='&semester=eq.'+encodeURIComponent(payload.semester);
       var pmts=await sbGet('payments',pmtParams);
-      var pmtMap={};
-      pmts.forEach(function(p){var k=(p.student_id||'')+'__'+(p.semester||'');if(!pmtMap[k]) pmtMap[k]=0;pmtMap[k]+=Number(p.paid_amount||0);});
+      var pmtMap={};   // 합계
+      var pmtHistory={}; // 내역 배열
+      pmts.forEach(function(p){
+        var k=(p.student_id||'')+'__'+(p.semester||'');
+        if(!pmtMap[k]) pmtMap[k]=0;
+        pmtMap[k]+=Number(p.paid_amount||0);
+        if(!pmtHistory[k]) pmtHistory[k]=[];
+        pmtHistory[k].push({date:p.paid_date||'',amount:Number(p.paid_amount||0),memo:p.memo||''});
+      });
       var rows=d.map(function(r){
         var k=(r.student_id||'')+'__'+(r.semester||'');
         var paid=pmtMap[k]||0;
         var total=Number(r.total||0);
-        return {'ID':r.id,'바코드':r.barcode,'교재명':r.book_name,'학생ID':r.student_id||'','학생명':r.student_name||'','학기':r.semester||'','반':r.class_name||'','합계':total,'날짜':r.sale_date,'입금상태':r.pay_status||'미납','입금액':paid,'메모':r.memo||''};
+        var balance=total-paid;
+        // 입금상태 재계산
+        var status=balance<=0?'완납':paid>0?'부분납':'미납';
+        return {'ID':r.id,'바코드':r.barcode,'교재명':r.book_name,'학생ID':r.student_id||'','학생명':r.student_name||'','학기':r.semester||'','반':r.class_name||'','합계':total,'날짜':r.sale_date,'입금상태':status,'입금액':paid,'메모':r.memo||'','입금내역':pmtHistory[k]||[]};
       });
-      // 필터
+      // 필터: 미납 선택 시 미납+부분납 모두 포함
       if(payload.payStatus){
-        rows=rows.filter(function(r){return r['입금상태']===payload.payStatus;});
+        if(payload.payStatus==='미납'){
+          rows=rows.filter(function(r){return r['입금상태']==='미납'||r['입금상태']==='부분납';});
+        } else {
+          rows=rows.filter(function(r){return r['입금상태']===payload.payStatus;});
+        }
       }
       return {ok:true,data:rows};
     }
@@ -1775,19 +1789,24 @@ async function loadUnpaid(){
       if(!byStudent[key]){
         byStudent[key]={
           studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],
-          items:[],totalAmount:0,totalPaid:Number(r['입금액']||0)
+          items:[],totalAmount:0,totalPaid:Number(r['입금액']||0),
+          status:r['입금상태'],history:r['입금내역']||[]
         };
       }
       byStudent[key].items.push({name:r['교재명'],amount:Number(r['합계']||0),date:r['날짜']});
       byStudent[key].totalAmount+=Number(r['합계']||0);
       byStudent[key].totalPaid=Number(r['입금액']||0);
+      byStudent[key].status=r['입금상태'];
+      byStudent[key].history=r['입금내역']||[];
     });
 
     var groups=Object.values(byStudent);
-    var unpaidTotal=groups.reduce(function(s,g){return s+Math.max(0,g.totalAmount-g.totalPaid);},0);
+    var unpaidTotal=groups.reduce(function(s,g){
+      return s+(g.status!=='완납'?g.totalAmount-g.totalPaid:0);
+    },0);
     var divLabel=div?'['+div+'] ':'';
     document.getElementById('unpaid-title').textContent=divLabel+'납입 내역 ('+groups.length+'명)';
-    document.getElementById('unpaid-total').textContent=unpaidTotal?'미납 합계 '+unpaidTotal.toLocaleString()+'원':'';
+    document.getElementById('unpaid-total').textContent=unpaidTotal>0?'미납 합계 '+unpaidTotal.toLocaleString()+'원':'';
 
     if(!groups.length){el.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
 
@@ -1797,24 +1816,38 @@ async function loadUnpaid(){
       +'</tr></thead><tbody>'
       +groups.map(function(g){
         var balance=g.totalAmount-g.totalPaid;
-        var statusColor=balance<=0?'var(--accent2)':g.totalPaid>0?'var(--yellow)':'var(--warn)';
-        var statusLabel=balance<=0?'완납':g.totalPaid>0?'부분납':'미납';
+        var statusColor=g.status==='완납'?'var(--accent2)':g.status==='부분납'?'var(--yellow)':'var(--warn)';
         var gid=encodeURIComponent((g.studentId||g.name)+'__'+(g.semester||''));
-        // 교재명 여러줄
         var bookLines=g.items.map(function(it){return escapeHtml(it.name);}).join('<br>');
-        // 금액 교재별 개별 여러줄
         var amtLines=g.items.map(function(it){return Number(it.amount).toLocaleString()+'원';}).join('<br>');
-        // 출고일 여러줄
         var dateLines=g.items.map(function(it){return it.date||'-';}).join('<br>');
-        return '<tr>'
-          +'<td><b>'+escapeHtml(g.name||'-')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div></td>'
+        // 부분납 내역 행 (숨겨져 있다가 클릭 시 표시)
+        var historyRow='';
+        if(g.history&&g.history.length){
+          var histHtml=g.history.map(function(h){
+            return '<span style="display:inline-block;margin:2px 4px;padding:3px 8px;background:#fff8e8;border:1px solid #d4b84a;border-radius:6px;font-size:11px">'
+              +(h.date||'-')+' · <b>'+Number(h.amount).toLocaleString()+'원</b>'+(h.memo?' · '+escapeHtml(h.memo):'')+'</span>';
+          }).join('');
+          historyRow='<tr id="hist-'+gid+'" style="display:none;background:#fffdf5">'
+            +'<td colspan="11" style="padding:8px 14px;font-size:12px;color:var(--muted)">'
+            +'<span style="font-weight:700;color:var(--accent);margin-right:8px">입금 내역</span>'+histHtml
+            +'</td></tr>';
+        }
+        var nameCell='<b>'+escapeHtml(g.name||'-')+'</b>'
+          +'<div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div>';
+        if(g.history&&g.history.length){
+          nameCell='<b style="cursor:pointer;text-decoration:underline dotted;color:var(--accent)" data-gid="'+gid+'" onclick="togglePayHistory(this.dataset.gid)">'+escapeHtml(g.name||'-')+'</b>'
+            +'<div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div>';
+        }
+        var mainRow='<tr>'
+          +'<td>'+nameCell+'</td>'
           +'<td><span class="badge b-blue">'+escapeHtml(g.semester||'-')+'</span></td>'
           +'<td style="font-size:12px">'+escapeHtml(g.class||'-')+'</td>'
           +'<td style="font-size:12px;line-height:1.8">'+bookLines+'</td>'
           +'<td class="mono" style="font-size:12px;line-height:1.8">'+amtLines+'</td>'
           +'<td class="mono" style="font-size:11px;line-height:1.8">'+dateLines+'</td>'
           +'<td>'
-            +'<span style="font-size:13px;font-weight:700;color:'+statusColor+'">'+statusLabel+'</span>'
+            +'<span style="font-size:13px;font-weight:700;color:'+statusColor+'">'+g.status+'</span>'
             +'<div style="font-size:15px;font-weight:900;color:'+statusColor+';margin-top:2px">'
               +(balance>0?balance.toLocaleString()+'원':balance<0?'초과 '+Math.abs(balance).toLocaleString()+'원':g.totalAmount.toLocaleString()+'원')
             +'</div>'
@@ -1824,9 +1857,14 @@ async function loadUnpaid(){
           +'<td><input type="text" id="paid-memo-'+gid+'" placeholder="메모" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
           +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
           +'</tr>';
+        return mainRow+historyRow;
       }).join('')
       +'</tbody></table></div>';
   }catch(e){console.error(e);el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+function togglePayHistory(gid){
+  var row=document.getElementById('hist-'+gid);
+  if(row) row.style.display=row.style.display==='none'?'':'none';
 }
 
 async function doPayment(studentId, semester, gid, totalAmount){
