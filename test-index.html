@@ -1108,7 +1108,8 @@ async function call(action,payload){
       // 학기 필터 없을 때: 학생 단위 전체 합산 / 있을 때: 학생+학기 단위
       var hasSem=!!payload.semester;
       var pmtParams='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=paid_date.asc';
-      if(hasSem) pmtParams+='&semester=eq.'+encodeURIComponent(payload.semester);
+      // 학기 필터 있어도 semester=null(전체조회에서 입금처리된 건)도 함께 가져옴
+      if(hasSem) pmtParams+='&or=(semester.eq.'+encodeURIComponent(payload.semester)+',semester.is.null)';
       var pmts=await sbGet('payments',pmtParams);
       var pmtMap={};    // 학생(+학기)별 입금 합계
       var pmtHistory={}; // 학생(+학기)별 입금 내역
@@ -2096,7 +2097,7 @@ async function loadUnpaid(){
           +'<td style="white-space:nowrap"><input type="number" id="paid-amt-'+gid+'" placeholder="입금액" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모" style="width:76px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
+          +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
           +'</tr>'+historyRow;
       }).join('')
       +'</tbody></table></div>';
@@ -2122,7 +2123,7 @@ async function doPayment(studentId, semester, gid, totalAmount){
   if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var body={branch:currentBranch,student_id:studentId,semester:semester,paid_amount:amt,paid_date:pd,memo:memo||null};
+    var body={branch:currentBranch,student_id:studentId,semester:semester||null,paid_amount:amt,paid_date:pd,memo:memo||null};
     var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
     if(!res.ok){var err=await res.text();toast('처리 실패: '+err,false);return;}
     // sales_history에서 해당 학생/학기 출고 건들 pay_status 업데이트
@@ -3444,11 +3445,11 @@ async function _uploadBankRows(rows,filename){
   if(!rows.length){statusEl.innerHTML='<div class="empty">데이터가 없습니다.</div>';return;}
   // 컬럼: 거래일시(0) 적요(1) 의뢰인/수취인(2) 내통장표시내용(3) 출금금액(4) 입금금액(5) 잔액(6) 취급점(7) 구분(8)
   var records=rows.map(function(r){
-    var dt=String(r[0]||'').trim();
+    var dt=String(r[0]||'').trim().replace(/\s+/g,' '); // 줄바꿈 정규화
     var counterpart=String(r[2]||'').trim();
     var withdraw=Number(String(r[4]||'0').replace(/,/g,''))||0;
     var deposit=Number(String(r[5]||'0').replace(/,/g,''))||0;
-    if(!dt) return null;
+    if(!dt||dt==='거래일시') return null;
     return {
       branch:currentBranch,
       tx_datetime:dt,
@@ -3464,31 +3465,59 @@ async function _uploadBankRows(rows,filename){
   }).filter(Boolean);
 
   if(!records.length){statusEl.innerHTML='<div class="empty">유효한 행이 없습니다.</div>';return;}
-  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>'+records.length+'건 저장 중...</div>';
+  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>중복 확인 중...</div>';
 
-  // 50개씩 나눠서 upsert (중복은 ON CONFLICT DO NOTHING)
-  var saved=0,skipped=0;
-  var CHUNK=50;
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'resolution=ignore-duplicates,return=representation'});
-  for(var i=0;i<records.length;i+=CHUNK){
-    var chunk=records.slice(i,i+CHUNK);
-    try{
-      var res=await fetch(SB_URL+'/bank_transactions',{method:'POST',headers:h,body:JSON.stringify(chunk)});
-      if(res.ok){
-        var inserted=await res.json();
-        saved+=Array.isArray(inserted)?inserted.length:0;
-      }
-    }catch(e){}
+  // DB에서 기존 데이터 조회 후 JS에서 중복 제거 → 신규만 INSERT
+  try{
+    var existing=await sbGet('bank_transactions',
+      'select=tx_datetime,counterpart,deposit,withdraw&branch=eq.'+encodeURIComponent(currentBranch)+'&limit=5000');
+    // 기존 데이터 key set 생성 (줄바꿈 정규화 포함)
+    var existingKeys=new Set(existing.map(function(e){
+      return (String(e.tx_datetime||'').replace(/\s+/g,' ').trim())
+        +'|'+(e.counterpart||'')
+        +'|'+Number(e.deposit||0)
+        +'|'+Number(e.withdraw||0);
+    }));
+
+    // 신규 행만 필터
+    var toInsert=records.filter(function(r){
+      var k=(r.tx_datetime||'')+'|'+(r.counterpart||'')+'|'+r.deposit+'|'+r.withdraw;
+      return !existingKeys.has(k);
+    });
+    var skipped=records.length-toInsert.length;
+
+    if(!toInsert.length){
+      statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#fff8e8;border:1px solid var(--yellow);font-size:13px">'
+        +'⚠️ 신규 내역 없음 · <b>'+skipped+'건 모두 중복</b></div>';
+      return;
+    }
+
+    statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>신규 '+toInsert.length+'건 저장 중...</div>';
+
+    // 50개씩 나눠서 INSERT
+    var saved=0;
+    var CHUNK=50;
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    for(var i=0;i<toInsert.length;i+=CHUNK){
+      var chunk=toInsert.slice(i,i+CHUNK);
+      try{
+        var res=await fetch(SB_URL+'/bank_transactions',{method:'POST',headers:h,body:JSON.stringify(chunk)});
+        if(res.ok) saved+=chunk.length;
+        else{var err=await res.text();console.error('bank insert err:',err);}
+      }catch(e){console.error(e);}
+    }
+
+    statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#e8f8f0;border:1px solid var(--accent2);font-size:13px">'
+      +'✅ 업로드 완료 · <b>'+saved+'건 새로 저장</b>'+(skipped?' · '+skipped+'건 중복 건너뜀':'')
+      +'</div>';
+    document.getElementById('bank-drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div>'
+      +'<div style="font-size:14px;font-weight:700">'+filename+'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'+records.length+'행 처리 · 클릭하여 파일 변경</div>'
+      +'<input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">';
+  }catch(e){
+    console.error(e);
+    statusEl.innerHTML='<div class="empty">업로드 실패: '+e.message+'</div>';
   }
-  skipped=records.length-saved;
-  statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#e8f8f0;border:1px solid var(--accent2);font-size:13px">'
-    +'✅ 업로드 완료 · <b>'+saved+'건 새로 저장</b>'+(skipped?' · '+skipped+'건 중복 건너뜀':'')
-    +'</div>';
-  // 드롭존 업데이트
-  document.getElementById('bank-drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div>'
-    +'<div style="font-size:14px;font-weight:700">'+filename+'</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'+records.length+'행 처리 · 클릭하여 파일 변경</div>'
-    +'<input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">';
 }
 
 async function loadBankHistory(){
