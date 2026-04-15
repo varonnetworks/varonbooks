@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 2.0</span>
+    <span>정상어학원 교재 관리 3.0</span>
 
   </div>
   <div class="hright">
@@ -975,17 +975,18 @@ async function call(action,payload){
     if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,note:payload.note||null,branch:currentBranch});return {ok:true,msg:'학생 등록 완료: '+payload.name};}
     if(action==='bulkAddStudents'){var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,note:r.note||null,branch:currentBranch};});await sbPost('students',rows);return {ok:true,msg:rows.length+'명 업로드 완료'};}
     if(action==='getAllStockStatus'){
-      var bks=await sbGet('books','select=barcode,name,branch,note&order=name&note=not.in.(JLS자체교재,JLS교사용)');
+      // books는 공용(branch 없음) - barcode→name 매핑만 사용
+      var bks=await sbGet('books','select=barcode,name&order=name&note=not.in.(JLS자체교재,JLS교사용)');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
-      // 교재명 기준으로 분원별 재고 집계
+      // barcode → 교재명 맵
+      var barcodeToName={};
+      bks.forEach(function(b){barcodeToName[b.barcode]=b.name;});
+      // 교재명+분원별 집계
       var bookNames={};
-      bks.forEach(function(b){if(!bookNames[b.name]) bookNames[b.name]={};if(!bookNames[b.name][b.branch||'?']) bookNames[b.name][b.branch||'?']={총입고:0,총출고:0};});
       sales.forEach(function(s){
         var br=s.branch||'?';
-        // 해당 branch의 book name 찾기
-        var bk=bks.find(function(b){return b.barcode===s.barcode&&(b.branch||'?')===br;});
-        if(!bk) return;
-        var nm=bk.name;
+        var nm=barcodeToName[s.barcode];
+        if(!nm) return; // 등록안된 교재 무시
         if(!bookNames[nm]) bookNames[nm]={};
         if(!bookNames[nm][br]) bookNames[nm][br]={총입고:0,총출고:0};
         if(s.type==='입고') bookNames[nm][br].총입고+=Number(s.qty);
