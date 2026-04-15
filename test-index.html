@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 1.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +197,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark">📚</div>
-    <span>정상어학원 교재 관리 3.0</span>
+    <span>정상어학원 교재 관리 1.0</span>
 
   </div>
   <div class="hright">
@@ -282,7 +282,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="출고">출고 (판매)</option>
           <option value="반품">반품 (업체반품)</option>
           <option value="분원출고">분원출고 (타분원 발송)</option>
-          <option value="분원입고">분원입고 (타분원 수령)</option>
+
         </select>
       </div>
       <div class="fg"><label class="fl">수량</label><input type="number" id="sales-qty" value="1" min="1"></div>
@@ -1071,6 +1071,95 @@ async function call(action,payload){
 }
 
 var _tt;
+
+// ── 분원간 입고 대기 ──────────────────────────────────────
+async function checkPendingTransfers(){
+  try{
+    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    if(!d.length) return;
+    var banner=document.getElementById('pending-transfer-banner');
+    if(!banner){
+      banner=document.createElement('div');
+      banner.id='pending-transfer-banner';
+      banner.style.cssText='background:#fff8e8;border:2px solid #d4b84a;border-radius:10px;padding:14px 18px;margin:12px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap;cursor:pointer';
+      banner.onclick=function(){showTab('sales',document.querySelector('.tab:nth-child(2)'));setTimeout(loadPendingTransfers,200);};
+      document.querySelector('main').insertBefore(banner, document.querySelector('main').firstChild);
+    }
+    banner.innerHTML='<span style="font-size:20px">📦</span>'
+      +'<span style="font-weight:700;color:#7a5c00">대기중인 입고가 <b style="color:var(--warn)">'+d.length+'건</b> 있습니다!</span>'
+      +'<span style="font-size:12px;color:var(--muted)">클릭하여 확인하세요</span>';
+  }catch(e){}
+}
+
+async function loadPendingTransfers(){
+  try{
+    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    if(!d.length){document.getElementById('pending-transfer-section')&&(document.getElementById('pending-transfer-section').style.display='none');return;}
+    var sec=document.getElementById('pending-transfer-section');
+    if(!sec){
+      sec=document.createElement('div');
+      sec.id='pending-transfer-section';
+      sec.style.cssText='margin-bottom:16px';
+      var salesList=document.getElementById('sales-list');
+      salesList.parentNode.insertBefore(sec,salesList);
+    }
+    sec.style.display='';
+    sec.innerHTML='<div class="card" style="border:2px solid var(--yellow)">'
+      +'<div class="retro-strip"></div>'
+      +'<div class="card-title">📦 대기중인 분원 입고 ('+d.length+'건)</div>'
+      +'<div class="twrap"><table><thead><tr><th>발송 분원</th><th>교재명</th><th>수량</th><th>매입단가</th><th>처리자</th><th>요청일</th><th>처리</th></tr></thead><tbody>'
+      +d.map(function(t){
+        var fromName=(BRANCHES[t.from_branch]||{}).name||t.from_branch;
+        var dt=(t.created_at||'').slice(0,10);
+        return '<tr>'
+          +'<td><span class="badge b-blue">'+escapeHtml(fromName)+'</span></td>'
+          +'<td><b>'+escapeHtml(t.book_name||'')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(t.barcode||'')+'</div></td>'
+          +'<td>'+t.qty+'권</td>'
+          +'<td class="mono">'+(t.purchase_price?Number(t.purchase_price).toLocaleString()+'원':'-')+'</td>'
+          +'<td>'+(escapeHtml(t.handler||'-'))+'</td>'
+          +'<td class="mono" style="font-size:11px">'+dt+'</td>'
+          +'<td style="display:flex;gap:6px;flex-wrap:wrap">'
+          +'<button class="btn btn-s btn-sm" data-tid="'+t.id+'" data-barcode="'+escapeHtml(t.barcode)+'" data-qty="'+t.qty+'" data-price="'+(t.purchase_price||0)+'" data-name="'+escapeHtml(t.book_name||'')+'" data-from="'+escapeHtml(t.from_branch||'')+'" onclick="acceptTransfer(this)">수락</button>'
+          +'<button class="btn btn-d btn-sm" data-tid="'+t.id+'" onclick="rejectTransfer(this.dataset.tid)">거절</button>'
+          +'</td></tr>';
+      }).join('')
+      +'</tbody></table></div></div>';
+  }catch(e){console.error(e);}
+}
+
+async function acceptTransfer(btn){
+  var tid=btn.dataset.tid;
+  var barcode=btn.dataset.barcode;
+  var qty=Number(btn.dataset.qty)||1;
+  var price=Number(btn.dataset.price)||0;
+  var name=btn.dataset.name;
+  var fromBranch=btn.dataset.from||'';
+  var fromName=(BRANCHES[fromBranch]||{}).name||fromBranch||'타분원';
+  if(!confirm('['+name+'] '+qty+'권 입고를 수락할까요?')) return;
+  try{
+    // transfers 상태 완료로 변경
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'완료',confirmed_at:new Date().toISOString()})});
+    // 내 분원 재고에 입고 반영 (메모에 출발분원 표시)
+    await call('addSales',{barcode:barcode,type:'분원입고',qty:qty,price:price,memo:'←'+fromName});
+    toast('입고 수락 완료!',true);
+    checkPendingTransfers();
+    loadPendingTransfers();
+    loadSalesHistory();
+  }catch(e){toast('오류 발생',false);}
+}
+
+async function rejectTransfer(tid){
+  if(!confirm('입고 요청을 거절할까요?')) return;
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'거절'})});
+    toast('거절했습니다.',true);
+    loadPendingTransfers();
+    checkPendingTransfers();
+  }catch(e){toast('오류 발생',false);}
+}
+
 function toast(msg,isOk){
   if(isOk===undefined)isOk=true;
   var el=document.getElementById('toast');
@@ -1084,7 +1173,7 @@ function showTab(id,tabEl){
   if(tabEl) tabEl.classList.add('active');
   document.getElementById('page-'+id).classList.add('active');
   if(id==='loan') loadActiveLoan();
-  if(id==='sales') loadSalesHistory();
+  if(id==='sales'){loadSalesHistory();loadPendingTransfers();}
   if(id==='bulk') initBulkPage();
   if(id==='unpaid') initUnpaidPage();
   if(id==='stock') loadStock();
@@ -1162,8 +1251,9 @@ async function init(){
     bindBarcodePreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
     initClassSearchUI();setLoadingState(true,hasCache?'최신 데이터 동기화 완료':'데이터 준비 완료');
     loadActiveLoan();
+    checkPendingTransfers();
   }catch(e){
-    if(hasCache){setLoadingState(true,'데이터 준비 완료 (캐시 사용중)');loadActiveLoan();}
+    if(hasCache){setLoadingState(true,'데이터 준비 완료 (캐시 사용중)');loadActiveLoan();checkPendingTransfers();}
     else{setLoadingState(false,'데이터 로드 실패');toast('서버 연결 실패.',false);}
   }
 }
@@ -1510,7 +1600,29 @@ async function doSales(){
   var handler=document.getElementById('sales-handler')?document.getElementById('sales-handler').value.trim():'';
   if(!barcode) return toast('바코드를 입력하세요.',false);
   if(!qty||qty<1) return toast('수량을 입력하세요.',false);
-  if((type==='분원출고'||type==='분원입고')&&!branchTarget) return toast('분원을 선택하세요.',false);
+  if(type==='분원출고'&&!branchTarget) return toast('분원을 선택하세요.',false);
+  // 분원출고는 transfers 테이블에 저장 (상대방이 수락해야 재고 반영)
+  if(type==='분원출고'){
+    try{
+      var book=findBookByBarcode(barcode)||{};
+      // 가장 최근 매입단가 조회
+      var recentPurchase=await sbGet('sales_history','select=purchase_price&barcode=eq.'+encodeURIComponent(barcode)+'&type=eq.입고&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.desc&limit=1');
+      var purchasePrice=recentPurchase.length?recentPurchase[0].purchase_price:0;
+      var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      var body={from_branch:currentBranch,to_branch:branchTarget,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
+      var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
+      if(!res.ok){var err=await res.text();toast('분원출고 실패: '+err,false);return;}
+      // 출고 분원 재고에서 차감 (sales_history에 분원출고로 기록)
+      await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:purchasePrice,memo:'→'+BRANCHES[branchTarget].name+(handler?' | 처리자:'+handler:''),branchTarget:branchTarget});
+      toast(BRANCHES[branchTarget].name+'으로 분원출고 요청 완료! 상대 분원이 수락해야 입고됩니다.',true);
+      document.getElementById('sales-barcode').value='';
+      updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+      document.getElementById('sales-qty').value='1';
+      if(document.getElementById('sales-handler')) document.getElementById('sales-handler').value='';
+      loadSalesHistory();
+    }catch(e){toast('오류 발생',false);}
+    return;
+  }
   try{
     var res=await call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:studentId,payStatus:payStatus,memo:memo,branchTarget:branchTarget||null,handler:handler||null});
     toast(res.msg,res.ok);
@@ -1552,12 +1664,24 @@ async function loadSalesHistory(){
     var res=await call('getSalesHistory',{});salesCache=(res.data||[]).slice(0,60);
     if(!salesCache.length){el.innerHTML='<div class="empty">이력이 없습니다</div>';return;}
     var rows=salesCache.map(function(r,idx){
-      var pb=r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':'');
+      var isInType=['입고','분원입고','반품'].includes(r['유형']);
+      // 입고 계열은 미납 배지 안 뜨게
+      var pb=isInType?'':(r['입금상태']==='완납'?'<span class="badge b-green">완납</span>':(r['입금상태']==='미납'?'<span class="badge b-red">미납</span>':''));
       var isCanceled=r['유형']==='입고취소'||r['유형']==='출고취소';
       if(isCanceled) return ''; // 취소 행은 표시 안 함
-      var typeColor=r['유형']==='입고'?'b-blue':r['유형']==='출고'?'b-red':'b-yellow';
+      var typeColor=r['유형']==='입고'||r['유형']==='분원입고'?'b-blue':r['유형']==='출고'?'b-red':r['유형']==='반품'?'b-green':'b-yellow';
+      // 분원출고/입고 시 학생 컬럼에 분원 표시
+      var studentCell=r['학생명']||'-';
+      if(r['유형']==='분원출고'){
+        // 메모에서 →분원명 파싱
+        var toMatch=(r['메모']||'').match(/→([^\s|]+)/);
+        studentCell='<span class="badge b-yellow">→'+(toMatch?toMatch[1]:'타분원')+'</span>';
+      } else if(r['유형']==='분원입고'){
+        var fromMatch=(r['메모']||'').match(/←([^\s|]+)/);
+        studentCell='<span class="badge b-blue">←'+(fromMatch?fromMatch[1]:'타분원')+'</span>';
+      }
       var cancelBtn='<button class="btn btn-d btn-sm" data-idx="'+idx+'">삭제</button>';
-      return '<tr><td><b>'+r['교재명']+'</b></td><td><span class="badge '+typeColor+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+(r['학생명']||'-')+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td><td>'+cancelBtn+'</td></tr>';
+      return '<tr><td><b>'+r['교재명']+'</b></td><td><span class="badge '+typeColor+'">'+r['유형']+'</span></td><td>'+r['수량']+'</td><td class="mono"><b>'+Number(r['합계']).toLocaleString()+'원</b></td><td>'+studentCell+'</td><td>'+(r['학기']||'-')+'</td><td>'+(r['반']||'-')+'</td><td>'+pb+'</td><td class="mono">'+r['날짜']+'</td><td>'+cancelBtn+'</td></tr>';
     }).join('');
     el.innerHTML='<div class="twrap"><table><thead><tr><th>교재명</th><th>유형</th><th>수량</th><th>합계</th><th>학생</th><th>학기</th><th>반</th><th>입금</th><th>날짜</th><th>취소</th></tr></thead><tbody>'+rows+'</tbody></table></div>';
     var table=el.querySelector('table');
@@ -1645,19 +1769,20 @@ async function loadUnpaid(){
     var data=res.data||[];
     if(nameSearch) data=data.filter(function(r){return (r['학생명']||'').toLowerCase().includes(nameSearch);});
 
-    // 학생별로 묶기
+    // 학생+학기별로 묶기
     var byStudent={};
     data.forEach(function(r){
       var key=(r['학생ID']||r['학생명'])+'__'+(r['학기']||'');
       if(!byStudent[key]){
         byStudent[key]={
           studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],
-          items:[],totalAmount:0,totalPaid:0
+          books:[],dates:[],totalAmount:0,totalPaid:r['입금액']||0
         };
       }
-      byStudent[key].items.push(r);
+      byStudent[key].books.push(r['교재명']);
+      byStudent[key].dates.push(r['날짜']);
       byStudent[key].totalAmount+=Number(r['합계']||0);
-      byStudent[key].totalPaid+=Number(r['입금액']||0);
+      if(r['입금액']) byStudent[key].totalPaid=Number(r['입금액']);
     });
 
     var groups=Object.values(byStudent);
@@ -1668,43 +1793,32 @@ async function loadUnpaid(){
 
     if(!groups.length){el.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
 
-    el.innerHTML='<div style="display:flex;flex-direction:column;gap:12px">'+
-      groups.map(function(g){
+    el.innerHTML='<div class="twrap"><table><thead><tr>'
+      +'<th>이름</th><th>학기</th><th>반</th><th>교재명</th><th>금액</th><th>출고일</th><th>상태</th>'
+      +'<th>입금액</th><th>날짜</th><th>메모</th><th>처리</th>'
+      +'</tr></thead><tbody>'
+      +groups.map(function(g){
         var balance=g.totalAmount-g.totalPaid;
-        var statusColor=balance<=0?'var(--accent2)':balance<g.totalAmount?'var(--yellow)':'var(--warn)';
-        var statusLabel=balance<=0?'완납':balance<g.totalAmount?'부분납':'미납';
-        var rows=g.items.map(function(r){
-          return '<tr><td style="font-size:12px;padding:6px 10px">'+r['교재명']+'</td>'
-            +'<td class="mono" style="font-size:12px;padding:6px 10px">'+Number(r['합계']).toLocaleString()+'원</td>'
-            +'<td style="font-size:11px;padding:6px 10px;color:var(--muted)">'+r['날짜']+'</td></tr>';
-        }).join('');
-        var gid=encodeURIComponent((g.studentId||g.name)+'__'+(g.semester||''));
-        return '<div style="background:#fff;border:1px solid var(--border-soft);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)">'
-          +'<div style="background:linear-gradient(180deg,#f2f4f8,#e4e9f1);padding:10px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">'
-          +'<b style="font-size:14px">'+escapeHtml(g.name||'-')+'</b>'
-          +'<span class="mono" style="font-size:11px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</span>'
-          +'<span class="badge b-blue">'+escapeHtml(g.semester||'-')+'</span>'
-          +'<span style="font-size:11px;color:var(--muted)">'+escapeHtml(g.class||'-')+'</span>'
-          +'<span style="margin-left:auto;font-size:13px;font-weight:700;color:'+statusColor+'">'+statusLabel+'</span>'
-          +'</div>'
-          +'<div style="padding:0 14px">'
-          +'<table style="width:100%;border-collapse:collapse;font-size:13px">'
-          +'<thead><tr style="border-bottom:1px solid #eee"><th style="text-align:left;padding:6px 10px;font-size:11px;color:var(--muted)">교재명</th><th style="text-align:left;padding:6px 10px;font-size:11px;color:var(--muted)">금액</th><th style="text-align:left;padding:6px 10px;font-size:11px;color:var(--muted)">출고일</th></tr></thead>'
-          +'<tbody>'+rows+'</tbody>'
-          +'<tfoot><tr style="border-top:2px solid #eee;background:#f8faff">'
-          +'<td style="padding:8px 10px;font-weight:700">합계</td>'
-          +'<td class="mono" style="padding:8px 10px;font-weight:700">'+g.totalAmount.toLocaleString()+'원</td>'
-          +'<td style="padding:8px 10px"></td>'
-          +'</tfoot></table></div>'
-          +'<div style="padding:10px 14px;border-top:1px solid #eee;display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:#fafbfc">'
-          +'<span style="font-size:12px;color:var(--muted)">입금액:</span>'
-          +'<input type="number" id="paid-amt-'+gid+'" placeholder="입금액 입력" style="width:120px;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:4px" value="'+g.totalPaid+'">'
-          +'<input type="text" id="paid-date-'+gid+'" placeholder="날짜(예:4/14)" style="width:90px;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:4px">'
-          +'<input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:110px;font-size:12px;padding:5px 8px;border:1px solid var(--border-soft);border-radius:4px">'
-          +'<button class="btn btn-s btn-sm" data-gid="'+gid+'" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester||'')+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button>'
-          +'<span style="font-size:12px;font-weight:700;color:'+statusColor+'">잔액: '+(balance>0?balance.toLocaleString()+'원 미납':balance===0?'완납':(Math.abs(balance)).toLocaleString()+'원 초과납')+'</span>'
-          +'</div></div>';
-      }).join('')+'</div>';
+        var statusColor=balance<=0?'var(--accent2)':g.totalPaid>0?'var(--yellow)':'var(--warn)';
+        var statusLabel=balance<=0?'완납':g.totalPaid>0?'부분납':'미납';
+        var gid=g.studentId+'__'+g.semester;
+        var gidE=encodeURIComponent(gid);
+        return '<tr>'
+          +'<td><b>'+escapeHtml(g.name||'-')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div></td>'
+          +'<td><span class="badge b-blue">'+escapeHtml(g.semester||'-')+'</span></td>'
+          +'<td style="font-size:12px">'+escapeHtml(g.class||'-')+'</td>'
+          +'<td style="font-size:12px">'+g.books.map(escapeHtml).join('<br>')+'</td>'
+          +'<td class="mono"><b>'+g.totalAmount.toLocaleString()+'원</b></td>'
+          +'<td class="mono" style="font-size:11px">'+g.dates[0]+(g.dates.length>1?'<br>'+g.dates.slice(1).join('<br>'):'')+'</td>'
+          +'<td><span style="font-size:12px;font-weight:700;color:'+statusColor+'">'+statusLabel+'</span>'
+          +'<div style="font-size:10px;color:var(--muted)">잔액 '+(balance>0?balance.toLocaleString()+'원':balance<0?'초과 '+Math.abs(balance).toLocaleString()+'원':'없음')+'</div></td>'
+          +'<td><input type="number" id="paid-amt-'+gidE+'" placeholder="입금액" style="width:90px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" value="'+g.totalAmount+'"></td>'
+          +'<td><input type="text" id="paid-date-'+gidE+'" placeholder="4/14" style="width:72px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
+          +'<td><input type="text" id="paid-memo-'+gidE+'" placeholder="메모" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
+          +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester||'')+'" data-gid="'+gidE+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
   }catch(e){console.error(e);el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 
