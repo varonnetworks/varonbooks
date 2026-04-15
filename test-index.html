@@ -217,6 +217,7 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
   <div class="tab" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
+  <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">자금 현황</span></div>
   <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
 
@@ -556,6 +557,67 @@ td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+<div id="page-finance" class="page">
+  <!-- 학기 필터 -->
+  <div class="card" style="margin-bottom:12px">
+    <div class="fgrid" style="align-items:end">
+      <div class="fg"><label class="fl">학기 필터</label>
+        <select id="finance-semester">
+          <option value="">전체 학기</option>
+        </select>
+      </div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadFinanceSummary()">조회</button></div>
+    </div>
+  </div>
+
+  <!-- 요약 카드 -->
+  <div id="finance-summary" class="sgrid" style="margin-bottom:16px"></div>
+
+  <!-- 상세 드릴다운 영역 -->
+  <div id="finance-detail" style="display:none;margin-bottom:16px"></div>
+
+  <!-- 통장 내역 업로드 (관리자 제외) -->
+  <div id="bank-upload-section">
+    <div class="card">
+      <div class="retro-strip"></div>
+      <div class="card-title">💳 통장 내역 업로드 (국민은행)</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">엑셀 파일을 업로드하면 새로운 내역만 자동으로 저장됩니다. 중복은 건너뜁니다.</p>
+      <div id="bank-drop-zone" onclick="document.getElementById('bank-file-input').click()" style="border:2px dashed var(--border-soft);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#fff9ea;margin-bottom:14px">
+        <div style="font-size:26px;margin-bottom:6px">📂</div>
+        <div style="font-size:14px;font-weight:700;margin-bottom:4px">국민은행 엑셀 파일을 여기에 끌어다 놓거나 클릭하세요</div>
+        <div style="font-size:12px;color:var(--muted)">.xlsx, .xls 지원 · 8행부터 데이터로 인식</div>
+        <input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">
+      </div>
+      <div id="bank-upload-status"></div>
+    </div>
+  </div>
+
+  <!-- 조회 필터 -->
+  <div class="card">
+    <div class="retro-strip"></div>
+    <div class="card-title">🔍 통장 내역 조회</div>
+    <div class="fgrid" style="align-items:end">
+      <div class="fg"><label class="fl">시작일</label><input type="date" id="bank-date-from"></div>
+      <div class="fg"><label class="fl">종료일</label><input type="date" id="bank-date-to"></div>
+      <div class="fg"><label class="fl">입금자 검색</label><input type="text" id="bank-search" placeholder="입금자명 입력"></div>
+      <div class="fg"><label class="fl">구분</label>
+        <select id="bank-type-filter">
+          <option value="">전체</option>
+          <option value="deposit">입금만</option>
+          <option value="withdraw">출금만</option>
+        </select>
+      </div>
+      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadBankHistory()">조회</button></div>
+    </div>
+  </div>
+
+  <div class="shead">
+    <span class="stitle" id="bank-result-title">통장 내역</span>
+    <span id="bank-result-summary" style="font-size:13px;color:var(--muted);font-weight:700"></span>
+  </div>
+  <div id="bank-list"><div class="empty">조회 버튼을 눌러주세요</div></div>
+</div>
+
 <div id="page-settings" class="page">
   <div class="card">
     <div class="retro-strip"></div>
@@ -751,6 +813,7 @@ var BRANCHES={
   'seosuwonjls':   {name:'서수원', account:'', accountHolder:''},
   'unjeongjls':    {name:'운정1',  account:'', accountHolder:''},
   'unjeongjls2':   {name:'운정2',  account:'', accountHolder:''},
+  'varon':         {name:'관리자',  account:'', accountHolder:''},
   'testjls':       {name:'테스트',  account:'', accountHolder:''}
 };
 // localStorage에 저장된 계좌 불러오기
@@ -851,6 +914,7 @@ function saveAccountSettings(){
   toast('설정이 저장됐어요!',true);
 }
 
+function isAdmin(){return currentBranch==='varon';}
 function doLogin(){
   var code=document.getElementById('login-input').value.trim();
   if(!BRANCHES[code]){document.getElementById('login-err').textContent='분원 코드가 올바르지 않습니다.';return;}
@@ -858,6 +922,12 @@ function doLogin(){
   sessionStorage.setItem('jls_branch',code);
   document.getElementById('login-screen').style.display='none';
   document.getElementById('branch-display').innerHTML='<span class="branch-badge">'+BRANCHES[code].name+'</span>';
+  // 관리자는 납입내역 탭 숨김
+  document.querySelectorAll('.tab').forEach(function(t){
+    if(t.getAttribute('onclick')&&t.getAttribute('onclick').includes("'unpaid'")){
+      t.style.display=isAdmin()?'none':'';
+    }
+  });
   init();
 }
 function doLogout(){
@@ -1208,6 +1278,7 @@ function showTab(id,tabEl){
   if(id==='allstock') loadAllStock();
   if(id==='barcode') initBarcodePage();
   if(id==='settings'){loadStudentList();var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=currentBranch==='namdongtanjls'?'':'none';}
+  if(id==='finance'){loadFinanceSummary();}
 }
 
 var CACHE_KEYS={books:'jls_cache_books_v1',teachers:'jls_cache_teachers_v1',students:'jls_cache_students_v1',semesters:'jls_cache_semesters_v1',ts:'jls_cache_ts_v1'};
@@ -1629,6 +1700,14 @@ async function doSales(){
   if(!barcode) return toast('바코드를 입력하세요.',false);
   if(!qty||qty<1) return toast('수량을 입력하세요.',false);
   if(type==='분원출고'&&!branchTarget) return toast('분원을 선택하세요.',false);
+  // 중복 판매 확인 (출고 + 학생 선택 시)
+  if(type==='출고'&&studentId){
+    var dup=await sbGet('sales_history','select=id,book_name&type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&limit=1');
+    if(dup.length){
+      var bookName=dup[0].book_name||barcode;
+      if(!confirm('['+bookName+']은 이 학생에게 이미 판매된 교재입니다.\n중복 판매가 맞나요?')) return;
+    }
+  }
   // 분원출고는 transfers 테이블에 저장 (상대방이 수락해야 재고 반영)
   if(type==='분원출고'){
     try{
@@ -2663,6 +2742,293 @@ function closeCam(){
   document.getElementById('cam-status-text').textContent='카메라 시작 중...';
 }
 document.addEventListener('keydown',function(e){if(e.key==='Escape') closeCam();});
+
+// ══════════════════════════════════════════════
+// 자금 현황 탭
+// ══════════════════════════════════════════════
+async function loadFinanceSummary(){
+  var sum=document.getElementById('finance-summary');
+  var detail=document.getElementById('finance-detail');
+  if(detail) detail.style.display='none';
+  if(sum) sum.innerHTML='<div class="scard"><div class="sl">로딩중</div><div class="sn" style="font-size:24px;color:var(--muted)">...</div></div>';
+
+  // 학기 필터 초기화
+  var semSel=document.getElementById('finance-semester');
+  if(semSel&&semSel.options.length<=1){
+    var semList=await sbGet('students','select=semester&order=semester.desc');
+    var sems=[...new Set(semList.map(function(r){return r.semester;}).filter(Boolean))];
+    sems.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;semSel.appendChild(o);});
+  }
+  var selectedSem=semSel?semSel.value:'';
+
+  // 통장 업로드 섹션 - 관리자는 숨김
+  var uploadSec=document.getElementById('bank-upload-section');
+  if(uploadSec) uploadSec.style.display=isAdmin()?'none':'';
+
+  try{
+    var branchList=isAdmin()?Object.keys(BRANCHES).filter(function(k){return k!=='varon'&&k!=='testjls';}):[currentBranch];
+
+    // sales_history 전체 조회
+    var salesParams='select=barcode,book_name,type,total,unit_price,qty,purchase_price,student_id,student_name,semester,branch';
+    if(selectedSem) salesParams+='&semester=eq.'+encodeURIComponent(selectedSem);
+    var sales=await sbGet('sales_history',salesParams);
+
+    // payments 조회
+    var pmtParams='select=paid_amount,branch,semester';
+    if(selectedSem) pmtParams+='&semester=eq.'+encodeURIComponent(selectedSem);
+    var pmts=await sbGet('payments',pmtParams);
+
+    // 분원별 집계
+    var byBranch={};
+    branchList.forEach(function(br){byBranch[br]={salesTotal:0,purchaseTotal:0,returnTotal:0,paidTotal:0,salesDetail:{},purchaseDetail:{},unpaidStudents:{}};});
+
+    sales.forEach(function(r){
+      var br=r.branch||'';
+      if(!byBranch[br]) return;
+      var b=byBranch[br];
+      if(r.type==='출고'){
+        b.salesTotal+=Number(r.total||0);
+        if(!b.salesDetail[r.book_name]) b.salesDetail[r.book_name]=0;
+        b.salesDetail[r.book_name]+=Number(r.qty||1);
+        if(r.student_id) b.unpaidStudents[r.student_id]={name:r.student_name,id:r.student_id};
+      } else if(r.type==='입고'){
+        b.purchaseTotal+=Number(r.unit_price||0)*Number(r.qty||0);
+        if(!b.purchaseDetail[r.book_name]) b.purchaseDetail[r.book_name]=0;
+        b.purchaseDetail[r.book_name]+=Number(r.qty||1);
+      } else if(r.type==='반품'){
+        b.returnTotal+=Number(r.total||0);
+      }
+    });
+    pmts.forEach(function(p){
+      var br=p.branch||'';
+      if(!byBranch[br]) return;
+      byBranch[br].paidTotal+=Number(p.paid_amount||0);
+    });
+
+    if(isAdmin()){
+      // 관리자: 분원별 카드
+      var cards=branchList.map(function(br){
+        var b=byBranch[br];
+        var brName=(BRANCHES[br]||{}).name||br;
+        var unpaid=b.salesTotal-b.paidTotal;
+        var profit=b.paidTotal-b.purchaseTotal+b.returnTotal;
+        return '<div class="scard" style="cursor:default">'
+          +'<div class="sl">'+brName+'</div>'
+          +'<div style="font-size:12px;margin-top:4px;display:flex;flex-direction:column;gap:4px">'
+          +'<div>판매 <b style="color:var(--accent)">'+b.salesTotal.toLocaleString()+'원</b></div>'
+          +'<div>입금 <b style="color:var(--accent2)">'+b.paidTotal.toLocaleString()+'원</b></div>'
+          +'<div>미수금 <b style="color:var(--warn)">'+Math.max(0,unpaid).toLocaleString()+'원</b></div>'
+          +'<div>매입 <b style="color:#9e7400">'+b.purchaseTotal.toLocaleString()+'원</b></div>'
+          +'<div>순이익 <b style="color:'+(profit>=0?'var(--accent2)':'var(--warn)')+'">'+profit.toLocaleString()+'원</b></div>'
+          +'</div></div>';
+      }).join('');
+      if(sum) sum.innerHTML=cards;
+    } else {
+      // 일반 분원: 클릭 가능한 요약 카드
+      var b=byBranch[currentBranch]||{salesTotal:0,purchaseTotal:0,returnTotal:0,paidTotal:0,salesDetail:{},purchaseDetail:{},unpaidStudents:{}};
+      var unpaid=b.salesTotal-b.paidTotal;
+      var profit=b.paidTotal-b.purchaseTotal+b.returnTotal;
+      var unpaidCount=Object.keys(b.unpaidStudents).length;
+
+      // 클릭 핸들러용 데이터 저장
+      window._financeData=b;
+
+      if(sum) sum.innerHTML=
+        '<div class="scard" style="cursor:pointer;border:2px solid var(--accent)" data-type="sales" onclick="showFinanceDetail(this.dataset.type)" title="클릭하여 교재별 상세">'
+          +'<div class="sl">학생 판매 총액 🔍</div>'
+          +'<div class="sn" style="color:var(--accent);font-size:26px">'+b.salesTotal.toLocaleString()+'</div>'
+          +'<div class="ss">원</div>'
+        +'</div>'
+        +'<div class="scard">'
+          +'<div class="sl">실제 입금액</div>'
+          +'<div class="sn" style="color:var(--accent2);font-size:26px">'+b.paidTotal.toLocaleString()+'</div>'
+          +'<div class="ss">원</div>'
+        +'</div>'
+        +'<div class="scard" style="cursor:pointer;border:2px solid var(--warn)" data-type="unpaid" onclick="showFinanceDetail(this.dataset.type)" title="클릭하여 미수금 인원">'
+          +'<div class="sl">미수금 🔍</div>'
+          +'<div class="sn" style="color:var(--warn);font-size:26px">'+Math.max(0,unpaid).toLocaleString()+'</div>'
+          +'<div class="ss">원 / '+unpaidCount+'명 출고</div>'
+        +'</div>'
+        +'<div class="scard" style="cursor:pointer;border:2px solid #9e7400" data-type="purchase" onclick="showFinanceDetail(this.dataset.type)" title="클릭하여 교재별 매입">'
+          +'<div class="sl">업체 매입 총액 🔍</div>'
+          +'<div class="sn" style="color:#9e7400;font-size:26px">'+b.purchaseTotal.toLocaleString()+'</div>'
+          +'<div class="ss">원</div>'
+        +'</div>'
+        +'<div class="scard">'
+          +'<div class="sl">반품 회수액</div>'
+          +'<div class="sn" style="color:var(--accent2);font-size:26px">'+b.returnTotal.toLocaleString()+'</div>'
+          +'<div class="ss">원</div>'
+        +'</div>'
+        +'<div class="scard">'
+          +'<div class="sl">순이익 추정</div>'
+          +'<div class="sn" style="color:'+(profit>=0?'var(--accent2)':'var(--warn)')+';font-size:26px">'+profit.toLocaleString()+'</div>'
+          +'<div class="ss">원</div>'
+        +'</div>';
+    }
+  }catch(e){console.error(e);if(sum) sum.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+
+function closeFinanceDetail(){
+  var el=document.getElementById('finance-detail');
+  if(el) el.style.display='none';
+}
+function showFinanceDetail(type){
+  var el=document.getElementById('finance-detail');
+  var b=window._financeData||{};
+  if(!el) return;
+  el.style.display='';
+  var html='';
+  if(type==='sales'){
+    var items=Object.entries(b.salesDetail||{}).sort(function(a,b){return b[1]-a[1];});
+    html='<div class="card"><div class="retro-strip"></div><div class="card-title">📚 교재별 판매 권수</div>'
+      +'<div class="twrap"><table><thead><tr><th>교재명</th><th>판매 권수</th></tr></thead><tbody>'
+      +items.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+      +'</tbody></table></div></div>';
+  } else if(type==='unpaid'){
+    var students=Object.values(b.unpaidStudents||{});
+    html='<div class="card"><div class="retro-strip"></div><div class="card-title">👥 출고된 학생 목록 ('+students.length+'명)</div>'
+      +'<div class="twrap"><table><thead><tr><th>학생ID</th><th>이름</th></tr></thead><tbody>'
+      +students.map(function(s){return '<tr><td class="mono" style="font-size:11px">'+escapeHtml(s.id||'')+'</td><td><b>'+escapeHtml(s.name||'')+'</b></td></tr>';}).join('')
+      +'</tbody></table></div></div>';
+  } else if(type==='purchase'){
+    var pitems=Object.entries(b.purchaseDetail||{}).sort(function(a,b){return b[1]-a[1];});
+    html='<div class="card"><div class="retro-strip"></div><div class="card-title">📦 교재별 매입 권수</div>'
+      +'<div class="twrap"><table><thead><tr><th>교재명</th><th>매입 권수</th></tr></thead><tbody>'
+      +pitems.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+      +'</tbody></table></div></div>';
+  }
+  el.innerHTML=html+'<div style="text-align:right;margin-top:8px"><button class="btn btn-g btn-sm" onclick="closeFinanceDetail()">닫기</button></div>';
+  el.scrollIntoView({behavior:'smooth'});
+}
+
+
+// 통장 파일 업로드
+function handleBankUpload(file){
+  if(!file) return;
+  var ext=file.name.split('.').pop().toLowerCase();
+  if(ext!=='xlsx'&&ext!=='xls'){toast('.xlsx, .xls 파일만 지원합니다.',false);return;}
+  var statusEl=document.getElementById('bank-upload-status');
+  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>파일 읽는 중...</div>';
+  if(window.XLSX){_parseBankXLSX(file);}
+  else{
+    var sc=document.createElement('script');
+    sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    sc.onload=function(){_parseBankXLSX(file);};
+    document.head.appendChild(sc);
+  }
+}
+function _parseBankXLSX(file){
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array',cellDates:true});
+    var ws=wb.Sheets[wb.SheetNames[0]];
+    // 8행부터 (index 7)
+    var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:'',range:7});
+    rows=rows.filter(function(r){return r.some(function(c){return String(c).trim();});});
+    _uploadBankRows(rows,file.name);
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function _uploadBankRows(rows,filename){
+  var statusEl=document.getElementById('bank-upload-status');
+  if(!rows.length){statusEl.innerHTML='<div class="empty">데이터가 없습니다.</div>';return;}
+  // 컬럼: 거래일시(0) 적요(1) 의뢰인/수취인(2) 내통장표시내용(3) 출금금액(4) 입금금액(5) 잔액(6) 취급점(7) 구분(8)
+  var records=rows.map(function(r){
+    var dt=String(r[0]||'').trim();
+    var counterpart=String(r[2]||'').trim();
+    var withdraw=Number(String(r[4]||'0').replace(/,/g,''))||0;
+    var deposit=Number(String(r[5]||'0').replace(/,/g,''))||0;
+    if(!dt) return null;
+    return {
+      branch:currentBranch,
+      tx_datetime:dt,
+      summary:String(r[1]||'').trim(),
+      counterpart:counterpart,
+      memo:String(r[3]||'').trim(),
+      withdraw:withdraw,
+      deposit:deposit,
+      balance:Number(String(r[6]||'0').replace(/,/g,''))||0,
+      tx_point:String(r[7]||'').trim(),
+      tx_type:String(r[8]||'').trim()
+    };
+  }).filter(Boolean);
+
+  if(!records.length){statusEl.innerHTML='<div class="empty">유효한 행이 없습니다.</div>';return;}
+  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>'+records.length+'건 저장 중...</div>';
+
+  // 50개씩 나눠서 upsert (중복은 ON CONFLICT DO NOTHING)
+  var saved=0,skipped=0;
+  var CHUNK=50;
+  var h=Object.assign({},SB_HEADERS,{'Prefer':'resolution=ignore-duplicates,return=representation'});
+  for(var i=0;i<records.length;i+=CHUNK){
+    var chunk=records.slice(i,i+CHUNK);
+    try{
+      var res=await fetch(SB_URL+'/bank_transactions',{method:'POST',headers:h,body:JSON.stringify(chunk)});
+      if(res.ok){
+        var inserted=await res.json();
+        saved+=Array.isArray(inserted)?inserted.length:0;
+      }
+    }catch(e){}
+  }
+  skipped=records.length-saved;
+  statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#e8f8f0;border:1px solid var(--accent2);font-size:13px">'
+    +'✅ 업로드 완료 · <b>'+saved+'건 새로 저장</b>'+(skipped?' · '+skipped+'건 중복 건너뜀':'')
+    +'</div>';
+  // 드롭존 업데이트
+  document.getElementById('bank-drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div>'
+    +'<div style="font-size:14px;font-weight:700">'+filename+'</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'+records.length+'행 처리 · 클릭하여 파일 변경</div>'
+    +'<input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">';
+}
+
+async function loadBankHistory(){
+  var el=document.getElementById('bank-list');
+  var from=document.getElementById('bank-date-from').value;
+  var to=document.getElementById('bank-date-to').value;
+  var search=document.getElementById('bank-search').value.trim();
+  var typeFilter=document.getElementById('bank-type-filter').value;
+  el.innerHTML='<div class="loading"><div class="spinner"></div><br>불러오는 중...</div>';
+  try{
+    var params='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=tx_datetime.desc&limit=500';
+    if(from) params+='&tx_datetime=gte.'+encodeURIComponent(from.replace(/-/g,'.'));
+    if(to) params+='&tx_datetime=lte.'+encodeURIComponent(to.replace(/-/g,'.')+'Z');
+    if(search) params+='&counterpart=ilike.'+encodeURIComponent('%'+search+'%');
+    if(typeFilter==='deposit') params+='&deposit=gt.0';
+    else if(typeFilter==='withdraw') params+='&withdraw=gt.0';
+    var data=await sbGet('bank_transactions',params);
+    if(!data.length){el.innerHTML='<div class="empty">조회 결과가 없습니다</div>';return;}
+    var totalDeposit=data.reduce(function(s,r){return s+Number(r.deposit||0);},0);
+    var totalWithdraw=data.reduce(function(s,r){return s+Number(r.withdraw||0);},0);
+    document.getElementById('bank-result-title').textContent='통장 내역 ('+data.length+'건)';
+    document.getElementById('bank-result-summary').textContent=
+      '입금 합계: '+totalDeposit.toLocaleString()+'원 · 출금 합계: '+totalWithdraw.toLocaleString()+'원';
+    el.innerHTML='<div class="twrap"><table><thead><tr>'
+      +'<th>거래일시</th><th>적요</th><th>의뢰인/수취인</th><th>내용</th><th>출금</th><th>입금</th><th>잔액</th>'
+      +'</tr></thead><tbody>'
+      +data.map(function(r){
+        var isDeposit=Number(r.deposit||0)>0;
+        var isWithdraw=Number(r.withdraw||0)>0;
+        return '<tr style="'+(isDeposit?'background:#f0fff8':'')+(isWithdraw?'background:#fff5f5':'')+'">'
+          +'<td class="mono" style="font-size:11px;white-space:nowrap">'+escapeHtml(r.tx_datetime||'')+'</td>'
+          +'<td style="font-size:12px">'+escapeHtml(r.summary||'')+'</td>'
+          +'<td><b>'+escapeHtml(r.counterpart||'')+'</b></td>'
+          +'<td style="font-size:12px;color:var(--muted)">'+escapeHtml(r.memo||'')+'</td>'
+          +'<td class="mono" style="color:var(--warn)">'+(isWithdraw?Number(r.withdraw).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="color:var(--accent2);font-weight:700">'+(isDeposit?Number(r.deposit).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="font-size:11px;color:var(--muted)">'+Number(r.balance||0).toLocaleString()+'</td>'
+          +'</tr>';
+      }).join('')
+      +'</tbody></table></div>';
+  }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
+}
+
+(function(){
+  var dz=document.getElementById('bank-drop-zone');
+  if(!dz) return;
+  dz.addEventListener('dragover',function(e){e.preventDefault();dz.style.borderColor='var(--accent)';});
+  dz.addEventListener('dragleave',function(){dz.style.borderColor='var(--border-soft)';});
+  dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='var(--border-soft)';var f=e.dataTransfer.files[0];if(f) handleBankUpload(f);});
+})();
 
 window.addEventListener('load',init);
 </script>
