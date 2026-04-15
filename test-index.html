@@ -2667,8 +2667,15 @@ async function checkWithdrawAndUpload(){
   if(!semester){toast('학기를 입력해야 업로드할 수 있어요.',false);return;}
 
   // 현재 재원생 조회 (status가 퇴원이 아닌 학생)
-  var existing=await sbGet('students','select=student_id,name,class_name,semester,status&branch=eq.'+encodeURIComponent(currentBranch));
-  var activeStudents=existing.filter(function(s){return s.status!=='퇴원';});
+  var existing=await sbGet('students','select=student_id,name,class_name,semester,status&branch=eq.'+encodeURIComponent(currentBranch)+'&order=semester.desc');
+  // student_id 기준 중복 제거 - 가장 최근 학기 1건만 유지
+  var seenIds={};
+  var deduped=existing.filter(function(s){
+    if(seenIds[s.student_id]) return false;
+    seenIds[s.student_id]=true;
+    return true;
+  });
+  var activeStudents=deduped.filter(function(s){return s.status!=='퇴원';});
   var newIds=previewData.map(function(r){return r.id;});
 
   // 새 파일에 없는 재원생 = 퇴원 후보
