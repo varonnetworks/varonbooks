@@ -217,7 +217,7 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
   <div class="tab" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
-  <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">자금 현황</span></div>
+  <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">계좌내역</span></div>
   <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
 
@@ -2095,10 +2095,14 @@ async function loadUnpaid(){
             +'</div>'
           +'</td>'
           +'<td style="white-space:nowrap"><input type="number" id="paid-amt-'+gid+'" placeholder="입금액" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모" style="width:76px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
-          +'</tr>'+historyRow;
+          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.key==='Enter'){event.preventDefault();triggerPayment(''+gid+'');}"></td>'
+          +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.key==='Enter'){event.preventDefault();triggerPayment(''+gid+'');}"></td>'
+          +'<td style="white-space:nowrap;display:flex;gap:4px;align-items:center">'
+          +(g.status==='완납'
+            ?'<button class="btn btn-d btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" onclick="cancelPayment(this.dataset.sid,this.dataset.sem)">취소</button>'
+            :'<button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button>')
+          +'</td>'
++'</tr>'+historyRow;
       }).join('')
       +'</tbody></table></div>';
   }catch(e){console.error(e);el.innerHTML='<div class="empty">불러오기 실패</div>';}
@@ -2108,6 +2112,27 @@ function togglePayHistory(gid){
   if(row) row.style.display=row.style.display==='none'?'':'none';
 }
 
+function triggerPayment(gid){
+  var btn=document.querySelector('.btn[data-gid="'+gid+'"][data-sid]');
+  if(btn) btn.click();
+}
+async function cancelPayment(studentId, semester){
+  if(!confirm('입금 내역을 취소하면 해당 학생/학기의 모든 payments가 삭제됩니다.\n정말 취소하시겠습니까?')) return;
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // 해당 학생+학기 payments 전체 삭제
+    var delParams='student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch);
+    if(semester) delParams+='&semester=eq.'+encodeURIComponent(semester);
+    else delParams+='&semester=is.null';
+    await fetch(SB_URL+'/payments?'+delParams,{method:'DELETE',headers:h});
+    // sales_history pay_status 미납으로 되돌리기
+    var salesParams='type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch);
+    if(semester) salesParams+='&semester=eq.'+encodeURIComponent(semester);
+    await fetch(SB_URL+'/sales_history?'+salesParams,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납'})});
+    toast('입금 취소 완료',true);
+    loadUnpaid();
+  }catch(e){toast('취소 실패',false);}
+}
 async function doPayment(studentId, semester, gid, totalAmount){
   var amtEl=document.getElementById('paid-amt-'+gid);
   var dateEl=document.getElementById('paid-date-'+gid);
