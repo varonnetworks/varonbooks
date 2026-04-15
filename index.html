@@ -591,7 +591,12 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="card">
       <div class="retro-strip"></div>
       <div class="card-title">💳 통장 내역 업로드 (국민은행)</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">엑셀 파일을 업로드하면 새로운 내역만 자동으로 저장됩니다. 중복은 건너뜁니다.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">엑셀 파일을 업로드하면 새로운 내역만 자동으로 저장됩니다. 중복은 건너뜁니다.</p>
+      <div style="background:#fff8e8;border:1px solid #d4b84a;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;color:#6a4f14">
+        ⚠️ <b>KB 거래내역 저장 방법</b><br>
+        KB 인터넷뱅킹에서 다운로드한 <b>.xls 파일은 엑셀로 열어서 다른 이름으로 저장 → .xlsx</b> 로 저장 후 업로드하세요.<br>
+        <span style="color:var(--warn)">파일명 확장자만 변경하면 안 됩니다.</span> 반드시 엑셀에서 열고 저장해야 합니다.
+      </div>
       <div id="bank-drop-zone" onclick="document.getElementById('bank-file-input').click()" style="border:2px dashed var(--border-soft);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#fff9ea;margin-bottom:14px">
         <div style="font-size:26px;margin-bottom:6px">📂</div>
         <div style="font-size:14px;font-weight:700;margin-bottom:4px">국민은행 엑셀 파일을 여기에 끌어다 놓거나 클릭하세요</div>
