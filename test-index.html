@@ -1927,7 +1927,7 @@ async function loadUnpaid(){
 
         return '<tr>'
           +'<td>'+nameCell+'</td>'
-          +'<td><span class="badge b-blue">'+escapeHtml(g.semester||'-')+'</span></td>'
+          +'<td style="white-space:nowrap"><span class="badge b-blue" style="white-space:nowrap">'+escapeHtml(g.semester||'-')+'</span></td>'
           +'<td style="font-size:12px">'+escapeHtml(g.class||'-')+'</td>'
           +'<td style="font-size:12px;line-height:1.8;word-break:keep-all">'+bookLines+'</td>'
           +'<td class="mono" style="font-size:12px;line-height:1.8;white-space:nowrap">'+amtLines+'</td>'
@@ -2429,7 +2429,7 @@ function renderAllStock(data){
   if(!data.length){el.innerHTML='<div class="empty">데이터가 없습니다</div>';return;}
   // 내 분원 맨 앞, 나머지 가나다순
   var orderedKeys=[currentBranch].concat(
-    BRANCH_KEYS.filter(function(k){return k!==currentBranch;})
+    BRANCH_KEYS.filter(function(k){return k!==currentBranch&&k!=='varon'&&k!=='testjls';})
     .sort(function(a,b){return BRANCHES[a].name.localeCompare(BRANCHES[b].name,'ko');})
   );
   var head='<tr><th>교재명</th>'+orderedKeys.map(function(k,i){
@@ -2821,6 +2821,7 @@ async function loadFinanceSummary(){
 
     // sales_history 전체 조회
     var salesParams='select=barcode,book_name,type,total,unit_price,qty,purchase_price,student_id,student_name,semester,branch';
+    if(!isAdmin()) salesParams+='&branch=eq.'+encodeURIComponent(currentBranch);
     if(selectedSem) salesParams+='&semester=eq.'+encodeURIComponent(selectedSem);
     var sales=await sbGet('sales_history',salesParams);
     // books vendor 맵
@@ -2829,7 +2830,8 @@ async function loadFinanceSummary(){
     booksData.forEach(function(b){vendorMap[b.barcode]=b.vendor||'미등록';bookNameMap[b.barcode]=b.name||b.barcode;});
 
     // payments 조회
-    var pmtParams='select=paid_amount,branch,semester';
+    var pmtParams='select=paid_amount,branch,semester,student_id';
+    if(!isAdmin()) pmtParams+='&branch=eq.'+encodeURIComponent(currentBranch);
     if(selectedSem) pmtParams+='&semester=eq.'+encodeURIComponent(selectedSem);
     var pmts=await sbGet('payments',pmtParams);
 
@@ -2902,13 +2904,13 @@ async function loadFinanceSummary(){
       var totalMisugeum=totalSales-totalPaid;
       var totalProfit=totalPaid-totalPurchase+totalReturn;
       var totalCard='<div class="scard" style="grid-column:1/-1;background:linear-gradient(180deg,#1a3a6e,#2d6cc0);color:#fff;border:2px solid #4a84ea">'
-        +'<div class="sl" style="color:#d6e4f7;letter-spacing:2px">📊 전체 분원 합산</div>'
-        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px">'
-        +'<div><div style="font-size:11px;color:#d6e4f7">판매 총액</div><div style="font-size:18px;font-weight:900;color:#fff">'+totalSales.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">실제 입금</div><div style="font-size:18px;font-weight:900;color:#86d389">'+totalPaid.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">미수금</div><div style="font-size:18px;font-weight:900;color:#ea8c89">'+Math.max(0,totalMisugeum).toLocaleString()+'원 <span style="font-size:12px">('+totalUnpaid+'명)</span></div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">매입 총액</div><div style="font-size:18px;font-weight:900;color:#f6db86">'+totalPurchase.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">순이익 추정</div><div style="font-size:18px;font-weight:900;color:'+(totalProfit>=0?'#86d389':'#ea8c89')+'">'+totalProfit.toLocaleString()+'원</div></div>'
+        +'<div class="sl" style="color:#d6e4f7;letter-spacing:2px;margin-bottom:12px">📊 전체 분원 합산</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-top:8px">'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">판매 총액</div><div style="font-size:20px;font-weight:900;color:#fff">'+totalSales.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">실제 입금</div><div style="font-size:20px;font-weight:900;color:#86d389">'+totalPaid.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">미수금</div><div style="font-size:20px;font-weight:900;color:#ea8c89">'+Math.max(0,totalMisugeum).toLocaleString()+'원</div><div style="font-size:12px;color:#ea8c89;margin-top:4px">미납 '+totalUnpaid+'명</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">매입 총액</div><div style="font-size:20px;font-weight:900;color:#f6db86">'+totalPurchase.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">순이익 추정</div><div style="font-size:20px;font-weight:900;color:'+(totalProfit>=0?'#86d389':'#ea8c89')+'">'+totalProfit.toLocaleString()+'원</div></div>'
         +'</div></div>';
 
       window._financeByBranch=byBranch;
@@ -2936,8 +2938,17 @@ async function loadFinanceSummary(){
       var unpaidCount=Object.keys(b.unpaidStudents).length;
 
       // 미납자 계산 (payments 기준 실제 미납)
+      // payments를 student_id__semester 키와 student_id 단독 키 두 가지로 매핑
       var pmtByStudent={};
-      pmts.forEach(function(p){var k=(p.student_id||'')+'__'+(p.semester||'');if(!pmtByStudent[k]) pmtByStudent[k]=0;pmtByStudent[k]+=Number(p.paid_amount||0);});
+      var pmtByStudentOnly={};
+      pmts.forEach(function(p){
+        var k=(p.student_id||'')+'__'+(p.semester||'');
+        if(!pmtByStudent[k]) pmtByStudent[k]=0;
+        pmtByStudent[k]+=Number(p.paid_amount||0);
+        var k2=(p.student_id||'');
+        if(!pmtByStudentOnly[k2]) pmtByStudentOnly[k2]=0;
+        pmtByStudentOnly[k2]+=Number(p.paid_amount||0);
+      });
       var salesByStudent={};
       sales.filter(function(r){return r.type==='출고'&&(r.branch===currentBranch);}).forEach(function(r){
         var k=(r.student_id||'')+'__'+(r.semester||'');
@@ -2945,10 +2956,11 @@ async function loadFinanceSummary(){
         salesByStudent[k].total+=Number(r.total||0);
       });
       var unpaidStudentList=Object.entries(salesByStudent).filter(function(e){
-        var paid=pmtByStudent[e[0]]||0;
+        var paid=pmtByStudent[e[0]]||pmtByStudentOnly[e[1].id]||0;
         return e[1].total>paid;
       }).map(function(e){
-        var paid=pmtByStudent[e[0]]||0;
+        // 키 매칭: student_id__semester 우선, 실패 시 student_id만으로 재시도
+        var paid=pmtByStudent[e[0]]||pmtByStudentOnly[e[1].id]||0;
         return {id:e[1].id,name:e[1].name,total:e[1].total,paid:paid,balance:e[1].total-paid};
       });
       window._financeUnpaidList=unpaidStudentList;
@@ -3021,7 +3033,7 @@ function showBranchDetail(br){
       +'<div class="sl">실제 입금액</div><div class="sn" style="color:var(--accent2);font-size:24px">'+b.paidTotal.toLocaleString()+'</div><div class="ss">원</div>'
     +'</div>'
     +'<div class="scard" style="cursor:pointer" data-br="'+br+'" data-type="unpaid" onclick="showBranchSubDetail(this.dataset.br,this.dataset.type)">'
-      +'<div class="sl">미수금 🔍</div><div class="sn" style="color:var(--warn);font-size:24px">'+Math.max(0,unpaid).toLocaleString()+'</div><div class="ss">원</div>'
+      +'<div class="sl">미수금 🔍</div><div class="sn" style="color:var(--warn);font-size:24px">'+Math.max(0,unpaid).toLocaleString()+'</div><div class="ss">원 / '+(b.unpaidList?b.unpaidList.length:0)+'명 미납</div>'
     +'</div>'
     +'<div class="scard" style="cursor:pointer" data-br="'+br+'" data-type="purchase" onclick="showBranchSubDetail(this.dataset.br,this.dataset.type)">'
       +'<div class="sl">매입 총액 🔍</div><div class="sn" style="color:#9e7400;font-size:24px">'+b.purchaseTotal.toLocaleString()+'</div><div class="ss">원</div>'
@@ -3045,14 +3057,20 @@ function showBranchSubDetail(br,type){
   if(!el) return;
   var html='';
   if(type==='sales'){
-    var items=Object.entries(b.salesDetail||{}).sort(function(a,b){return b[1]-a[1];});
-    html='<div class="twrap"><table><thead><tr><th>교재명</th><th>판매 권수</th></tr></thead><tbody>'
-      +items.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+    var items=Object.entries(b.salesDetail||{}).sort(function(a,b){return (b[1].qty||0)-(a[1].qty||0);});
+    html='<div class="twrap"><table><thead><tr><th>교재명</th><th>업체</th><th>판매 권수</th></tr></thead><tbody>'
+      +items.map(function(e){
+        var v=typeof e[1]==='object'?e[1]:{qty:e[1],vendor:'-'};
+        return '<tr><td>'+escapeHtml(e[0])+'</td><td style="font-size:12px;color:var(--muted)">'+escapeHtml(v.vendor||'-')+'</td><td class="mono"><b>'+v.qty+'권</b></td></tr>';
+      }).join('')
       +'</tbody></table></div>';
   } else if(type==='purchase'){
-    var items=Object.entries(b.purchaseDetail||{}).sort(function(a,b){return b[1]-a[1];});
+    var items=Object.entries(b.purchaseDetail||{}).sort(function(a,b){return (b[1].amount||0)-(a[1].amount||0);});
     html='<div class="twrap"><table><thead><tr><th>교재명</th><th>매입 권수</th></tr></thead><tbody>'
-      +items.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+      +items.map(function(e){
+        var v=typeof e[1]==='object'?e[1]:{qty:e[1],amount:0};
+        return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+v.qty+'권</b></td></tr>';
+      }).join('')
       +'</tbody></table></div>';
   } else if(type==='unpaid'){
     // 미납 학생 - 해당 분원 데이터
