@@ -2015,22 +2015,22 @@ function jumpToStudent(keyword){
   if(!keyword) return;
   var kw=keyword.trim().toLowerCase();
 
-  // 검색어 바뀌면 매칭 목록 초기화
-  if(kw!==_jumpLastKeyword){
+  // 매번 DOM에서 새로 수집 (큐 추가로 행 스타일 바뀌어도 참조 유지)
+  var isNewKeyword=kw!==_jumpLastKeyword;
+  if(isNewKeyword){
     _jumpLastKeyword=kw;
     _jumpCurrentIdx=-1;
-    // 매칭되는 모든 행 수집 (완납 제외 - 이미 처리됨)
-    _jumpMatches=[];
-    document.querySelectorAll('#unpaid-list tbody tr').forEach(function(tr){
-      var nameEl=tr.querySelector('td:first-child b');
-      if(!nameEl) return;
-      if(nameEl.textContent.toLowerCase().includes(kw)){
-        // 입금액 input 있는 행만 (완납 취소버튼만 있는 행 제외)
-        var amtInput=tr.querySelector('input[id^="paid-amt-"]');
-        if(amtInput) _jumpMatches.push(tr);
-      }
-    });
   }
+  // 항상 현재 DOM에서 매칭 행 재수집
+  _jumpMatches=[];
+  document.querySelectorAll('#unpaid-list tbody tr').forEach(function(tr){
+    var nameEl=tr.querySelector('td:first-child b');
+    if(!nameEl) return;
+    if(nameEl.textContent.toLowerCase().includes(kw)){
+      var amtInput=tr.querySelector('input[id^="paid-amt-"]');
+      if(amtInput) _jumpMatches.push(tr);
+    }
+  });
 
   if(!_jumpMatches.length){
     toast('"'+keyword+'" 학생을 찾을 수 없습니다.',false);
@@ -2171,7 +2171,7 @@ async function loadUnpaid(){
               +(balance>0?balance.toLocaleString()+'원':balance<0?'초과 '+Math.abs(balance).toLocaleString()+'원':g.totalAmount.toLocaleString()+'원')
             +'</div>'
           +'</td>'
-          +'<td style="white-space:nowrap"><input type="number" id="paid-amt-'+gid+'" value="'+Math.max(0,balance)+'" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
+          +'<td style="white-space:nowrap"><input type="text" inputmode="numeric" id="paid-amt-'+gid+'" value="'+Math.max(0,balance).toLocaleString()+'" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px;text-align:right" oninput="formatAmtInput(this)" onfocus="this.select()"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
           +'<td style="white-space:nowrap;display:flex;gap:4px;align-items:center">'
@@ -2192,12 +2192,17 @@ function togglePayHistory(gid){
 // ── 입금 대기 큐 ──
 var _payQueue=[]; // [{studentId, semester, gid, totalAmount, amt, date, memo, name}]
 
+function formatAmtInput(el){
+  var raw=el.value.replace(/[^0-9]/g,'');
+  var num=parseInt(raw)||0;
+  el.value=num>0?num.toLocaleString():'';
+}
 function triggerPayment(gid){
   if(!gid) return;
   var amtEl=document.getElementById('paid-amt-'+gid);
   var dateEl=document.getElementById('paid-date-'+gid);
   var memoEl=document.getElementById('paid-memo-'+gid);
-  var amt=amtEl?Number(amtEl.value)||0:0;
+  var amt=amtEl?Number(String(amtEl.value).replace(/,/g,''))||0:0;
   var date=dateEl?dateEl.value.trim():'';
   if(!amt){toast('입금액을 입력해주세요.',false);if(amtEl)amtEl.focus();return;}
   if(!date){toast('날짜를 입력해주세요.',false);if(dateEl)dateEl.focus();return;}
@@ -2237,18 +2242,24 @@ function triggerPayment(gid){
 
 function updatePaymentQueueBar(){
   var bar=document.getElementById('payment-queue-bar');
+  if(!bar) return;
   if(!_payQueue.length){
-    if(bar) bar.style.display='none';
+    bar.style.display='none';
     return;
   }
-  if(bar) bar.style.display='flex';
+  // 바 HTML 항상 재구성 (처리 중 로딩으로 덮어쓴 경우 복구)
   var total=_payQueue.reduce(function(s,q){return s+q.amt;},0);
-  var countEl=document.getElementById('pq-count');
-  var totalEl=document.getElementById('pq-total');
-  var namesEl=document.getElementById('pq-names');
-  if(countEl) countEl.textContent=_payQueue.length+'명';
-  if(totalEl) totalEl.textContent='합계 '+total.toLocaleString()+'원';
-  if(namesEl) namesEl.textContent=_payQueue.map(function(q){return q.name+'('+q.amt.toLocaleString()+'원)';}).join(' · ');
+  var names=_payQueue.map(function(q){return q.name+'('+q.amt.toLocaleString()+'원)';}).join(' · ');
+  bar.innerHTML=''
+    +'<span style="font-size:13px;font-weight:700">📋 입금 대기</span>'
+    +'<span style="background:rgba(255,255,255,.25);padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700">'+_payQueue.length+'명</span>'
+    +'<span style="font-size:12px;color:#d6e4f7">합계 '+total.toLocaleString()+'원</span>'
+    +'<div style="font-size:11px;color:#b8d4f5;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(names)+'</div>'
+    +'<div style="display:flex;gap:8px;flex-shrink:0">'
+    +'<button class="btn btn-g btn-sm" onclick="clearPaymentQueue()" style="font-size:11px;padding:4px 10px;color:#344251">큐 비우기</button>'
+    +'<button class="btn btn-y btn-sm" onclick="processPaymentQueue()" style="font-size:12px;padding:4px 14px;font-weight:700">전체 처리</button>'
+    +'</div>';
+  bar.style.display='flex';
 }
 
 function clearPaymentQueue(){
@@ -2290,6 +2301,7 @@ async function processPaymentQueue(){
   var ok=results.filter(function(r){return r.status==='fulfilled';}).length;
   var fail=results.filter(function(r){return r.status==='rejected';}).length;
   _payQueue=[];
+  updatePaymentQueueBar(); // 바 원래대로 복구 (innerHTML 덮어쓴 것 복구)
   toast('처리 완료: '+ok+'명 성공'+(fail?' · '+fail+'명 실패':''),ok>0);
   loadUnpaid();
 }
@@ -2314,7 +2326,7 @@ async function doPayment(studentId, semester, gid, totalAmount){
   var amtEl=document.getElementById('paid-amt-'+gid);
   var dateEl=document.getElementById('paid-date-'+gid);
   var memoEl=document.getElementById('paid-memo-'+gid);
-  var amt=amtEl?Number(amtEl.value)||0:0;
+  var amt=amtEl?Number(String(amtEl.value).replace(/,/g,''))||0:0;
   var dateVal=dateEl?dateEl.value.trim():'';
   var memo=memoEl?memoEl.value.trim():'';
   if(!amt) return toast('입금액을 입력해주세요.',false);
@@ -3752,19 +3764,19 @@ async function loadBankHistory(){
     document.getElementById('bank-result-summary').textContent=
       '입금 합계: '+totalDeposit.toLocaleString()+'원 · 출금 합계: '+totalWithdraw.toLocaleString()+'원';
     el.innerHTML='<div class="twrap"><table><thead><tr>'
-      +'<th>거래일시</th><th>적요</th><th>의뢰인/수취인</th><th>내용</th><th>출금</th><th>입금</th><th>잔액</th>'
+      +'<th>적요</th><th>의뢰인/수취인</th><th>내용</th><th>거래일시</th><th>입금</th><th>출금</th><th>잔액</th>'
       +'</tr></thead><tbody>'
       +data.map(function(r,idx){
         var isDeposit=Number(r.deposit||0)>0;
         var isWithdraw=Number(r.withdraw||0)>0;
         var rowBg=idx%2===0?'background:#f9fbfd':'background:#ffffff';
         return '<tr style="'+rowBg+'">'
-          +'<td class="mono" style="font-size:11px;white-space:nowrap">'+escapeHtml(r.tx_datetime||'')+'</td>'
           +'<td style="font-size:12px">'+escapeHtml(r.summary||'')+'</td>'
-          +'<td><b>'+escapeHtml(r.counterpart||'')+'</b></td>'
+          +'<td><b style="font-size:14px;font-weight:400;letter-spacing:-.3px">'+escapeHtml(r.counterpart||'')+'</b></td>'
           +'<td style="font-size:12px;color:var(--muted)">'+escapeHtml(r.memo||'')+'</td>'
-          +'<td class="mono" style="color:var(--warn)">'+(isWithdraw?Number(r.withdraw).toLocaleString()+'원':'')+'</td>'
-          +'<td class="mono" style="color:var(--accent2);font-weight:700">'+(isDeposit?Number(r.deposit).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="font-size:11px;white-space:nowrap;color:var(--muted)">'+escapeHtml(r.tx_datetime||'')+'</td>'
+          +'<td class="mono" style="font-size:14px;color:var(--accent2);font-weight:400;letter-spacing:-.3px">'+(isDeposit?Number(r.deposit).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="font-size:14px;color:var(--warn);font-weight:400;letter-spacing:-.3px">'+(isWithdraw?Number(r.withdraw).toLocaleString()+'원':'')+'</td>'
           +'<td class="mono" style="font-size:11px;color:var(--muted)">'+Number(r.balance||0).toLocaleString()+'</td>'
           +'</tr>';
       }).join('')
