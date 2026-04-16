@@ -304,7 +304,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="입고">입고 (구입)</option>
           <option value="출고">출고 (판매)</option>
           <option value="반품">반품 (업체반품)</option>
-          <option value="분원출고">분원출고 (타분원 발송)</option>
+          <option value="분원출고">분원요청 (타분원에 출고 요청)</option>
 
         </select>
       </div>
@@ -1312,7 +1312,7 @@ var _tt;
 // ── 분원간 입고 대기 ──────────────────────────────────────
 async function checkPendingTransfers(){
   try{
-    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    var d=await sbGet('transfers','select=*&from_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
     if(!d.length) return;
     var banner=document.getElementById('pending-transfer-banner');
     if(!banner){
@@ -1323,14 +1323,14 @@ async function checkPendingTransfers(){
       document.querySelector('main').insertBefore(banner, document.querySelector('main').firstChild);
     }
     banner.innerHTML='<span style="font-size:20px">📦</span>'
-      +'<span style="font-weight:700;color:#7a5c00">대기중인 입고가 <b style="color:var(--warn)">'+d.length+'건</b> 있습니다!</span>'
+      +'<span style="font-weight:700;color:#7a5c00">출고 요청이 <b style="color:var(--warn)">'+d.length+'건</b> 있습니다!</span>'
       +'<span style="font-size:12px;color:var(--muted)">클릭하여 확인하세요</span>';
   }catch(e){}
 }
 
 async function loadPendingTransfers(){
   try{
-    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    var d=await sbGet('transfers','select=*&from_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
     if(!d.length){document.getElementById('pending-transfer-section')&&(document.getElementById('pending-transfer-section').style.display='none');return;}
     var sec=document.getElementById('pending-transfer-section');
     if(!sec){
@@ -1343,20 +1343,20 @@ async function loadPendingTransfers(){
     sec.style.display='';
     sec.innerHTML='<div class="card" style="border:2px solid var(--yellow)">'
       +'<div class="retro-strip"></div>'
-      +'<div class="card-title">📦 대기중인 분원 입고 ('+d.length+'건)</div>'
-      +'<div class="twrap"><table><thead><tr><th>발송 분원</th><th>교재명</th><th>수량</th><th>매입단가</th><th>처리자</th><th>요청일</th><th>처리</th></tr></thead><tbody>'
+      +'<div class="card-title">📦 출고 요청 대기 ('+d.length+'건)</div>'
+      +'<p style="font-size:12px;color:var(--muted);margin-bottom:10px">다른 분원에서 교재 출고를 요청했습니다. 수락하면 재고에서 차감됩니다.</p>'
+      +'<div class="twrap"><table><thead><tr><th>요청 분원</th><th>교재명</th><th>수량</th><th>처리자</th><th>요청일</th><th>처리</th></tr></thead><tbody>'
       +d.map(function(t){
-        var fromName=(BRANCHES[t.from_branch]||{}).name||t.from_branch;
+        var toName=(BRANCHES[t.to_branch]||{}).name||t.to_branch; // 요청한 분원(입고받을 곳)
         var dt=(t.created_at||'').slice(0,10);
         return '<tr>'
-          +'<td><span class="badge b-blue">'+escapeHtml(fromName)+'</span></td>'
+          +'<td><span class="badge b-yellow">'+escapeHtml(toName)+'</span></td>'
           +'<td><b>'+escapeHtml(t.book_name||'')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(t.barcode||'')+'</div></td>'
           +'<td>'+t.qty+'권</td>'
-          +'<td class="mono">'+(t.purchase_price?Number(t.purchase_price).toLocaleString()+'원':'-')+'</td>'
           +'<td>'+(escapeHtml(t.handler||'-'))+'</td>'
           +'<td class="mono" style="font-size:11px">'+dt+'</td>'
           +'<td style="display:flex;gap:6px;flex-wrap:wrap">'
-          +'<button class="btn btn-s btn-sm" data-tid="'+t.id+'" data-barcode="'+escapeHtml(t.barcode)+'" data-qty="'+t.qty+'" data-price="'+(t.purchase_price||0)+'" data-name="'+escapeHtml(t.book_name||'')+'" data-from="'+escapeHtml(t.from_branch||'')+'" onclick="acceptTransfer(this)">수락</button>'
+          +'<button class="btn btn-s btn-sm" data-tid="'+t.id+'" data-barcode="'+escapeHtml(t.barcode)+'" data-qty="'+t.qty+'" data-price="'+(t.purchase_price||0)+'" data-name="'+escapeHtml(t.book_name||'')+'" data-to="'+escapeHtml(t.to_branch||'')+'" onclick="acceptTransfer(this)">수락 (출고)</button>'
           +'<button class="btn btn-d btn-sm" data-tid="'+t.id+'" onclick="rejectTransfer(this.dataset.tid)">거절</button>'
           +'</td></tr>';
       }).join('')
@@ -1370,16 +1370,20 @@ async function acceptTransfer(btn){
   var qty=Number(btn.dataset.qty)||1;
   var price=Number(btn.dataset.price)||0;
   var name=btn.dataset.name;
-  var fromBranch=btn.dataset.from||'';
-  var fromName=(BRANCHES[fromBranch]||{}).name||fromBranch||'타분원';
-  if(!confirm('['+name+'] '+qty+'권 입고를 수락할까요?')) return;
+  var toBranch=btn.dataset.to||''; // 입고받을 분원 (요청한 쪽)
+  var toName=(BRANCHES[toBranch]||{}).name||toBranch||'타분원';
+  if(!confirm('['+name+'] '+qty+'권을 '+toName+'에 출고할까요?')) return;
   try{
-    // transfers 상태 완료로 변경
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // transfers 상태 완료로 변경
     await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'완료',confirmed_at:new Date().toISOString()})});
-    // 내 분원 재고에 입고 반영 (메모에 출발분원 표시)
-    await call('addSales',{barcode:barcode,type:'분원입고',qty:qty,price:price,memo:'←'+fromName});
-    toast('입고 수락 완료!',true);
+    // 내 분원(from_branch)에서 분원출고 처리 (재고 차감)
+    await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:price,memo:'→'+toName,branchTarget:toBranch});
+    // 상대 분원(to_branch)에 분원입고 기록
+    // → 상대 분원 DB에 직접 저장 (branch를 toBranch로)
+    var iBody={barcode:barcode,book_name:name,type:'분원입고',qty:qty,unit_price:price,total:price*qty,sale_date:new Date().toISOString().slice(0,10),memo:'←'+(BRANCHES[currentBranch]||{}).name||currentBranch,branch:toBranch,purchase_price:price};
+    await sbPost('sales_history',iBody);
+    toast(toName+'으로 출고 완료!',true);
     checkPendingTransfers();
     loadPendingTransfers();
     loadSalesHistory();
@@ -1387,7 +1391,7 @@ async function acceptTransfer(btn){
 }
 
 async function rejectTransfer(tid){
-  if(!confirm('입고 요청을 거절할까요?')) return;
+  if(!confirm('출고 요청을 거절할까요?')) return;
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
     await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'거절'})});
@@ -1896,12 +1900,12 @@ async function doSales(){
       var recentPurchase=await sbGet('sales_history','select=purchase_price&barcode=eq.'+encodeURIComponent(barcode)+'&type=eq.입고&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.desc&limit=1');
       var purchasePrice=recentPurchase.length?recentPurchase[0].purchase_price:0;
       var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-      var body={from_branch:currentBranch,to_branch:branchTarget,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
+      // 요청: from=출고해줄 분원(상대), to=입고받을 분원(나)
+      var body={from_branch:branchTarget,to_branch:currentBranch,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
-      if(!res.ok){var err=await res.text();toast('분원출고 실패: '+err,false);return;}
-      // 출고 분원 재고에서 차감 (sales_history에 분원출고로 기록)
-      await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:purchasePrice,memo:'→'+BRANCHES[branchTarget].name+(handler?' | 처리자:'+handler:''),branchTarget:branchTarget});
-      toast(BRANCHES[branchTarget].name+'으로 분원출고 요청 완료! 상대 분원이 수락해야 입고됩니다.',true);
+      if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
+      // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
+      toast(BRANCHES[branchTarget].name+'에 출고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
