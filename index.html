@@ -2901,14 +2901,24 @@ function renderChecklist(){
 
 function checklistMark(barcode){
   if(!barcode||!document.getElementById('checklist-search').value.trim()) return;
-  // 스캔된 바코드의 교재명 찾기
   var book=(books||[]).find(function(b){return b['바코드']===barcode;});
   if(!book) return;
-  // 교사용이면 이름 정규화, 아니면 그대로
-  var matchName=book['비고']==='JLS교사용'
-    ? normalizeTeacherBookName(book['교재명'])
-    : book['교재명'];
-  _checklistChecked[matchName]=true;
+  // 교재명 정규화: [교사용] 접두, 01번~03번 접미 제거
+  var normalizedName=normalizeTeacherBookName(book['교재명']);
+  // 체크리스트 목록에서 매칭 시도 (교재명 또는 정규화 교재명)
+  var kw=(document.getElementById('checklist-search').value||'').trim().toLowerCase();
+  var checklistBooks=(books||[]).filter(function(b){
+    if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return false;
+    return (b['교재명']||'').toLowerCase().includes(kw)||(b['레벨']||'').toLowerCase().includes(kw);
+  });
+  // 1순위: 정규화된 교재명과 정확히 일치하는 일반 교재
+  var matched=checklistBooks.find(function(b){return b['교재명']===normalizedName;});
+  // 2순위: 스캔 교재의 레벨과 같은 레벨의 교재 (교사용 스캔 시)
+  if(!matched&&book['레벨']){
+    matched=checklistBooks.find(function(b){return b['레벨']&&b['레벨']===book['레벨'];});
+  }
+  if(!matched) return;
+  _checklistChecked[matched['교재명']]=true;
   renderChecklist();
 }
 
