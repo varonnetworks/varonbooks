@@ -2318,27 +2318,29 @@ async function processPaymentQueue(){
   var bar=document.getElementById('payment-queue-bar');
   if(bar) bar.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></div> <span style="font-size:13px">처리 중...</span>';
 
-  // 병렬 처리
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-  var results=await Promise.allSettled(_payQueue.map(async function(q){
-    var pd=q.date;
-    var m=pd.match(/^(\d{1,2})[\/-](\d{1,2})$/);
-    if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
-    var body={branch:currentBranch,student_id:q.studentId,semester:q.semester||null,paid_amount:q.amt,paid_date:pd,memo:q.memo||null};
-    var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
-    if(!res.ok) throw new Error('payment fail');
-    // pay_status 업데이트
-    var semQ=q.semester?'&semester=eq.'+encodeURIComponent(q.semester):'';
-    var salesRes=await sbGet('sales_history','select=total&type=eq.출고&student_id=eq.'+encodeURIComponent(q.studentId)+semQ+'&branch=eq.'+encodeURIComponent(currentBranch));
-    var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
-    var pmtRes=await sbGet('payments','select=paid_amount&student_id=eq.'+encodeURIComponent(q.studentId)+semQ+'&branch=eq.'+encodeURIComponent(currentBranch));
-    var totalPaid=pmtRes.reduce(function(s,r){return s+Number(r.paid_amount||0);},0);
-    var newStatus=totalPaid>=totalSales?'완납':totalPaid>0?'부분납':'미납';
-    var patchQ='type=eq.출고&student_id=eq.'+encodeURIComponent(q.studentId)+'&branch=eq.'+encodeURIComponent(currentBranch)+semQ;
-    await fetch(SB_URL+'/sales_history?'+patchQ,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:newStatus})});
-  }));
-  var ok=results.filter(function(r){return r.status==='fulfilled';}).length;
-  var fail=results.filter(function(r){return r.status==='rejected';}).length;
+  // doPayment와 동일한 방식으로 순차 처리
+  var ok=0,fail=0;
+  for(var qi=0;qi<_payQueue.length;qi++){
+    var q=_payQueue[qi];
+    try{
+      var pd=q.date;
+      var m=pd.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+      if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
+      var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      var body={branch:currentBranch,student_id:q.studentId,semester:q.semester||null,paid_amount:q.amt,paid_date:pd,memo:q.memo||null};
+      var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
+      if(!res.ok){var errTxt=await res.text();console.error('payment fail:',errTxt);fail++;continue;}
+      // doPayment와 동일하게 semester 조건 포함
+      var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고&student_id=eq.'+encodeURIComponent(q.studentId)+'&semester=eq.'+encodeURIComponent(q.semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
+      var pmtRes=await sbGet('payments','select=paid_amount&student_id=eq.'+encodeURIComponent(q.studentId)+'&semester=eq.'+encodeURIComponent(q.semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var totalPaid=pmtRes.reduce(function(s,r){return s+Number(r.paid_amount||0);},0);
+      var newStatus=totalPaid>=totalSales?'완납':totalPaid>0?'부분납':'미납';
+      var ph=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      await fetch(SB_URL+'/sales_history?type=eq.출고&student_id=eq.'+encodeURIComponent(q.studentId)+'&semester=eq.'+encodeURIComponent(q.semester)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph,body:JSON.stringify({pay_status:newStatus})});
+      ok++;
+    }catch(e){console.error('queue item fail:',e);fail++;}
+  }
   _payQueue=[];
   updatePaymentQueueBar(); // 바 원래대로 복구 (innerHTML 덮어쓴 것 복구)
   toast('처리 완료: '+ok+'명 성공'+(fail?' · '+fail+'명 실패':''),ok>0);
