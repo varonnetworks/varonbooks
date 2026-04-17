@@ -241,8 +241,13 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="fgrid" style="margin-bottom:14px">
       <div class="fg"><label class="fl">선생님 *</label><select id="loan-teacher"><option value="">-- 선택 --</option></select></div>
       <div class="fg"><label class="fl">학기</label><input type="text" id="loan-semester" placeholder="예: 26년봄"></div>
-      <div class="fg"><label class="fl">레벨 <span style="font-size:10px;color:var(--muted);font-weight:400">(선택 · 입력하면 교재목록 표시)</span></label>
-        <input type="text" id="checklist-search" placeholder="예: DSA1, T Map..." oninput="renderChecklist()">
+      <div class="fg"><label class="fl">레벨 <span style="font-size:10px;color:var(--muted);font-weight:400">(선택 · 고르면 교재목록 표시)</span></label>
+        <div style="position:relative">
+          <input type="text" id="checklist-search" placeholder="예: DSB 입력 후 선택..." autocomplete="off"
+            oninput="renderLevelDropdown()" onfocus="renderLevelDropdown()">
+          <div id="checklist-level-dropdown" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:#fff;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:200px;overflow-y:auto"></div>
+        </div>
+        <div id="checklist-selected-level" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--accent)"></div>
       </div>
       <div class="fg"><label class="fl">반납 예정일</label><input type="date" id="loan-return"></div>
     </div>
@@ -2859,22 +2864,69 @@ function normalizeTeacherBookName(name){
     .trim();
 }
 
+var _checklistSelectedLevel=''; // 현재 선택된 레벨
+
+function renderLevelDropdown(){
+  var kw=(document.getElementById('checklist-search').value||'').trim().toLowerCase();
+  var box=document.getElementById('checklist-level-dropdown');
+  var selEl=document.getElementById('checklist-selected-level');
+  if(!box) return;
+  // 선택 초기화
+  _checklistSelectedLevel='';
+  _checklistChecked={};
+  if(selEl) selEl.style.display='none';
+  var wrap=document.getElementById('checklist-wrap');
+  if(wrap) wrap.style.display='none';
+  if(!kw){box.style.display='none';return;}
+  // books에서 레벨 목록 추출 (콤마 분리, 중복 제거)
+  var allLevels={};
+  (books||[]).forEach(function(b){
+    if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return;
+    (b['레벨']||'').split(',').forEach(function(l){
+      l=l.trim();
+      if(l) allLevels[l]=true;
+    });
+  });
+  var matched=Object.keys(allLevels).filter(function(l){return l.toLowerCase().includes(kw);}).sort();
+  if(!matched.length){box.style.display='none';return;}
+  box.innerHTML=matched.map(function(l){
+    return '<button type="button" data-level="'+escapeHtml(l)+'" style="width:100%;text-align:left;padding:9px 14px;border:none;border-bottom:1px solid #eee;background:#fff;cursor:pointer;font-size:13px;font-weight:700">'
+      +escapeHtml(l)+'</button>';
+  }).join('');
+  box.style.display='block';
+  box.querySelectorAll('button[data-level]').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      var level=btn.getAttribute('data-level');
+      _checklistSelectedLevel=level;
+      document.getElementById('checklist-search').value=level;
+      box.style.display='none';
+      if(selEl){selEl.style.display='block';selEl.textContent='선택된 레벨: '+level;}
+      renderChecklist();
+    });
+  });
+}
+
+document.addEventListener('click',function(e){
+  var box=document.getElementById('checklist-level-dropdown');
+  var inp=document.getElementById('checklist-search');
+  if(box&&inp&&!inp.contains(e.target)&&!box.contains(e.target)) box.style.display='none';
+});
+
 function renderChecklist(){
-  var kw=(document.getElementById('checklist-search')||{value:''}).value.trim().toLowerCase();
   var el=document.getElementById('checklist-list');
   var wrap=document.getElementById('checklist-wrap');
   var summaryEl=document.getElementById('checklist-summary');
   if(!el) return;
-  if(!kw){
+  if(!_checklistSelectedLevel){
     if(wrap) wrap.style.display='none';
     return;
   }
-  // 일반 교재만 (JLS교사용 제외) + 레벨 또는 교재명으로 검색
+  var selectedLevel=_checklistSelectedLevel;
+  // 선택된 레벨과 정확히 일치하는 일반 교재만
   var filtered=(books||[]).filter(function(b){
     if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return false;
-    var nameMatch=(b['교재명']||'').toLowerCase().includes(kw);
-    var levelMatch=(b['레벨']||'').toLowerCase().includes(kw);
-    return nameMatch||levelMatch;
+    return (b['레벨']||'').split(',').some(function(l){return l.trim()===selectedLevel;});
   });
   if(!filtered.length){
     if(wrap) wrap.style.display='none';
@@ -2900,22 +2952,24 @@ function renderChecklist(){
 }
 
 function checklistMark(barcode){
-  if(!barcode||!document.getElementById('checklist-search').value.trim()) return;
+  if(!barcode||!_checklistSelectedLevel) return;
   var book=(books||[]).find(function(b){return b['바코드']===barcode;});
   if(!book) return;
-  // 교재명 정규화: [교사용] 접두, 01번~03번 접미 제거
+  // 정규화된 교재명으로 체크리스트 항목 매칭
   var normalizedName=normalizeTeacherBookName(book['교재명']);
-  // 체크리스트 목록에서 매칭 시도 (교재명 또는 정규화 교재명)
-  var kw=(document.getElementById('checklist-search').value||'').trim().toLowerCase();
+  // 현재 선택된 레벨의 체크리스트 목록에서 찾기
   var checklistBooks=(books||[]).filter(function(b){
     if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return false;
-    return (b['교재명']||'').toLowerCase().includes(kw)||(b['레벨']||'').toLowerCase().includes(kw);
+    return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
   });
-  // 1순위: 정규화된 교재명과 정확히 일치하는 일반 교재
+  // 1순위: 정규화 교재명 일치
   var matched=checklistBooks.find(function(b){return b['교재명']===normalizedName;});
-  // 2순위: 스캔 교재의 레벨과 같은 레벨의 교재 (교사용 스캔 시)
-  if(!matched&&book['레벨']){
-    matched=checklistBooks.find(function(b){return b['레벨']&&b['레벨']===book['레벨'];});
+  // 2순위: 스캔 교재 레벨이 선택 레벨 포함
+  if(!matched){
+    var bookLevels=(book['레벨']||'').split(',').map(function(l){return l.trim();});
+    if(bookLevels.indexOf(_checklistSelectedLevel)>=0){
+      matched=checklistBooks[0]; // 해당 레벨 첫 번째 교재
+    }
   }
   if(!matched) return;
   _checklistChecked[matched['교재명']]=true;
@@ -2924,12 +2978,15 @@ function checklistMark(barcode){
 
 function clearChecklist(){
   _checklistChecked={};
+  _checklistSelectedLevel='';
   var s=document.getElementById('checklist-search');
   if(s) s.value='';
   var el=document.getElementById('checklist-list');
   if(el) el.innerHTML='';
   var wrap=document.getElementById('checklist-wrap');
   if(wrap) wrap.style.display='none';
+  var selEl=document.getElementById('checklist-selected-level');
+  if(selEl) selEl.style.display='none';
 }
 
 async function loadTeacherList(){
