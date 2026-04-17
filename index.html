@@ -1927,7 +1927,7 @@ async function doSales(){
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
       if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
       // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
-      toast(BRANCHES[branchTarget].name+' 출고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
+      toast(BRANCHES[branchTarget].name+' 입고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
@@ -2495,12 +2495,14 @@ async function doPayment(studentId, semester, gid, totalAmount){
   if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var body={branch:currentBranch,student_id:studentId,semester:semester||null,paid_amount:amt,paid_date:pd,memo:memo||null};
-    var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
-    if(!res.ok){var err=await res.text();toast('처리 실패: '+err,false);return;}
-    // sales_history에서 해당 학생/학기 출고 건들 pay_status 업데이트
-    var sem=document.getElementById('unpaid-semester').value||semester;
     var ph2=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // 학기 지정된 경우에만 먼저 INSERT (전체조회는 분배 로직에서 직접 INSERT)
+    if(semester){
+      var body={branch:currentBranch,student_id:studentId,semester:semester||null,paid_amount:amt,paid_date:pd,memo:memo||null};
+      var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
+      if(!res.ok){var err=await res.text();toast('처리 실패: '+err,false);return;}
+    }
+    var sem=document.getElementById('unpaid-semester').value||semester;
     var _doSid=studentId||null;
     // 퇴원학생 이름 찾기
     var _doRow=document.getElementById('paid-amt-'+gid)?document.getElementById('paid-amt-'+gid).closest('tr'):null;
@@ -2508,8 +2510,7 @@ async function doPayment(studentId, semester, gid, totalAmount){
     var _doSname=_doSid?null:(_doNameEl?_doNameEl.textContent:'');
     var _doIdQ=_doSid?'&student_id=eq.'+encodeURIComponent(_doSid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_doSname);
 
-    if(semester){
-      // 학기 지정된 경우: 해당 학기만 처리
+    if(semester){ // 이미 위에서 INSERT 완료, pay_status 업데이트만
       var _semQ2='&semester=eq.'+encodeURIComponent(semester);
       var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고'+_doIdQ+_semQ2+'&branch=eq.'+encodeURIComponent(currentBranch));
       var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
@@ -2542,7 +2543,7 @@ async function doPayment(studentId, semester, gid, totalAmount){
         await fetch(SB_URL+'/sales_history?type=eq.출고'+_doIdQ+semSemQ2+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph2,body:JSON.stringify({pay_status:newStatus2})});
       }
     }
-    toast('입금 처리 완료! ('+amt.toLocaleString()+'원 · '+newStatus+')',true);
+    toast('입금 처리 완료! ('+amt.toLocaleString()+'원)',true);
     loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
