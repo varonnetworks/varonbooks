@@ -1223,8 +1223,19 @@ async function call(action,payload){
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var sts=await sbGet('students','select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch));
       if(!sts.length) return {ok:false,msg:'해당 반 학생이 없습니다.'};
-      await sbPost('sales_history',sts.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
-      return {ok:true,msg:sts.length+'명 출고 완료'};
+      // 중복 판매 확인: 이미 해당 교재 판매된 학생 제외
+      var dupCheck=await sbGet('sales_history','select=student_id&type=eq.출고&barcode=eq.'+encodeURIComponent(bc)+'&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var dupIds=new Set(dupCheck.map(function(r){return r.student_id;}));
+      var dupNames=sts.filter(function(s){return dupIds.has(s.student_id);}).map(function(s){return s.name;});
+      var toProcess=sts.filter(function(s){return !dupIds.has(s.student_id);});
+      if(!toProcess.length) return {ok:false,msg:'모든 학생이 이미 해당 교재를 판매받았습니다.'};
+      if(dupNames.length) {
+        // 중복 학생 있으면 제외하고 처리 (프론트에서 confirm은 이미 했으므로 여기선 그냥 제외)
+      }
+      await sbPost('sales_history',toProcess.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
+      var msg=toProcess.length+'명 출고 완료';
+      if(dupNames.length) msg+=' ('+dupNames.join(', ')+' '+dupNames.length+'명 중복 제외)';
+      return {ok:true,msg:msg};
     }
     if(action==='getStockStatus'){
       var bks=await sbGet('books','select=*&order=name&note=not.in.(JLS자체교재,JLS교사용)');
@@ -1378,6 +1389,20 @@ async function acceptTransfer(btn){
   var toBranch=btn.dataset.to||''; // 입고받을 분원 (요청한 쪽)
   var toName=(BRANCHES[toBranch]||{}).name||toBranch||'타분원';
   if(!confirm('['+name+'] '+qty+'권을 '+toName+'에 출고할까요?')) return;
+  // 재고 확인
+  try{
+    var curStock2=0;
+    var cached2=(stockCache||[]).find(function(r){return r['바코드']===barcode;});
+    if(cached2){
+      curStock2=Number(cached2['현재재고']||0);
+    } else {
+      var inRows2=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고)');
+      inRows2.forEach(function(r){if(r.type==='입고') curStock2+=Number(r.qty||0);else curStock2-=Number(r.qty||0);});
+    }
+    if(curStock2<qty){
+      if(!confirm('⚠️ 재고 부족\n현재 재고: '+curStock2+'권 / 출고 요청: '+qty+'권\n재고가 '+Math.abs(curStock2-qty)+'권 부족합니다. 그대로 출고하시겠습니까?')) return;
+    }
+  }catch(e){}
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
     // transfers 상태 완료로 변경
