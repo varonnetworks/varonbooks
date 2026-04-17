@@ -2925,7 +2925,7 @@ function renderChecklist(){
   var selectedLevel=_checklistSelectedLevel;
   // 선택된 레벨과 정확히 일치하는 일반 교재만
   var filtered=(books||[]).filter(function(b){
-    if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return false;
+    if(b['비고']==='JLS교사용') return false;
     return (b['레벨']||'').split(',').some(function(l){return l.trim()===selectedLevel;});
   });
   if(!filtered.length){
@@ -2955,22 +2955,14 @@ function checklistMark(barcode){
   if(!barcode||!_checklistSelectedLevel) return;
   var book=(books||[]).find(function(b){return b['바코드']===barcode;});
   if(!book) return;
-  // 정규화된 교재명으로 체크리스트 항목 매칭
+  // 정규화된 교재명으로 체크리스트 항목 매칭 ([교사용], 01번 등 제거)
   var normalizedName=normalizeTeacherBookName(book['교재명']);
-  // 현재 선택된 레벨의 체크리스트 목록에서 찾기
+  // 현재 선택된 레벨의 체크리스트 목록에서 정규화 교재명과 정확히 일치하는 것만 체크
   var checklistBooks=(books||[]).filter(function(b){
-    if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return false;
+    if(b['비고']==='JLS교사용') return false;
     return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
   });
-  // 1순위: 정규화 교재명 일치
   var matched=checklistBooks.find(function(b){return b['교재명']===normalizedName;});
-  // 2순위: 스캔 교재 레벨이 선택 레벨 포함
-  if(!matched){
-    var bookLevels=(book['레벨']||'').split(',').map(function(l){return l.trim();});
-    if(bookLevels.indexOf(_checklistSelectedLevel)>=0){
-      matched=checklistBooks[0]; // 해당 레벨 첫 번째 교재
-    }
-  }
   if(!matched) return;
   _checklistChecked[matched['교재명']]=true;
   renderChecklist();
