@@ -2878,10 +2878,10 @@ function renderLevelDropdown(){
   var wrap=document.getElementById('checklist-wrap');
   if(wrap) wrap.style.display='none';
   if(!kw){box.style.display='none';return;}
-  // books에서 레벨 목록 추출 (콤마 분리, 중복 제거)
+  // books에서 레벨 목록 추출 (JLS자체교재만 제외, 교사용도 레벨 포함)
   var allLevels={};
   (books||[]).forEach(function(b){
-    if(b['비고']==='JLS교사용'||b['비고']==='JLS자체교재') return;
+    if(b['비고']==='JLS자체교재') return;
     (b['레벨']||'').split(',').forEach(function(l){
       l=l.trim();
       if(l) allLevels[l]=true;
