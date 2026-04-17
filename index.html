@@ -1063,7 +1063,7 @@ async function call(action,payload){
   payload=payload||{};
   try{
     if(action==='getTeachers'){var d=await sbGet('teachers','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(t){return {'교사ID':t.teacher_id,'이름':t.name,'담당과목':t.subject||'','연락처':t.contact||''};})};}
-    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'비고':b.note||'','레벨':b.level||''};})};}
+    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name&limit=5000');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'비고':b.note||'','레벨':b.level||''};})};}
     if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','비고':s.note||'','구분':s.division||'CHESS','상태':s.status||'재원'};})};}
     if(action==='getSemesters'){var d1=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var d2=await sbGet('sales_history','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch)+'&type=eq.출고');var sems=[...new Set([...d1,...d2].map(function(r){return r.semester;}).filter(Boolean))].sort(function(a,b){return b.localeCompare(a,'ko');});return {ok:true,data:sems};}
     if(action==='getClassesBySemester'){
@@ -1721,6 +1721,21 @@ async function processLoanQueue(){
   var semester=document.getElementById('loan-semester').value.trim();
   if(!loanQueue.length) return toast('대여 목록이 비어 있습니다.',false);
   if(!teacherId) return toast('선생님을 먼저 선택하세요.',false);
+
+  // 레벨 선택된 경우 미체크 교재 확인
+  if(_checklistSelectedLevel){
+    var checklistBooks=(books||[]).filter(function(b){
+      if(b['비고']==='JLS교사용') return false;
+      return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
+    });
+    var unchecked=checklistBooks.filter(function(b){return !_checklistChecked[b['교재명']];});
+    if(unchecked.length>0){
+      var uncheckedNames=unchecked.map(function(b){return '· '+b['교재명'];}).join('\n');
+      var go=confirm('아직 스캔되지 않은 교재가 '+unchecked.length+'권 있습니다.\n\n'+uncheckedNames+'\n\n누락된 교재는 나중에 별도로 대여할 수 있습니다.\n그대로 대여 처리하시겠습니까?');
+      if(!go) return;
+    }
+  }
+
   var items=loanQueue.slice();
   toast('대여 처리 중... ('+items.length+'권)',true);
   var results=await Promise.all(items.map(async function(item){
@@ -2373,11 +2388,8 @@ async function processPaymentQueue(){
   var bar=document.getElementById('payment-queue-bar');
   if(bar) bar.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></div> <span style="font-size:13px">처리 중...</span>';
 
-  // 순차 처리 (semester 없으면 학기별 자동 분배)
-  var ok=0,fail=0;
-  for(var qi=0;qi<_payQueue.length;qi++){
-    var q=_payQueue[qi];
-    try{
+  // 병렬 처리 (semester 없으면 학기별 자동 분배)
+  var results=await Promise.allSettled(_payQueue.map(async function(q){
       var pd=q.date;
       var m=pd.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
       if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
@@ -2392,7 +2404,7 @@ async function processPaymentQueue(){
         var _semQ=_sem?'&semester=eq.'+encodeURIComponent(_sem):'';
         var body={branch:currentBranch,student_id:_sid,student_name:_sid?null:_sname,semester:_sem||null,paid_amount:q.amt,paid_date:pd,memo:q.memo||null};
         var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
-        if(!res.ok){fail++;continue;}
+        if(!res.ok) throw new Error('payment fail');
         var _idQ=_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname);
         var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고'+_idQ+_semQ+'&branch=eq.'+encodeURIComponent(currentBranch));
         var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
@@ -2427,7 +2439,7 @@ async function processPaymentQueue(){
           // 해당 학기 payments INSERT
           var semBody={branch:currentBranch,student_id:_sid,student_name:_sid?null:_sname,semester:sk||null,paid_amount:payAmt,paid_date:pd,memo:q.memo||null};
           var semRes=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(semBody)});
-          if(!semRes.ok) continue;
+          if(!semRes.ok) throw new Error('sem payment fail');
           // pay_status 업데이트
           var newPaid=semPaid+payAmt;
           var newStatus=newPaid>=semSales?'완납':newPaid>0?'부분납':'미납';
@@ -2441,9 +2453,9 @@ async function processPaymentQueue(){
           await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(lastBody)});
         }
       }
-      ok++;
-    }catch(e){console.error('queue item fail:',e);fail++;}
-  }
+  }));
+  var ok=results.filter(function(r){return r.status==='fulfilled';}).length;
+  var fail=results.filter(function(r){return r.status==='rejected';}).length;
   _payQueue=[];
   updatePaymentQueueBar(); // 바 원래대로 복구 (innerHTML 덮어쓴 것 복구)
   toast('처리 완료: '+ok+'명 성공'+(fail?' · '+fail+'명 실패':''),ok>0);
