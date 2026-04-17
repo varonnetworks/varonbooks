@@ -309,7 +309,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="입고">입고 (구입)</option>
           <option value="출고">출고 (판매)</option>
           <option value="반품">반품 (업체반품)</option>
-          <option value="분원출고">분원요청 (타분원에 입고 요청)</option>
+          <option value="분원출고">분원요청 (타분원에 출고 요청)</option>
 
         </select>
       </div>
@@ -1153,7 +1153,7 @@ async function call(action,payload){
       return {ok:true,msg:'완납 처리되었습니다.'};
     }
     if(action==='getUnpaid'){
-      var params='select=*&type=eq.출고&order=class_name.asc,student_name.asc&branch=eq.'+encodeURIComponent(currentBranch);
+      var params='select=*&type=eq.출고&order=student_name.asc,sale_date.asc&branch=eq.'+encodeURIComponent(currentBranch);
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
       if(payload.classNum) params+='&class_name=eq.'+encodeURIComponent(payload.classNum);
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
@@ -1927,7 +1927,7 @@ async function doSales(){
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
       if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
       // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
-      toast(BRANCHES[branchTarget].name+' 입고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
+      toast(BRANCHES[branchTarget].name+' 출고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
@@ -2419,7 +2419,7 @@ async function processPaymentQueue(){
         // ── 전체 조회에서 처리: 학기별 자동 분배 ──
         // 해당 학생의 학기별 미납 목록 조회 (오래된 학기 순)
         var _idQ2=_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname);
-        var allSales=await sbGet('sales_history','select=semester,total&type=eq.출고'+_idQ2+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=semester.asc');
+        var allSales=await sbGet('sales_history','select=semester,sale_date,total&type=eq.출고'+_idQ2+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.asc');
         // 학기별 출고 합계
         var salesBySem={};
         allSales.forEach(function(r){var s=r.semester||'';if(!salesBySem[s])salesBySem[s]=0;salesBySem[s]+=Number(r.total||0);});
@@ -2427,8 +2427,10 @@ async function processPaymentQueue(){
         var allPmts=await sbGet('payments','select=semester,paid_amount'+(_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname))+'&branch=eq.'+encodeURIComponent(currentBranch));
         var paidBySem={};
         allPmts.forEach(function(p){var s=p.semester||'';if(!paidBySem[s])paidBySem[s]=0;paidBySem[s]+=Number(p.paid_amount||0);});
-        // 미납 학기 목록 (오래된 순)
-        var semKeys=Object.keys(salesBySem).sort();
+        // 미납 학기 목록 (첫 출고날짜 오래된 순)
+        var semFirstDate={};
+        allSales.forEach(function(r){var s=r.semester||'';if(!semFirstDate[s]||r.sale_date<semFirstDate[s]) semFirstDate[s]=r.sale_date;});
+        var semKeys=Object.keys(salesBySem).sort(function(a,b){return (semFirstDate[a]||'').localeCompare(semFirstDate[b]||'');});
         var remaining=q.amt;
         for(var si=0;si<semKeys.length&&remaining>0;si++){
           var sk=semKeys[si];
@@ -2520,13 +2522,15 @@ async function doPayment(studentId, semester, gid, totalAmount){
       await fetch(SB_URL+'/sales_history?type=eq.출고'+_doIdQ+_semQ2+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph2,body:JSON.stringify({pay_status:newStatus})});
     } else {
       // 전체 조회 처리: 학기별 자동 분배
-      var allSales2=await sbGet('sales_history','select=semester,total&type=eq.출고'+_doIdQ+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=semester.asc');
+      var allSales2=await sbGet('sales_history','select=semester,sale_date,total&type=eq.출고'+_doIdQ+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.asc');
       var salesBySem2={};
       allSales2.forEach(function(r){var s=r.semester||'';if(!salesBySem2[s])salesBySem2[s]=0;salesBySem2[s]+=Number(r.total||0);});
       var allPmts2=await sbGet('payments','select=semester,paid_amount'+_doIdQ+'&branch=eq.'+encodeURIComponent(currentBranch));
       var paidBySem2={};
       allPmts2.forEach(function(p){var s=p.semester||'';if(!paidBySem2[s])paidBySem2[s]=0;paidBySem2[s]+=Number(p.paid_amount||0);});
-      var semKeys2=Object.keys(salesBySem2).sort();
+      var semFirstDate2={};
+      allSales2.forEach(function(r){var s=r.semester||'';if(!semFirstDate2[s]||r.sale_date<semFirstDate2[s]) semFirstDate2[s]=r.sale_date;});
+      var semKeys2=Object.keys(salesBySem2).sort(function(a,b){return (semFirstDate2[a]||'').localeCompare(semFirstDate2[b]||'');});
       var remaining2=amt;
       for(var si2=0;si2<semKeys2.length&&remaining2>0;si2++){
         var sk2=semKeys2[si2];
@@ -3761,11 +3765,11 @@ async function loadFinanceSummary(){
       // 분원별 데이터 저장
       // 관리자용 - 분원별 미납자 목록도 계산
       var pmtByStudentAll={};
-      pmts.forEach(function(p){var k=(p.student_id||'')+'__'+(p.semester||'')+'__'+(p.branch||'');if(!pmtByStudentAll[k]) pmtByStudentAll[k]=0;pmtByStudentAll[k]+=Number(p.paid_amount||0);});
+      pmts.forEach(function(p){var k=(p.student_id||p.student_name||'')+'__'+(p.branch||'');if(!pmtByStudentAll[k]) pmtByStudentAll[k]=0;pmtByStudentAll[k]+=Number(p.paid_amount||0);});
       branchList.forEach(function(br){
         var salesBySt={};
         sales.filter(function(r){return r.type==='출고'&&r.branch===br;}).forEach(function(r){
-          var k=(r.student_id||'')+'__'+(r.semester||'')+'__'+br;
+          var k=(r.student_id||r.student_name||'')+'__'+br;
           if(!salesBySt[k]) salesBySt[k]={name:r.student_name,id:r.student_id,total:0};
           salesBySt[k].total+=Number(r.total||0);
         });
