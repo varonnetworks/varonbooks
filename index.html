@@ -309,7 +309,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="입고">입고 (구입)</option>
           <option value="출고">출고 (판매)</option>
           <option value="반품">반품 (업체반품)</option>
-          <option value="분원출고">분원요청 (타분원에 출고 요청)</option>
+          <option value="분원출고">분원요청 (타분원에 입고 요청)</option>
 
         </select>
       </div>
@@ -1952,7 +1952,7 @@ async function doSales(){
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
       if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
       // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
-      toast(BRANCHES[branchTarget].name+' 출고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
+      toast(BRANCHES[branchTarget].name+' 입고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
