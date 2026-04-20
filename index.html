@@ -3101,6 +3101,16 @@ function searchStudentList(){
   });
   if(!filtered.length){el.innerHTML='<div class="empty">검색 결과가 없습니다.</div>';return;}
   renderStudentTable(el,filtered);
+  // 상단 고정 헤더에 가려지지 않도록 스크롤 보정
+  setTimeout(function(){
+    var wrap=document.getElementById('student-search-wrap');
+    if(!wrap) return;
+    var header=document.querySelector('header');
+    var nav=document.querySelector('nav');
+    var offset=(header?header.offsetHeight:0)+(nav?nav.offsetHeight:0)+8;
+    var top=wrap.getBoundingClientRect().top+window.scrollY-offset;
+    window.scrollTo({top:top,behavior:'smooth'});
+  },50);
 }
 function showAllStudents(){
   var el=document.getElementById('student-list');
@@ -3114,103 +3124,19 @@ function renderStudentTable(el,list){
       var badge=div==='ACE'?'b-blue':'b-green';
       var status=s['상태']||'재원';
       var isWithdrawn=status==='퇴원';
-      var payload=encodeURIComponent(JSON.stringify({
-        id:s['학생ID'],name:s['이름'],grade:s['학년']||'',classNum:s['반']||'',
-        contact:s['학부모연락처']||'',note:s['비고']||'',division:div,semester:s['학기']||''
-      }));
+      var sid=escapeHtml(s['학생ID']);
       return '<tr style="'+(isWithdrawn?'opacity:0.5':'')+'">'
-        +'<td class="mono" style="font-size:11px">'+escapeHtml(s['학생ID'])+'</td>'
+        +'<td class="mono" style="font-size:11px">'+sid+'</td>'
         +'<td><b>'+escapeHtml(s['이름'])+'</b></td>'
-        +'<td style="font-size:12px">'+escapeHtml(s['반']||'-')+'</td>'
-        +'<td><span class="badge '+badge+'" style="cursor:pointer" data-sid="'+escapeHtml(s['학생ID'])+'" data-div="'+div+'" onclick="toggleDivision(this.dataset.sid,this.dataset.div,this)">'+div+'</span></td>'
-        +'<td><span class="badge '+(isWithdrawn?'b-red':'b-green')+'" style="cursor:pointer;white-space:nowrap" data-sid="'+escapeHtml(s['학생ID'])+'" data-status="'+status+'" onclick="toggleStudentStatus(this.dataset.sid,this.dataset.status,this)">'+(isWithdrawn?'퇴원':'재원')+'</span></td>'
-        +'<td class="mono">'+escapeHtml(s['학부모연락처']||'-')+'</td>'
-        +'<td style="color:var(--muted);font-size:12px">'+escapeHtml(s['비고']||'')+'</td>'
-        +'<td><button class="btn btn-y btn-sm" data-student="'+payload+'" onclick="openStudentEdit(this)">✏️ 수정</button></td>'
+        +'<td style="font-size:12px">'+(s['반']||'-')+'</td>'
+        +'<td><span class="badge '+badge+'" style="cursor:pointer" data-sid="'+sid+'" data-div="'+div+'" onclick="toggleDivision(this.dataset.sid,this.dataset.div,this)">'+div+'</span></td>'
+        +'<td><span class="badge '+(isWithdrawn?'b-red':'b-green')+'" style="cursor:pointer;white-space:nowrap" data-sid="'+sid+'" data-status="'+status+'" onclick="toggleStudentStatus(this.dataset.sid,this.dataset.status,this)">'+(isWithdrawn?'퇴원':'재원')+'</span></td>'
+        +'<td class="mono">'+(s['학부모연락처']||'-')+'</td>'
+        +'<td style="color:var(--muted);font-size:12px">'+(s['비고']||'')+'</td>'
+        +'<td><button class="btn btn-y btn-sm" data-sid="'+sid+'" onclick="openStudentEditModal(this.dataset.sid)">수정</button></td>'
         +'</tr>';
     }).join('')+
     '</tbody></table></div>';
-}
-
-// ── 학생 정보 수정 모달 ──────────────────────────────────
-var _studentEditId='';
-function openStudentEdit(btn){
-  var data;
-  try{data=JSON.parse(decodeURIComponent(btn.getAttribute('data-student')));}catch(e){return;}
-  _studentEditId=data.id;
-  var modal=document.getElementById('student-edit-modal');
-  if(!modal){
-    modal=document.createElement('div');
-    modal.id='student-edit-modal';
-    modal.style.cssText='display:none;position:fixed;inset:0;z-index:4000;background:rgba(20,16,9,.55);align-items:center;justify-content:center;';
-    modal.innerHTML='<div style="background:linear-gradient(180deg,var(--surface),var(--card));border:2px solid var(--border);border-radius:14px;padding:24px;width:min(480px,94vw);box-shadow:6px 6px 0 rgba(0,0,0,.18);max-height:92vh;overflow-y:auto">'
-      +'<div style="font-family:\'VT323\',monospace;font-size:26px;color:#2450a6;margin-bottom:14px">✏️ 학생 정보 수정</div>'
-      +'<div id="student-edit-id-display" style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:monospace"></div>'
-      +'<div class="fgrid" style="margin-bottom:14px">'
-      +'<div class="fg"><label class="fl">이름 *</label><input type="text" id="se-name"></div>'
-      +'<div class="fg"><label class="fl">학기</label><input type="text" id="se-semester" placeholder="예: 26년봄"></div>'
-      +'<div class="fg"><label class="fl">학년</label><input type="text" id="se-grade" placeholder="예: 초등3"></div>'
-      +'<div class="fg"><label class="fl">반</label><input type="text" id="se-class" placeholder="예: [IS1]SP1/MWF/F"></div>'
-      +'<div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="se-contact"></div>'
-      +'<div class="fg"><label class="fl">담임 (비고)</label><input type="text" id="se-note" placeholder="예: Sonya이예지"></div>'
-      +'</div>'
-      +'<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'
-      +'<button class="btn btn-g" onclick="closeStudentEdit()">취소</button>'
-      +'<button class="btn btn-p" onclick="saveStudentEdit()">저장</button>'
-      +'</div>'
-      +'</div>';
-    document.body.appendChild(modal);
-    modal.addEventListener('click',function(e){if(e.target===modal) closeStudentEdit();});
-  }
-  document.getElementById('student-edit-id-display').textContent='학생 ID: '+data.id;
-  document.getElementById('se-name').value=data.name||'';
-  document.getElementById('se-semester').value=data.semester||'';
-  document.getElementById('se-grade').value=data.grade||'';
-  document.getElementById('se-class').value=data.classNum||'';
-  document.getElementById('se-contact').value=data.contact||'';
-  document.getElementById('se-note').value=data.note||'';
-  modal.style.display='flex';
-  setTimeout(function(){document.getElementById('se-name').focus();},50);
-}
-function closeStudentEdit(){
-  var modal=document.getElementById('student-edit-modal');
-  if(modal) modal.style.display='none';
-  _studentEditId='';
-}
-async function saveStudentEdit(){
-  if(!_studentEditId) return;
-  var name=document.getElementById('se-name').value.trim();
-  if(!name) return toast('이름은 필수입니다.',false);
-  var body={
-    name:name,
-    semester:document.getElementById('se-semester').value.trim()||null,
-    grade:document.getElementById('se-grade').value.trim()||null,
-    class_name:document.getElementById('se-class').value.trim()||null,
-    contact:document.getElementById('se-contact').value.trim()||null,
-    note:document.getElementById('se-note').value.trim()||null
-  };
-  try{
-    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var res=await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(_studentEditId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify(body)});
-    if(!res.ok){var err=await res.text();toast('수정 실패: '+err,false);return;}
-    var st=students.find(function(s){return s['학생ID']===_studentEditId;});
-    if(st){
-      st['이름']=name;
-      if(body.semester!==null) st['학기']=body.semester;
-      if(body.grade!==null) st['학년']=body.grade;
-      if(body.class_name!==null) st['반']=body.class_name;
-      if(body.contact!==null) st['학부모연락처']=body.contact;
-      if(body.note!==null) st['비고']=body.note;
-    }
-    writeCache();
-    toast(name+' 정보가 수정됐어요!',true);
-    closeStudentEdit();
-    var listEl=document.getElementById('student-list');
-    var kw=(document.getElementById('student-search-input')||{}).value||'';
-    kw=kw.trim().toLowerCase();
-    var displayList=kw?students.filter(function(s){return (s['이름']||'').toLowerCase().includes(kw)||(s['학생ID']||'').toLowerCase().includes(kw);}):students;
-    renderStudentTable(listEl,displayList);
-  }catch(e){toast('오류 발생',false);}
 }
 
 async function toggleStudentStatus(studentId, currentStatus, el){
@@ -3231,6 +3157,71 @@ async function toggleStudentStatus(studentId, currentStatus, el){
     if(st) st['상태']=newStatus;
     toast(label+' → '+newStatus+' 처리됨',true);
   }catch(e){toast('변경 실패',false);}
+}
+// ── 학생 정보 수정 모달 ──
+function openStudentEditModal(studentId){
+  var s=students.find(function(x){return x['학생ID']===studentId;});
+  if(!s) return toast('학생 정보를 찾을 수 없습니다.',false);
+  var old=document.getElementById('student-edit-modal');
+  if(old) old.remove();
+  var modal=document.createElement('div');
+  modal.id='student-edit-modal';
+  modal.style.cssText='position:fixed;inset:0;z-index:4000;background:rgba(20,16,9,.55);display:flex;align-items:center;justify-content:center;padding:16px';
+  var statusOpts='<option value="재원"'+(s['상태']==='재원'?' selected':'')+'>재원</option><option value="퇴원"'+(s['상태']==='퇴원'?' selected':'')+'>퇴원</option>';
+  modal.innerHTML=
+    '<div style="background:linear-gradient(180deg,#f2f4f8,#e4e9f1);border:2px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:480px;box-shadow:6px 6px 0 rgba(0,0,0,.18);max-height:90vh;overflow-y:auto">'
+      +'<div style="font-family:VT323,monospace;font-size:26px;color:#2450a6;margin-bottom:16px">✏️ 학생 정보 수정</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-bottom:16px;padding:8px 10px;background:rgba(29,95,208,.06);border-radius:6px;border:1px solid var(--accent)">ID: <b class="mono">'+escapeHtml(studentId)+'</b></div>'
+      +'<div class="fgrid" style="gap:10px">'
+        +'<div class="fg"><label class="fl">이름 *</label><input type="text" id="sedit-name" value="'+escapeHtml(s['이름']||'')+'"></div>'
+        +'<div class="fg"><label class="fl">학기</label><input type="text" id="sedit-semester" value="'+escapeHtml(s['학기']||'')+'" placeholder="예: 26년봄"></div>'
+        +'<div class="fg"><label class="fl">학년</label><input type="text" id="sedit-grade" value="'+escapeHtml(s['학년']||'')+'" placeholder="예: 초등3"></div>'
+        +'<div class="fg" style="grid-column:span 2"><label class="fl">반</label><input type="text" id="sedit-class" value="'+escapeHtml(s['반']||'')+'" placeholder="예: [IS1]SP1/MWF/F"></div>'
+        +'<div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="sedit-contact" value="'+escapeHtml(s['학부모연락처']||'')+'"></div>'
+        +'<div class="fg"><label class="fl">담임</label><input type="text" id="sedit-note" value="'+escapeHtml(s['비고']||'')+'" placeholder="예: Sonya이예지"></div>'
+        +'<div class="fg"><label class="fl">상태</label><select id="sedit-status">'+statusOpts+'</select></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-top:20px;justify-content:flex-end">'
+        +'<button class="btn btn-g" onclick="document.getElementById(\'student-edit-modal\').remove()">취소</button>'
+        +'<button class="btn btn-p" onclick="saveStudentEdit(\''+escapeHtml(studentId)+'\')">저장</button>'
+      +'</div>'
+    +'</div>';
+  modal.addEventListener('click',function(e){if(e.target===modal) modal.remove();});
+  document.body.appendChild(modal);
+  setTimeout(function(){var n=document.getElementById('sedit-name');if(n) n.focus();},50);
+}
+async function saveStudentEdit(studentId){
+  var name=(document.getElementById('sedit-name').value||'').trim();
+  if(!name) return toast('이름은 필수입니다.',false);
+  var patch={
+    name:name,
+    semester:(document.getElementById('sedit-semester').value||'').trim()||null,
+    grade:(document.getElementById('sedit-grade').value||'').trim()||null,
+    class_num:(document.getElementById('sedit-class').value||'').trim()||null,
+    contact:(document.getElementById('sedit-contact').value||'').trim()||null,
+    note:(document.getElementById('sedit-note').value||'').trim()||null,
+    status:document.getElementById('sedit-status').value||'재원',
+    updated_at:new Date().toISOString()
+  };
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    var res=await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify(patch)});
+    if(!res.ok){var err=await res.text();toast('저장 실패: '+err,false);return;}
+    var st=students.find(function(s){return s['학생ID']===studentId;});
+    if(st){
+      st['이름']=patch.name;
+      st['학기']=patch.semester||'';
+      st['학년']=patch.grade||'';
+      st['반']=patch.class_num||'';
+      st['학부모연락처']=patch.contact||'';
+      st['비고']=patch.note||'';
+      st['상태']=patch.status;
+    }
+    document.getElementById('student-edit-modal').remove();
+    toast(name+' 정보가 수정됐어요!',true);
+    var kw=(document.getElementById('student-search-input')||{}).value||'';
+    if(kw.trim()) searchStudentList(); else {var el=document.getElementById('student-list');if(el&&el.querySelector('table')) showAllStudents();}
+  }catch(e){toast('오류 발생',false);}
 }
 async function toggleDivision(studentId, currentDiv, el){
   var newDiv=currentDiv==='ACE'?'CHESS':'ACE';
