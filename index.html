@@ -186,7 +186,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 3.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -196,8 +196,8 @@ td{padding:10px 13px;vertical-align:middle}
 
 <header>
   <div class="logo">
-    <div class="logo-mark">📚</div>
-    <span style="color:#ffffff;font-weight:700">정상어학원 교재 관리 2.0</span>
+    <div class="logo-mark" style="padding:0;overflow:hidden"><img src="data:image/png;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/4gHYSUNDX1BST0ZJTEUAAQEAAAHIAAAAAAQwAABtbnRyUkdCIFhZWiAH4AABAAEAAAAAAABhY3NwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAA9tYAAQAAAADTLQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAlkZXNjAAAA8AAAACRyWFlaAAABFAAAABRnWFlaAAABKAAAABRiWFlaAAABPAAAABR3dHB0AAABUAAAABRyVFJDAAABZAAAAChnVFJDAAABZAAAAChiVFJDAAABZAAAAChjcHJ0AAABjAAAADxtbHVjAAAAAAAAAAEAAAAMZW5VUwAAAAgAAAAcAHMAUgBHAEJYWVogAAAAAAAAb6IAADj1AAADkFhZWiAAAAAAAABimQAAt4UAABjaWFlaIAAAAAAAACSgAAAPhAAAts9YWVogAAAAAAAA9tYAAQAAAADTLXBhcmEAAAAAAAQAAAACZmYAAPKnAAANWQAAE9AAAApbAAAAAAAAAABtbHVjAAAAAAAAAAEAAAAMZW5VUwAAACAAAAAcAEcAbwBvAGcAbABlACAASQBuAGMALgAgADIAMAAxADb/2wBDAAUDBAQEAwUEBAQFBQUGBwwIBwcHBw8LCwkMEQ8SEhEPERETFhwXExQaFRERGCEYGh0dHx8fExciJCIeJBweHx7/2wBDAQUFBQcGBw4ICA4eFBEUHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh4eHh7/wAARCABcAFwDASIAAhEBAxEB/8QAHAABAAICAwEAAAAAAAAAAAAAAAMHAQQFBggC/8QAOxAAAAUBAwgFCwQDAAAAAAAAAAECAwQFBhFBBxUhMTRzk9ESUVWBsRMUFyIyUlRhcZHBFiREkkJD4f/EABwBAAEEAwEAAAAAAAAAAAAAAAADBAUGAQcIAv/EADARAAEDAgIHCAEFAAAAAAAAAAEAAgMEBRExBhITIUFRcQcUImGBkbHRoRVCcqLw/9oADAMBAAIRAxEAPwDpkypVHzx79/Ku8or/AHK6/qIs5VHXnCVxlcxDN2x/eK8REG69LazlUS/ny+MrmGcqj8fK4yuY1QAhbWc6j2hK4yuYZyqJfz5fGVzGqFwELazlUe0JXGVzGc5VH4+Vxlcx2HJfZj9SWiS2+gzhMF03z6ywT3i5PRvZDssv7mKretL6G0T93lBc7DHdhu67wntPQyTt1hkvPOcqj8fL4yuYZzqPx8rjK5j0N6N7Idll/cx0bK5RLKWcpLbEGAlM+SfqH0jPoJLWYa27TijuFSymhjfrO8h7nevctukiYXuIwCrPOVR+PlcZXMfJ1Ko9oS+MrmNbQGjExdFHqWbtj+8V4iISzdsf3ivERAQgAAEJoGUJUtaUJIzUo7iIsTGB37ItZrPFoM4yG74kEyVpLQpeBd2sMblXx2+lfUy5NGPXkPUpSGIyvDBxVq5L7OJs9ZllpxJFLfInXzxvPDuHawIsAHNVbWSVtQ+olOLnHEq2xsEbQ1uQUUp9qNGckPrJDTaTWtR4ERDzHbqvOWitHJqCzPyXS6DKb/ZQWoWll2tL5lTEUGK5c/KLpPXa0owLvFIDbXZ7ZNhAa+UeJ+5v8efqfwFCXSo1nbIcM0DVoDEC+Q2SolSzdsf3ivExEJZu2P7xXiIgIQADQBCkisOypLUdhBrddUSEJLEzHp2wtBas7ZyNT0EXlCT0nle8s9Yq3ITZrzypLr0lu9mMfRYvLWvE+4XeNO9oV720woIj4Wb3deA9B+T5KetdPqt2p45INWrTmKZTZE+UskMsINaj+mA2hT+Xq0l5tWdiuaCuckmR/ZP5FNsNpfda5lO3LMnkBn9dU/qZxBGXlVnaWrSK5W5NTkKvU8szIr/ZLAvsONAB0hFEyFgjYMABgOgVTc4uOJQCK8A7gosKWbtj+8V4iISzdsf3ivERAQg2qRAkVOpR4EZJqdfWSEl9cRqi4Mgtmrku2ilN6TvbjXlhir8CIvt1ZaqF9S7MbgOZOX+5JemgM0gYFZlmqSxRKJGpsciJDKCIz6zxMckHzAc2zTPmkdJIcSTiT5lWxrQ0YBcZairsUKhyam+ZXNI9UveVgX3Hl2qzn6lUH50pZrdfWa1GfWYsTLraU51URQ4rl7EU73rj9pzq7hWQ3foJZO40XeZB45N/RvAeufsq9cqjaSagyHymIaQAXpRqGHdeAGBClm7Y/vFeIiEs3bH94rxEQELk7L0h+u12NTGCO91frH7qcT+w9RUuCxTacxBjIJDTKCQki+QrvIXZrzGlLrkpu5+XoavLSlv/AKLNGjtPL336t7tGfBHu6u4+2XurFbafZx65zPwg4G3tfbs7ZuRPNReWMugwk8Vnq5jnjHn3LPaTPVojgx3L4cIzQm49Cl/5H+BEaKWU3a4NY4eBu93Tl6/aXrajYREjM5Lo8l5yRIckOqNbjijUpR6zMxGADocAAYBVbFAABlCBcXUBBoxAhSzdsf3ivEYiqaRIbW+g3GkqI1oI7jUV+khmbtb+8V4iLEYIxGCFbsbLFHjx22GqEaG20klJE6VxEQk9NCOxFcUU8eoMRVToTZXHExf2d9p7+o1A/crXq2WF2VTZEeLS1R3nUGlDhuX9G/EVStSlKUtR3qM7zM8RgBL2uzUdra5tKzV1s8z8pCaokmwLzigAWkD0EJRIoQDAzgRgQgGHIYvMgIX/2Q==" style="width:34px;height:34px;object-fit:cover;display:block;border-radius:6px"></div>
+    <span style="color:#ffffff;font-weight:700">정상어학원 교재 관리 3.0</span>
 
   </div>
   <div class="hright">
@@ -217,10 +217,21 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
   <div class="tab" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
-  <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">자금 현황</span></div>
+  <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">계좌 내역</span></div>
   <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
 
+<!-- 입금 대기 큐 바 -->
+<div id="payment-queue-bar" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9000;background:linear-gradient(180deg,#1a3a6e,#2d6cc0);color:#fff;padding:9px 20px;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 2px 8px rgba(0,0,0,.3)">
+  <span style="font-size:13px;font-weight:700">📋 입금 대기</span>
+  <span id="pq-count" style="background:rgba(255,255,255,.25);padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700"></span>
+  <span id="pq-total" style="font-size:12px;color:#d6e4f7"></span>
+  <div id="pq-names" style="font-size:11px;color:#b8d4f5;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div>
+  <div style="display:flex;gap:8px;flex-shrink:0">
+    <button class="btn btn-g btn-sm" onclick="clearPaymentQueue()" style="font-size:11px;padding:4px 10px;color:#344251">큐 비우기</button>
+    <button class="btn btn-y btn-sm" onclick="processPaymentQueue()" style="font-size:12px;padding:4px 14px;font-weight:700">전체 처리</button>
+  </div>
+</div>
 <main>
 
 <div id="page-loan" class="page active">
@@ -230,7 +241,23 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="fgrid" style="margin-bottom:14px">
       <div class="fg"><label class="fl">선생님 *</label><select id="loan-teacher"><option value="">-- 선택 --</option></select></div>
       <div class="fg"><label class="fl">학기</label><input type="text" id="loan-semester" placeholder="예: 26년봄"></div>
+      <div class="fg"><label class="fl">레벨 <span style="font-size:10px;color:var(--muted);font-weight:400">(선택 · 고르면 교재목록 표시)</span></label>
+        <div style="position:relative">
+          <input type="text" id="checklist-search" placeholder="예: DSB 입력 후 선택..." autocomplete="off"
+            oninput="renderLevelDropdown()" onfocus="renderLevelDropdown()">
+          <div id="checklist-level-dropdown" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:#fff;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:200px;overflow-y:auto"></div>
+        </div>
+        <div id="checklist-selected-level" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--accent)"></div>
+      </div>
       <div class="fg"><label class="fl">반납 예정일</label><input type="date" id="loan-return"></div>
+    </div>
+    <!-- 체크리스트 (레벨 입력 시 표시) -->
+    <div id="checklist-wrap" style="display:none;margin-bottom:14px;border:1px solid var(--border-soft);border-radius:8px;overflow:hidden">
+      <div style="background:linear-gradient(180deg,#dfe6ef,#c5cfdb);padding:8px 12px;display:flex;align-items:center;justify-content:space-between">
+        <span style="font-size:12px;font-weight:700;color:#415062">📋 교재 체크리스트</span>
+        <span id="checklist-summary" style="font-size:12px;font-weight:700"></span>
+      </div>
+      <div id="checklist-list" style="max-height:220px;overflow-y:auto;background:#fff"></div>
     </div>
     <div style="background:linear-gradient(180deg,var(--surface2),#fff4d2);border:2px solid var(--border-soft);border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 바코드를 찍는 대로 목록에 자동 추가되고, 잘못 들어간 건 삭제 후 한 번에 대여처리</div>
@@ -282,7 +309,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="입고">입고 (구입)</option>
           <option value="출고">출고 (판매)</option>
           <option value="반품">반품 (업체반품)</option>
-          <option value="분원출고">분원출고 (타분원 발송)</option>
+          <option value="분원출고">분원요청 (타분원에 입고 요청)</option>
 
         </select>
       </div>
@@ -292,7 +319,7 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg" id="sf-student">
         <label class="fl">학생</label>
         <div style="position:relative">
-          <input type="text" id="sales-student-search" placeholder="학생 이름 검색" autocomplete="off">
+          <input type="text" id="sales-student-search" placeholder="학생 이름 / 퇴원이름 직접입력" autocomplete="off">
           <input type="hidden" id="sales-student">
           <div id="sales-student-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:40;background:#fffdf5;border:2px solid var(--border-soft);border-radius:12px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
         </div>
@@ -409,7 +436,7 @@ td{padding:10px 13px;vertical-align:middle}
           <option value="완납">완납만</option>
         </select>
       </div>
-      <div class="fg"><label class="fl">학생 이름 검색</label><input type="text" id="unpaid-name-search" placeholder="이름 입력"></div>
+      <div class="fg"><label class="fl">학생 검색 <span style="font-size:10px;color:var(--accent);font-weight:400">[ / ] 단축키</span></label><input type="text" id="unpaid-name-search" placeholder="이름 입력 후 엔터" onkeydown="if(event.keyCode===13){event.preventDefault();jumpToStudent(this.value);}"></div>
       <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="loadUnpaid()">조회</button></div>
     </div>
   </div>
@@ -495,6 +522,7 @@ td{padding:10px 13px;vertical-align:middle}
       </div>
       <div class="fg" id="ft-teacher"><label class="fl">선생님</label><select id="filter-teacher"><option value="">전체</option></select></div>
       <div class="fg" id="ft-status"><label class="fl">상태</label><select id="filter-status"><option value="">전체</option><option value="대여중">대여중</option><option value="반납완료">반납완료</option></select></div>
+      <div class="fg" id="ft-loan-sem"><label class="fl">학기</label><select id="filter-loan-sem"><option value="">전체 학기</option></select></div>
       <div class="fg" id="ft-stype" style="display:none"><label class="fl">입/출고</label><select id="filter-stype"><option value="">전체</option><option value="입고">입고</option><option value="출고">출고</option></select></div>
       <div class="fg" id="ft-sem" style="display:none"><label class="fl">학기</label><select id="filter-sem"><option value="">전체</option></select></div>
       <div class="fg" id="ft-student" style="display:none"><label class="fl">학생 이름 검색</label><input type="text" id="filter-student-search" placeholder="이름 입력" style="width:100%"></div>
@@ -590,7 +618,12 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="card">
       <div class="retro-strip"></div>
       <div class="card-title">💳 통장 내역 업로드 (국민은행)</div>
-      <p style="font-size:13px;color:var(--muted);margin-bottom:14px">엑셀 파일을 업로드하면 새로운 내역만 자동으로 저장됩니다. 중복은 건너뜁니다.</p>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:10px">엑셀 파일을 업로드하면 새로운 내역만 자동으로 저장됩니다. 중복은 건너뜁니다.</p>
+      <div style="background:#fff8e8;border:1px solid #d4b84a;border-radius:8px;padding:10px 14px;margin-bottom:14px;font-size:12px;line-height:1.8;color:#6a4f14">
+        ⚠️ <b>KB 거래내역 저장 방법</b><br>
+        KB 인터넷뱅킹에서 다운로드한 <b>.xls 파일은 엑셀로 열어서 다른 이름으로 저장 → .xlsx</b> 로 저장 후 업로드하세요.<br>
+        <span style="color:var(--warn)">파일명 확장자만 변경하면 안 됩니다.</span> 반드시 엑셀에서 열고 저장해야 합니다.
+      </div>
       <div id="bank-drop-zone" onclick="document.getElementById('bank-file-input').click()" style="border:2px dashed var(--border-soft);border-radius:12px;padding:24px;text-align:center;cursor:pointer;background:#fff9ea;margin-bottom:14px">
         <div style="font-size:26px;margin-bottom:6px">📂</div>
         <div style="font-size:14px;font-weight:700;margin-bottom:4px">국민은행 엑셀 파일을 여기에 끌어다 놓거나 클릭하세요</div>
@@ -598,6 +631,42 @@ td{padding:10px 13px;vertical-align:middle}
         <input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">
       </div>
       <div id="bank-upload-status"></div>
+    </div>
+
+    <!-- 통장 내역 조회 -->
+    <div class="card" style="margin-top:0">
+      <div class="retro-strip"></div>
+      <div class="card-title">🔍 통장 내역 조회</div>
+      <div class="fgrid" style="margin-bottom:12px;align-items:end">
+        <div class="fg">
+          <label class="fl">시작일</label>
+          <input type="date" id="bank-date-from">
+        </div>
+        <div class="fg">
+          <label class="fl">종료일</label>
+          <input type="date" id="bank-date-to">
+        </div>
+        <div class="fg">
+          <label class="fl">입금/출금</label>
+          <select id="bank-type-filter">
+            <option value="">전체</option>
+            <option value="deposit">입금만</option>
+            <option value="withdraw">출금만</option>
+          </select>
+        </div>
+        <div class="fg" style="grid-column:span 2">
+          <label class="fl">검색 (입금자 · 출금내용)</label>
+          <input type="text" id="bank-search" placeholder="이름, 내용 검색" onkeydown="if(event.key==='Enter') loadBankHistory()">
+        </div>
+        <div class="fg" style="justify-content:flex-end">
+          <button class="btn btn-p" onclick="loadBankHistory()">조회</button>
+        </div>
+      </div>
+      <div class="shead" style="margin-bottom:8px">
+        <span class="stitle" style="font-size:13px" id="bank-result-title"></span>
+        <span style="font-size:12px;color:var(--muted)" id="bank-result-summary"></span>
+      </div>
+      <div id="bank-list"></div>
     </div>
   </div>
 
@@ -645,6 +714,24 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
   </div>
 
+  <div class="card" id="level-edit-card">
+    <div class="retro-strip"></div>
+    <div class="card-title">📚 교재 레벨 설정</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">교재별 레벨을 지정합니다. 대여 체크리스트 검색 시 활용됩니다.</p>
+    <div class="fgrid">
+      <div class="fg" style="grid-column:span 2">
+        <label class="fl">교재 검색</label>
+        <div style="position:relative">
+          <input type="text" id="level-edit-search" placeholder="교재명 또는 바코드 검색" autocomplete="off" oninput="renderLevelEditResults()">
+          <div id="level-edit-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;background:#fffdf5;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
+        </div>
+        <div id="level-edit-picked" style="display:none;margin-top:8px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:10px;background:#fff8e8;font-size:13px;font-weight:700"></div>
+      </div>
+      <div class="fg"><label class="fl">레벨</label><input type="text" id="level-edit-value" placeholder="예: LSA1, ACE_INT"></div>
+      <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="doEditLevel()">레벨 저장</button></div>
+    </div>
+  </div>
+
   <div class="card" id="vendor-edit-card">
     <div class="retro-strip"></div>
     <div class="card-title">교재 업체 수정</div>
@@ -667,11 +754,15 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="retro-strip"></div>
     <div class="card-title">선생님 등록</div>
     <div class="fgrid">
-      <div class="fg"><label class="fl">교사 ID *</label><input type="text" id="teacher-id" placeholder="예: T001"></div>
-      <div class="fg"><label class="fl">이름 *</label><input type="text" id="teacher-name"></div>
-      <div class="fg"><label class="fl">담당 과목</label><input type="text" id="teacher-subject"></div>
-      <div class="fg"><label class="fl">연락처</label><input type="text" id="teacher-contact"></div>
+      <div class="fg"><label class="fl">이름 *</label><input type="text" id="teacher-name" placeholder="예: Sonya이예지"></div>
+      <div class="fg"><label class="fl">담당 과목</label><input type="text" id="teacher-subject" placeholder="예: CHESS, ACE"></div>
       <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddTeacher()">선생님 등록</button></div>
+    </div>
+    <input type="hidden" id="teacher-id">
+    <input type="hidden" id="teacher-contact">
+    <div style="margin-top:16px">
+      <div class="shead"><span class="stitle" style="font-size:13px">등록된 선생님</span><button class="btn btn-g btn-sm" onclick="loadTeacherList()">새로고침</button></div>
+      <div id="teacher-list"></div>
     </div>
   </div>
 
@@ -691,6 +782,12 @@ td{padding:10px 13px;vertical-align:middle}
         <div class="fg"><label class="fl">반</label><input type="text" id="student-class" placeholder="예: [IS1]SP1/MWF/F"></div>
         <div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="student-contact"></div>
         <div class="fg"><label class="fl">담임</label><input type="text" id="student-note" placeholder="예: Sonya이예지"></div>
+        <div class="fg"><label class="fl">상태</label>
+          <select id="student-status">
+            <option value="재원">재원</option>
+            <option value="퇴원">퇴원</option>
+          </select>
+        </div>
         <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddStudent()">학생 등록</button></div>
       </div>
     </div>
@@ -731,10 +828,25 @@ td{padding:10px 13px;vertical-align:middle}
           <span class="stitle" style="font-size:13px">미리보기 <span id="preview-count" style="color:var(--muted);font-weight:400"></span></span>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
             <button class="btn btn-g btn-sm" onclick="document.getElementById('preview-section').style.display='none'">다시 수정</button>
-            <button class="btn btn-s" onclick="doUpload()">업로드 실행</button>
+            <button class="btn btn-s" onclick="checkWithdrawAndUpload()">업로드 실행</button>
           </div>
         </div>
         <div id="preview-table"></div>
+      </div>
+      <!-- 퇴원 확인 패널 -->
+      <div id="withdraw-check-section" style="display:none;margin-top:16px">
+        <div style="background:linear-gradient(180deg,#fff8e8,#fff3d6);border:2px solid var(--yellow);border-radius:10px;padding:16px">
+          <div style="font-size:15px;font-weight:700;color:#7a5c00;margin-bottom:4px">⚠️ 퇴원 확인이 필요한 학생</div>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:14px">새 파일에 없는 재원생입니다. 퇴원 처리할 학생을 체크하세요. 체크 안 하면 재원 유지됩니다.</div>
+          <div id="withdraw-list" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+            <button class="btn btn-g btn-sm" onclick="toggleAllWithdraw(true)">전체 선택</button>
+            <button class="btn btn-g btn-sm" onclick="toggleAllWithdraw(false)">전체 해제</button>
+            <span style="flex:1"></span>
+            <button class="btn btn-d" onclick="cancelWithdrawCheck()">취소</button>
+            <button class="btn btn-s" onclick="doUpload()">확인 후 업로드</button>
+          </div>
+        </div>
       </div>
     </div>
     <div style="margin-top:18px">
@@ -951,9 +1063,9 @@ async function call(action,payload){
   payload=payload||{};
   try{
     if(action==='getTeachers'){var d=await sbGet('teachers','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(t){return {'교사ID':t.teacher_id,'이름':t.name,'담당과목':t.subject||'','연락처':t.contact||''};})};}
-    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'비고':b.note||''};})};}
-    if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','비고':s.note||'','구분':s.division||'CHESS'};})};}
-    if(action==='getSemesters'){var d=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var sems=[...new Set(d.map(function(r){return r.semester;}).filter(Boolean))];return {ok:true,data:sems};}
+    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name&limit=5000');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'비고':b.note||'','레벨':b.level||''};})};}
+    if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','비고':s.note||'','구분':s.division||'CHESS','상태':s.status||'재원'};})};}
+    if(action==='getSemesters'){var d1=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var d2=await sbGet('sales_history','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch)+'&type=eq.출고');var sems=[...new Set([...d1,...d2].map(function(r){return r.semester;}).filter(Boolean))].sort(function(a,b){return b.localeCompare(a,'ko');});return {ok:true,data:sems};}
     if(action==='getClassesBySemester'){
       var params='select=class_name&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=class_name';
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
@@ -995,7 +1107,7 @@ async function call(action,payload){
       // 출고: 정가 사용, 입고: 매입단가(payload.price) 사용
       var unitPrice=isOut?(book.price||0):(payload.price!=null?Number(payload.price):0);
       var qty=Number(payload.qty)||1;
-      var studentName='',className='';
+      var studentName=payload.forcedName||'',className='';
       if(payload.studentId){
         var st=(await sbGet('students','select=name,class_name&student_id=eq.'+encodeURIComponent(payload.studentId)+'&limit=1'))[0];
         if(st){studentName=st.name;className=st.class_name||'';}
@@ -1041,37 +1153,49 @@ async function call(action,payload){
       return {ok:true,msg:'완납 처리되었습니다.'};
     }
     if(action==='getUnpaid'){
-      var params='select=*&type=eq.출고&order=class_name.asc,student_name.asc&branch=eq.'+encodeURIComponent(currentBranch);
+      var params='select=*&type=eq.출고&order=student_name.asc,sale_date.asc&branch=eq.'+encodeURIComponent(currentBranch);
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
       if(payload.classNum) params+='&class_name=eq.'+encodeURIComponent(payload.classNum);
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
       var d=await sbGet('sales_history',params);
       // payments 합산 (내역 포함)
+      // 학기 필터 없을 때: 학생 단위 전체 합산 / 있을 때: 학생+학기 단위
+      var hasSem=!!payload.semester;
       var pmtParams='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=paid_date.asc';
-      if(payload.semester) pmtParams+='&semester=eq.'+encodeURIComponent(payload.semester);
+      // 학기 필터 있어도 semester=null(전체조회에서 입금처리된 건)도 함께 가져옴
+      if(hasSem) pmtParams+='&or=(semester.eq.'+encodeURIComponent(payload.semester)+',semester.is.null)';
       var pmts=await sbGet('payments',pmtParams);
-      var pmtMap={};    // 학생별 입금 합계
-      var pmtHistory={}; // 학생별 입금 내역
+      var pmtMap={};    // 학생(+학기)별 입금 합계
+      var pmtHistory={}; // 학생(+학기)별 입금 내역
       pmts.forEach(function(p){
-        var k=(p.student_id||'')+'__'+(p.semester||'')+'__'+(p.branch||currentBranch);
+        // student_id 없는 퇴원학생은 student_name으로 키 구성
+        var _pid=(p.student_id&&p.student_id!=='null')?p.student_id:(p.student_name||'__noname__');
+        var k=hasSem
+          ?_pid+'__'+(p.semester||'')+'__'+(p.branch||currentBranch)
+          :_pid+'__'+(p.branch||currentBranch);
         if(!pmtMap[k]) pmtMap[k]=0;
         pmtMap[k]+=Number(p.paid_amount||0);
         if(!pmtHistory[k]) pmtHistory[k]=[];
-        pmtHistory[k].push({date:p.paid_date||'',amount:Number(p.paid_amount||0),memo:p.memo||''});
+        pmtHistory[k].push({date:p.paid_date||'',amount:Number(p.paid_amount||0),memo:p.memo||'',semester:p.semester||''});
       });
       // 학생별 총 출고금액 먼저 계산 (여러 교재 합산)
       var totalByStudent={};
       d.forEach(function(r){
-        var k=(r.student_id||'')+'__'+(r.semester||'')+'__'+currentBranch;
+        var _rid=(r.student_id&&r.student_id!=='null')?r.student_id:(r.student_name||'__noname__');
+        var k=hasSem
+          ?_rid+'__'+(r.semester||'')+'__'+currentBranch
+          :_rid+'__'+currentBranch;
         if(!totalByStudent[k]) totalByStudent[k]=0;
         totalByStudent[k]+=Number(r.total||0);
       });
       var rows=d.map(function(r){
-        var k=(r.student_id||'')+'__'+(r.semester||'')+'__'+currentBranch;
+        var _rid=(r.student_id&&r.student_id!=='null')?r.student_id:(r.student_name||'__noname__');
+        var k=hasSem
+          ?_rid+'__'+(r.semester||'')+'__'+currentBranch
+          :_rid+'__'+currentBranch;
         var paid=pmtMap[k]||0;
-        var studentTotal=totalByStudent[k]||0; // 해당 학생 전체 출고 합계
+        var studentTotal=totalByStudent[k]||0;
         var balance=studentTotal-paid;
-        // 상태는 학생 전체 기준으로 판단
         var status=balance<=0?'완납':paid>0?'부분납':'미납';
         return {
           'ID':r.id,'바코드':r.barcode,'교재명':r.book_name,
@@ -1099,8 +1223,19 @@ async function call(action,payload){
       var unitPrice=payload.price!=null?Number(payload.price):(book.price||0);
       var sts=await sbGet('students','select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch));
       if(!sts.length) return {ok:false,msg:'해당 반 학생이 없습니다.'};
-      await sbPost('sales_history',sts.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
-      return {ok:true,msg:sts.length+'명 출고 완료'};
+      // 중복 판매 확인: 이미 해당 교재 판매된 학생 제외
+      var dupCheck=await sbGet('sales_history','select=student_id&type=eq.출고&barcode=eq.'+encodeURIComponent(bc)+'&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var dupIds=new Set(dupCheck.map(function(r){return r.student_id;}));
+      var dupNames=sts.filter(function(s){return dupIds.has(s.student_id);}).map(function(s){return s.name;});
+      var toProcess=sts.filter(function(s){return !dupIds.has(s.student_id);});
+      if(!toProcess.length) return {ok:false,msg:'모든 학생이 이미 해당 교재를 판매받았습니다.'};
+      if(dupNames.length) {
+        // 중복 학생 있으면 제외하고 처리 (프론트에서 confirm은 이미 했으므로 여기선 그냥 제외)
+      }
+      await sbPost('sales_history',toProcess.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
+      var msg=toProcess.length+'명 출고 완료';
+      if(dupNames.length) msg+=' ('+dupNames.join(', ')+' '+dupNames.length+'명 중복 제외)';
+      return {ok:true,msg:msg};
     }
     if(action==='getStockStatus'){
       var bks=await sbGet('books','select=*&order=name&note=not.in.(JLS자체교재,JLS교사용)');
@@ -1112,9 +1247,41 @@ async function call(action,payload){
       return {ok:true,data:Object.values(m)};
     }
     if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,vendor:payload.vendor||null,price:payload.price?Number(payload.price):0,note:payload.note||null});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
-    if(action==='addTeacher'){await sbPost('teachers',{teacher_id:payload.id,name:payload.name,subject:payload.subject||null,contact:payload.contact||null,branch:currentBranch});return {ok:true,msg:'선생님 등록 완료: '+payload.name};}
-    if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,note:payload.note||null,branch:currentBranch});return {ok:true,msg:'학생 등록 완료: '+payload.name};}
-    if(action==='bulkAddStudents'){var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,note:r.note||null,branch:currentBranch};});await sbPost('students',rows);return {ok:true,msg:rows.length+'명 업로드 완료'};}
+    if(action==='addTeacher'){
+      var tid=payload.id||('T'+Date.now().toString().slice(-6));
+      // ID 중복 체크
+      var existing=await sbGet('teachers','select=teacher_id&teacher_id=eq.'+encodeURIComponent(tid)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      if(existing.length) return {ok:false,msg:'이미 존재하는 교사 ID입니다: '+tid};
+      await sbPost('teachers',{teacher_id:tid,name:payload.name,subject:payload.subject||null,contact:payload.contact||null,branch:currentBranch});
+      return {ok:true,msg:'선생님 등록 완료: '+payload.name+' (ID: '+tid+')'};
+    }
+    if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원'});return {ok:true,msg:'학생 등록 완료: '+payload.name+' ('+( payload.status||'재원')+')'};}
+    if(action==='bulkAddStudents'){
+      var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,note:r.note||null,branch:currentBranch,status:'재원'};});
+      // 기존 학생 ID 목록 조회
+      var existingIds=(await sbGet('students','select=student_id&branch=eq.'+encodeURIComponent(currentBranch))).map(function(s){return s.student_id;});
+      var toUpdate=rows.filter(function(r){return existingIds.includes(r.student_id);});
+      var toInsert=rows.filter(function(r){return !existingIds.includes(r.student_id);});
+      var updated=0,inserted=0,withdrew=0;
+      // 기존 학생: 반/학년/연락처/학기/상태 업데이트
+      var h2=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      for(var i=0;i<toUpdate.length;i++){
+        var u=toUpdate[i];
+        await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(u.student_id)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h2,body:JSON.stringify({semester:u.semester,grade:u.grade,class_name:u.class_name,contact:u.contact,note:u.note,status:'재원',updated_at:new Date().toISOString()})});
+        updated++;
+      }
+      // 신규 학생: INSERT
+      if(toInsert.length){await sbPost('students',toInsert);inserted=toInsert.length;}
+      // 퇴원 처리 (체크된 학생만)
+      var withdrawIds=payload.withdrawIds||[];
+      for(var j=0;j<withdrawIds.length;j++){
+        await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(withdrawIds[j])+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h2,body:JSON.stringify({status:'퇴원',updated_at:new Date().toISOString()})});
+        withdrew++;
+      }
+      var msg='업로드 완료 · 업데이트 '+updated+'명 / 신규 '+inserted+'명';
+      if(withdrew) msg+=' / 퇴원 처리 '+withdrew+'명';
+      return {ok:true,msg:msg};
+    }
     if(action==='getAllStockStatus'){
       // books는 공용(branch 없음) - barcode→name 매핑만 사용
       var bks=await sbGet('books','select=barcode,name&order=name&note=not.in.(JLS자체교재,JLS교사용)');
@@ -1161,7 +1328,7 @@ var _tt;
 // ── 분원간 입고 대기 ──────────────────────────────────────
 async function checkPendingTransfers(){
   try{
-    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    var d=await sbGet('transfers','select=*&from_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
     if(!d.length) return;
     var banner=document.getElementById('pending-transfer-banner');
     if(!banner){
@@ -1172,14 +1339,14 @@ async function checkPendingTransfers(){
       document.querySelector('main').insertBefore(banner, document.querySelector('main').firstChild);
     }
     banner.innerHTML='<span style="font-size:20px">📦</span>'
-      +'<span style="font-weight:700;color:#7a5c00">대기중인 입고가 <b style="color:var(--warn)">'+d.length+'건</b> 있습니다!</span>'
+      +'<span style="font-weight:700;color:#7a5c00">출고 요청이 <b style="color:var(--warn)">'+d.length+'건</b> 있습니다!</span>'
       +'<span style="font-size:12px;color:var(--muted)">클릭하여 확인하세요</span>';
   }catch(e){}
 }
 
 async function loadPendingTransfers(){
   try{
-    var d=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    var d=await sbGet('transfers','select=*&from_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
     if(!d.length){document.getElementById('pending-transfer-section')&&(document.getElementById('pending-transfer-section').style.display='none');return;}
     var sec=document.getElementById('pending-transfer-section');
     if(!sec){
@@ -1192,20 +1359,20 @@ async function loadPendingTransfers(){
     sec.style.display='';
     sec.innerHTML='<div class="card" style="border:2px solid var(--yellow)">'
       +'<div class="retro-strip"></div>'
-      +'<div class="card-title">📦 대기중인 분원 입고 ('+d.length+'건)</div>'
-      +'<div class="twrap"><table><thead><tr><th>발송 분원</th><th>교재명</th><th>수량</th><th>매입단가</th><th>처리자</th><th>요청일</th><th>처리</th></tr></thead><tbody>'
+      +'<div class="card-title">📦 출고 요청 대기 ('+d.length+'건)</div>'
+      +'<p style="font-size:12px;color:var(--muted);margin-bottom:10px">다른 분원에서 교재 출고를 요청했습니다. 수락하면 재고에서 차감됩니다.</p>'
+      +'<div class="twrap"><table><thead><tr><th>요청 분원</th><th>교재명</th><th>수량</th><th>처리자</th><th>요청일</th><th>처리</th></tr></thead><tbody>'
       +d.map(function(t){
-        var fromName=(BRANCHES[t.from_branch]||{}).name||t.from_branch;
+        var toName=(BRANCHES[t.to_branch]||{}).name||t.to_branch; // 요청한 분원(입고받을 곳)
         var dt=(t.created_at||'').slice(0,10);
         return '<tr>'
-          +'<td><span class="badge b-blue">'+escapeHtml(fromName)+'</span></td>'
+          +'<td><span class="badge b-yellow">'+escapeHtml(toName)+'</span></td>'
           +'<td><b>'+escapeHtml(t.book_name||'')+'</b><div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(t.barcode||'')+'</div></td>'
           +'<td>'+t.qty+'권</td>'
-          +'<td class="mono">'+(t.purchase_price?Number(t.purchase_price).toLocaleString()+'원':'-')+'</td>'
           +'<td>'+(escapeHtml(t.handler||'-'))+'</td>'
           +'<td class="mono" style="font-size:11px">'+dt+'</td>'
           +'<td style="display:flex;gap:6px;flex-wrap:wrap">'
-          +'<button class="btn btn-s btn-sm" data-tid="'+t.id+'" data-barcode="'+escapeHtml(t.barcode)+'" data-qty="'+t.qty+'" data-price="'+(t.purchase_price||0)+'" data-name="'+escapeHtml(t.book_name||'')+'" data-from="'+escapeHtml(t.from_branch||'')+'" onclick="acceptTransfer(this)">수락</button>'
+          +'<button class="btn btn-s btn-sm" data-tid="'+t.id+'" data-barcode="'+escapeHtml(t.barcode)+'" data-qty="'+t.qty+'" data-price="'+(t.purchase_price||0)+'" data-name="'+escapeHtml(t.book_name||'')+'" data-to="'+escapeHtml(t.to_branch||'')+'" onclick="acceptTransfer(this)">수락 (출고)</button>'
           +'<button class="btn btn-d btn-sm" data-tid="'+t.id+'" onclick="rejectTransfer(this.dataset.tid)">거절</button>'
           +'</td></tr>';
       }).join('')
@@ -1219,16 +1386,34 @@ async function acceptTransfer(btn){
   var qty=Number(btn.dataset.qty)||1;
   var price=Number(btn.dataset.price)||0;
   var name=btn.dataset.name;
-  var fromBranch=btn.dataset.from||'';
-  var fromName=(BRANCHES[fromBranch]||{}).name||fromBranch||'타분원';
-  if(!confirm('['+name+'] '+qty+'권 입고를 수락할까요?')) return;
+  var toBranch=btn.dataset.to||''; // 입고받을 분원 (요청한 쪽)
+  var toName=(BRANCHES[toBranch]||{}).name||toBranch||'타분원';
+  if(!confirm('['+name+'] '+qty+'권을 '+toName+'에 출고할까요?')) return;
+  // 재고 확인
   try{
-    // transfers 상태 완료로 변경
+    var curStock2=0;
+    var cached2=(stockCache||[]).find(function(r){return r['바코드']===barcode;});
+    if(cached2){
+      curStock2=Number(cached2['현재재고']||0);
+    } else {
+      var inRows2=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고)');
+      inRows2.forEach(function(r){if(r.type==='입고') curStock2+=Number(r.qty||0);else curStock2-=Number(r.qty||0);});
+    }
+    if(curStock2<qty){
+      if(!confirm('⚠️ 재고 부족\n현재 재고: '+curStock2+'권 / 출고 요청: '+qty+'권\n재고가 '+Math.abs(curStock2-qty)+'권 부족합니다. 그대로 출고하시겠습니까?')) return;
+    }
+  }catch(e){}
+  try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // transfers 상태 완료로 변경
     await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'완료',confirmed_at:new Date().toISOString()})});
-    // 내 분원 재고에 입고 반영 (메모에 출발분원 표시)
-    await call('addSales',{barcode:barcode,type:'분원입고',qty:qty,price:price,memo:'←'+fromName});
-    toast('입고 수락 완료!',true);
+    // 내 분원(from_branch)에서 분원출고 처리 (재고 차감)
+    await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:price,memo:'→'+toName,branchTarget:toBranch});
+    // 상대 분원(to_branch)에 분원입고 기록
+    // → 상대 분원 DB에 직접 저장 (branch를 toBranch로)
+    var iBody={barcode:barcode,book_name:name,type:'분원입고',qty:qty,unit_price:price,total:price*qty,sale_date:new Date().toISOString().slice(0,10),memo:'←'+(BRANCHES[currentBranch]||{}).name||currentBranch,branch:toBranch,purchase_price:price};
+    await sbPost('sales_history',iBody);
+    toast(toName+'으로 출고 완료!',true);
     checkPendingTransfers();
     loadPendingTransfers();
     loadSalesHistory();
@@ -1236,7 +1421,7 @@ async function acceptTransfer(btn){
 }
 
 async function rejectTransfer(tid){
-  if(!confirm('입고 요청을 거절할까요?')) return;
+  if(!confirm('출고 요청을 거절할까요?')) return;
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
     await fetch(SB_URL+'/transfers?id=eq.'+tid,{method:'PATCH',headers:h,body:JSON.stringify({status:'거절'})});
@@ -1265,7 +1450,7 @@ function showTab(id,tabEl){
   if(id==='stock') loadStock();
   if(id==='allstock') loadAllStock();
   if(id==='barcode') initBarcodePage();
-  if(id==='settings'){loadStudentList();var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=currentBranch==='namdongtanjls'?'':'none';}
+  if(id==='settings'){loadStudentList();loadTeacherList();var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=currentBranch==='namdongtanjls'?'':'none';}
   if(id==='finance'){loadFinanceSummary();}
 }
 
@@ -1431,10 +1616,12 @@ function renderBookResults(inputId,resultsId,keyword){
   var list=(books||[]).filter(function(b){
     var title=String(b['교재명']||'');
     var barcode=String(b['바코드']||'');
-    if(!keyword) return true;
+    // 판매 가능 교재: vendor 있는 것만 (판매입출고 검색창에서만 적용)
+    if(inputId==='sales-barcode' && !b['업체']) return false;
+    if(!keyword) return false;
     keyword=keyword.toLowerCase();
     return title.toLowerCase().includes(keyword)||barcode.toLowerCase().includes(keyword);
-  }).slice(0,30);
+  }).slice(0,50);
   if(!keyword && document.activeElement!==input){ box.style.display='none'; return; }
   if(!list.length){
     box.innerHTML='<div style="padding:9px 10px;font-size:12px;color:#5f6b77">검색 결과가 없습니다.</div>';
@@ -1539,6 +1726,7 @@ function pushUnique(queue,code){
 }
 function queueLoanBarcode(){
   var input=document.getElementById('loan-barcode');var barcode=input.value.trim();
+  if(barcode) checklistMark(barcode);
   if(!barcode) return toast('바코드 또는 교재명을 입력하세요.',false);
   if(pushUnique(loanQueue,barcode)){input.value='';renderLoanQueue();toast('대여 목록에 추가됨',true);}
   else{toast('이미 목록에 있는 바코드입니다.',false);}
@@ -1560,6 +1748,21 @@ async function processLoanQueue(){
   var semester=document.getElementById('loan-semester').value.trim();
   if(!loanQueue.length) return toast('대여 목록이 비어 있습니다.',false);
   if(!teacherId) return toast('선생님을 먼저 선택하세요.',false);
+
+  // 레벨 선택된 경우 미체크 교재 확인
+  if(_checklistSelectedLevel){
+    var checklistBooks=(books||[]).filter(function(b){
+      if(b['비고']==='JLS교사용') return false;
+      return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
+    });
+    var unchecked=checklistBooks.filter(function(b){return !_checklistChecked[b['교재명']];});
+    if(unchecked.length>0){
+      var uncheckedNames=unchecked.map(function(b){return '· '+b['교재명'];}).join('\n');
+      var go=confirm('아직 스캔되지 않은 교재가 '+unchecked.length+'권 있습니다.\n\n'+uncheckedNames+'\n\n누락된 교재는 나중에 별도로 대여할 수 있습니다.\n그대로 대여 처리하시겠습니까?');
+      if(!go) return;
+    }
+  }
+
   var items=loanQueue.slice();
   toast('대여 처리 중... ('+items.length+'권)',true);
   var results=await Promise.all(items.map(async function(item){
@@ -1652,7 +1855,9 @@ function initSalesStudentSearch(){
 function renderSalesStudentResults(keyword){
   var box=document.getElementById('sales-student-results');var hidden=document.getElementById('sales-student');var picked=document.getElementById('sales-student-picked');var pickedName=document.getElementById('sales-student-picked-name');
   if(!box||!hidden) return;
-  var list=students.filter(function(s){var name=String(s['이름']||'');var id=String(s['학생ID']||'');if(!keyword) return true;keyword=keyword.toLowerCase();return name.toLowerCase().includes(keyword)||id.toLowerCase().includes(keyword);}).slice(0,30);
+  // 퇴원으로 시작하면 드롭다운 숨김
+  if(keyword&&keyword.startsWith('퇴원')){box.style.display='none';return;}
+  var list=students.filter(function(s){var name=String(s['이름']||'');var id=String(s['학생ID']||'');if(!keyword) return true;var kw=keyword.toLowerCase();return name.toLowerCase().includes(kw)||id.toLowerCase().includes(kw);}).slice(0,30);
   if(hidden.value){var chosen=students.find(function(s){return String(s['학생ID'])===String(hidden.value);});if(chosen&&picked&&pickedName){picked.style.display='flex';pickedName.textContent=chosen['이름']+' ('+chosen['학생ID']+')';}}else if(picked){picked.style.display='none';}
   if(!list.length){box.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">검색 결과가 없습니다.</div>';box.style.display='block';return;}
   box.innerHTML=list.map(function(s){var name=String(s['이름']||'');var id=String(s['학생ID']||'');return '<button type="button" onclick="pickSalesStudent(\''+id.replace(/'/g,"\\'")+'\')" style="width:100%;text-align:left;padding:10px 12px;border:none;border-bottom:1px solid #ecd89b;background:#fffdf5;cursor:pointer"><div style="font-size:13px;font-weight:700;color:var(--text)">'+name+'</div><div class="mono" style="font-size:11px;margin-top:2px">'+id+'</div></button>';}).join('');
@@ -1688,6 +1893,18 @@ async function doSales(){
   if(!barcode) return toast('바코드를 입력하세요.',false);
   if(!qty||qty<1) return toast('수량을 입력하세요.',false);
   if(type==='분원출고'&&!branchTarget) return toast('분원을 선택하세요.',false);
+  // 출고 시 학생 선택 검증
+  var searchInput=document.getElementById('sales-student-search');
+  var searchVal=(searchInput?searchInput.value:'').trim();
+  var _forcedName=null; // 퇴원 강제처리용 이름
+  if(type==='출고'&&!studentId){
+    if(searchVal.startsWith('퇴원')&&searchVal.length>2){
+      // 퇴원으로 시작하면 강제처리 - 입력값을 student_name으로 사용
+      _forcedName=searchVal;
+    } else {
+      return toast('학생을 선택해주세요. 퇴원학생은 "퇴원이름"으로 입력하세요.',false);
+    }
+  }
   // 중복 판매 확인 (출고 + 학생 선택 시)
   if(type==='출고'&&studentId){
     var dup=await sbGet('sales_history','select=id,book_name&type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&limit=1');
@@ -1697,6 +1914,32 @@ async function doSales(){
     }
   }
   // 분원출고는 transfers 테이블에 저장 (상대방이 수락해야 재고 반영)
+  // ── 재고 부족 확인 (출고/분원출고 공통) ──
+  if(type==='출고'){ // 분원요청은 내 재고 체크 불필요
+    try{
+      // 현재 재고 조회: stockCache 우선, 없으면 DB 직접 조회
+      var curStock=0;
+      var cached=(stockCache||[]).find(function(r){return r['바코드']===barcode;});
+      if(cached){
+        curStock=Number(cached['현재재고']||0);
+      } else {
+        // DB에서 직접 집계
+        var inRows=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고,입고취소,출고취소)');
+        inRows.forEach(function(r){
+          if(r.type==='입고') curStock+=Number(r.qty||0);
+          else if(r.type==='출고') curStock-=Number(r.qty||0);
+          else if(r.type==='입고취소') curStock-=Number(r.qty||0);
+          else if(r.type==='출고취소') curStock+=Number(r.qty||0);
+        });
+      }
+      var shortage=qty-curStock;
+      if(shortage>0){
+        var bookLabel=(findBookByBarcode(barcode)||{})['교재명']||barcode;
+        if(!confirm('⚠️ 재고 부족\n\n['+bookLabel+']\n현재 재고: '+curStock+'권 / 출고 요청: '+qty+'권\n재고가 '+shortage+'권 부족합니다.\n\n그대로 처리하시겠습니까?')) return;
+      }
+    }catch(e){ /* 재고 확인 실패 시 그냥 진행 */ }
+  }
+
   if(type==='분원출고'){
     try{
       var book=findBookByBarcode(barcode)||{};
@@ -1704,12 +1947,12 @@ async function doSales(){
       var recentPurchase=await sbGet('sales_history','select=purchase_price&barcode=eq.'+encodeURIComponent(barcode)+'&type=eq.입고&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.desc&limit=1');
       var purchasePrice=recentPurchase.length?recentPurchase[0].purchase_price:0;
       var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-      var body={from_branch:currentBranch,to_branch:branchTarget,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
+      // 요청: from=출고해줄 분원(상대), to=입고받을 분원(나)
+      var body={from_branch:branchTarget,to_branch:currentBranch,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
-      if(!res.ok){var err=await res.text();toast('분원출고 실패: '+err,false);return;}
-      // 출고 분원 재고에서 차감 (sales_history에 분원출고로 기록)
-      await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:purchasePrice,memo:'→'+BRANCHES[branchTarget].name+(handler?' | 처리자:'+handler:''),branchTarget:branchTarget});
-      toast(BRANCHES[branchTarget].name+'으로 분원출고 요청 완료! 상대 분원이 수락해야 입고됩니다.',true);
+      if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
+      // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
+      toast(BRANCHES[branchTarget].name+' 입고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
       document.getElementById('sales-qty').value='1';
@@ -1719,7 +1962,7 @@ async function doSales(){
     return;
   }
   try{
-    var res=await call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:studentId,payStatus:payStatus,memo:memo,branchTarget:branchTarget||null,handler:handler||null});
+    var res=await call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:studentId||null,forcedName:_forcedName||null,payStatus:payStatus,memo:memo,branchTarget:branchTarget||null,handler:handler||null});
     toast(res.msg,res.ok);
     if(res.ok){
       document.getElementById('sales-barcode').value='';
@@ -1830,6 +2073,29 @@ async function doBulk(){
   if(!barcode) return toast('바코드를 입력하세요.',false);
   if(!semester) return toast('학기를 선택하세요.',false);
   if(!classNum) return toast('반을 선택하세요.',false);
+  // 재고 부족 확인
+  try{
+    var _bulkQty=bulkAssigns.length;
+    var _bulkStock=0;
+    var _bulkCached=(stockCache||[]).find(function(r){return r['바코드']===barcode;});
+    if(_bulkCached){
+      _bulkStock=Number(_bulkCached['현재재고']||0);
+    } else {
+      var _bRows=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고,입고취소,출고취소)');
+      _bRows.forEach(function(r){
+        if(r.type==='입고') _bulkStock+=Number(r.qty||0);
+        else if(r.type==='출고') _bulkStock-=Number(r.qty||0);
+        else if(r.type==='입고취소') _bulkStock-=Number(r.qty||0);
+        else if(r.type==='출고취소') _bulkStock+=Number(r.qty||0);
+      });
+    }
+    var _bulkShortage=_bulkQty-_bulkStock;
+    if(_bulkShortage>0){
+      var _bulkLabel=(findBookByBarcode(barcode)||{})['교재명']||barcode;
+      if(!confirm('⚠️ 재고 부족\n\n['+_bulkLabel+']\n현재 재고: '+_bulkStock+'권 / 출고 요청: '+_bulkQty+'권 ('+bulkAssigns.length+'명)\n재고가 '+_bulkShortage+'권 부족합니다.\n\n그대로 처리하시겠습니까?')) return;
+    }
+  }catch(e){ /* 재고 확인 실패 시 진행 */ }
+
   if(!confirm('['+semester+'] ['+classNum+'] ('+bulkAssigns.length+'명) 전원 출고합니다. 계속할까요?')) return;
   try{var res=await call('bulkSales',{barcode:barcode,semester:semester,classNum:classNum,price:price?Number(price):null,memo:memo});toast(res.msg,res.ok);}
   catch(e){toast('오류 발생',false);}
@@ -1850,6 +2116,84 @@ async function updateUnpaidClasses(){
   document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>'+(r.data||[]).map(function(c){return '<option value="'+c+'">'+c+'</option>';}).join('');
   setClassOptions('unpaid');syncClassSearchFromSelect('unpaid');
 }
+function jumpNextMatch(){
+  // 입금액 칸에서 엔터 → 다음 동명이인으로 이동 (날짜 입력 없이)
+  if(!_jumpMatches.length) return;
+  // 현재 인덱스에서 다음으로
+  _jumpCurrentIdx=(_jumpCurrentIdx+1)%_jumpMatches.length;
+  var found=_jumpMatches[_jumpCurrentIdx];
+  if(!found) return;
+  _jumpMatches.forEach(function(tr){tr.style.outline='';});
+  if(_jumpMatches.length>1){
+    toast((_jumpCurrentIdx+1)+'/'+_jumpMatches.length+' '+_jumpLastKeyword,true);
+  }
+  var barH2=0;
+  var bar2=document.getElementById('payment-queue-bar');
+  if(bar2&&bar2.style.display!=='none') barH2=bar2.offsetHeight+8;
+  var rect2=found.getBoundingClientRect();
+  window.scrollTo({top:Math.max(0,window.pageYOffset+rect2.top-barH2-80),behavior:'smooth'});
+  found.style.outline='3px solid var(--accent)';
+  var amtInput=found.querySelector('input[id^="paid-amt-"]');
+  if(amtInput) setTimeout(function(){amtInput.focus();amtInput.select();},350);
+  setTimeout(function(){if(found) found.style.outline='';},3000);
+}
+var _jumpLastKeyword='';
+var _jumpCurrentIdx=-1;
+var _jumpMatches=[];
+
+function jumpToStudent(keyword){
+  if(!keyword) return;
+  var kw=keyword.trim().toLowerCase();
+
+  // 매번 DOM에서 새로 수집 (큐 추가로 행 스타일 바뀌어도 참조 유지)
+  var isNewKeyword=kw!==_jumpLastKeyword;
+  if(isNewKeyword){
+    _jumpLastKeyword=kw;
+    _jumpCurrentIdx=-1;
+  }
+  // 항상 현재 DOM에서 매칭 행 재수집
+  _jumpMatches=[];
+  document.querySelectorAll('#unpaid-list tbody tr').forEach(function(tr){
+    var nameEl=tr.querySelector('td:first-child b');
+    if(!nameEl) return;
+    if(nameEl.textContent.toLowerCase().includes(kw)){
+      var amtInput=tr.querySelector('input[id^="paid-amt-"]');
+      if(amtInput) _jumpMatches.push(tr);
+    }
+  });
+
+  if(!_jumpMatches.length){
+    toast('"'+keyword+'" 학생을 찾을 수 없습니다.',false);
+    return;
+  }
+
+  // 이전 하이라이트 제거
+  _jumpMatches.forEach(function(tr){tr.style.outline='';});
+
+  // 다음 인덱스로 이동 (순환)
+  _jumpCurrentIdx=(_jumpCurrentIdx+1)%_jumpMatches.length;
+  var found=_jumpMatches[_jumpCurrentIdx];
+
+  // 동명이인 안내
+  if(_jumpMatches.length>1){
+    toast(((_jumpCurrentIdx+1)+'/'+_jumpMatches.length+' '+keyword),true);
+  }
+
+  // 고정 큐 바 높이만큼 오프셋 추가해서 가려지지 않게
+  var barH=0;
+  var bar=document.getElementById('payment-queue-bar');
+  if(bar&&bar.style.display!=='none') barH=bar.offsetHeight+8;
+  var rect=found.getBoundingClientRect();
+  window.scrollTo({top:Math.max(0,window.pageYOffset+rect.top-barH-80),behavior:'smooth'});
+  found.style.outline='3px solid var(--accent)';
+
+  // 입금액 칸 포커스
+  var amtInput=found.querySelector('input[id^="paid-amt-"]');
+  if(amtInput) setTimeout(function(){amtInput.focus();amtInput.select();},400);
+
+  // 3초 후 하이라이트 제거
+  setTimeout(function(){if(found) found.style.outline='';},3000);
+}
 async function loadUnpaid(){
   var el=document.getElementById('unpaid-list');
   var sem=document.getElementById('unpaid-semester').value;
@@ -1863,22 +2207,42 @@ async function loadUnpaid(){
     var data=res.data||[];
     if(nameSearch) data=data.filter(function(r){return (r['학생명']||'').toLowerCase().includes(nameSearch);});
 
-    // 학생+학기별 묶기
+    // 학기 필터 여부에 따라 그룹핑 키 결정
+    // - 학기 필터 있음: 학생+학기별 묶기 (기존)
+    // - 학기 필터 없음: 학생 단위로 전체 합산 (여러 학기 미납 합계)
+    var hasSemFilter=!!sem;
     var byStudent={};
     data.forEach(function(r){
-      var key=(r['학생ID']||r['학생명'])+'__'+(r['학기']||'');
+      var key=hasSemFilter
+        ?(r['학생ID']||r['학생명'])+'__'+(r['학기']||'')
+        :(r['학생ID']||r['학생명']);
       if(!byStudent[key]){
+        // students 배열에서 연락처/학년 찾기
+        var _stu=(students||[]).find(function(s){return s['학생ID']===r['학생ID'];});
+        var _contact=_stu?(_stu['학부모연락처']||''):'';
+        var _grade=_stu?(_stu['학년']||''):'';
         byStudent[key]={
-          studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],
-          items:[],totalAmount:0,totalPaid:Number(r['입금액']||0),
-          status:r['입금상태'],history:r['입금내역']||[]
+          studentId:r['학생ID'],name:r['학생명'],class:r['반'],
+          semester:hasSemFilter?(r['학기']||''):'전체',
+          contact:_contact,grade:_grade,
+          items:[],totalAmount:0,totalPaid:0,
+          status:'미납',history:[]
         };
       }
-      byStudent[key].items.push({name:r['교재명'],amount:Number(r['합계']||0),date:r['날짜']});
+      byStudent[key].items.push({name:r['교재명'],amount:Number(r['합계']||0),date:r['날짜'],semester:r['학기']||''});
       byStudent[key].totalAmount+=Number(r['합계']||0);
-      byStudent[key].totalPaid=Number(r['입금액']||0);
-      byStudent[key].status=r['입금상태'];
-      if(r['입금내역']&&r['입금내역'].length) byStudent[key].history=r['입금내역'];
+      // 입금액은 학생별 최신값으로 누적 (getUnpaid에서 이미 학생 전체 합산됨)
+      if(Number(r['입금액']||0)>byStudent[key].totalPaid) byStudent[key].totalPaid=Number(r['입금액']||0);
+      // 입금내역 병합 (중복 제거)
+      (r['입금내역']||[]).forEach(function(h){
+        var dup=byStudent[key].history.find(function(x){return x.date===h.date&&x.amount===h.amount;});
+        if(!dup) byStudent[key].history.push(h);
+      });
+    });
+    // 상태 재계산
+    Object.values(byStudent).forEach(function(g){
+      var bal=g.totalAmount-g.totalPaid;
+      g.status=bal<=0?'완납':g.totalPaid>0?'부분납':'미납';
     });
 
     var groups=Object.values(byStudent);
@@ -1916,18 +2280,21 @@ async function loadUnpaid(){
             +'</td></tr>';
         }
 
+        // 학교/학년 + 전화번호 뒷4자리
+        var _tel4=g.contact?g.contact.replace(/[^0-9]/g,'').slice(-4):'';
+        var _subInfo=[g.grade,_tel4].filter(Boolean).join(' · ');
         var nameCell;
         if(g.history&&g.history.length){
           nameCell='<b style="cursor:pointer;text-decoration:underline dotted;color:var(--accent)" data-gid="'+gid+'" onclick="togglePayHistory(this.dataset.gid)">'+escapeHtml(g.name||'-')+'</b>'
-            +'<div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div>';
+            +(_subInfo?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(_subInfo)+'</div>':'');
         } else {
           nameCell='<b>'+escapeHtml(g.name||'-')+'</b>'
-            +'<div class="mono" style="font-size:10px;color:var(--muted)">'+escapeHtml(g.studentId||'')+'</div>';
+            +(_subInfo?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(_subInfo)+'</div>':'');
         }
 
         return '<tr>'
           +'<td>'+nameCell+'</td>'
-          +'<td><span class="badge b-blue">'+escapeHtml(g.semester||'-')+'</span></td>'
+          +'<td style="white-space:nowrap"><span class="badge b-blue" style="white-space:nowrap">'+escapeHtml(g.semester||'-')+'</span></td>'
           +'<td style="font-size:12px">'+escapeHtml(g.class||'-')+'</td>'
           +'<td style="font-size:12px;line-height:1.8;word-break:keep-all">'+bookLines+'</td>'
           +'<td class="mono" style="font-size:12px;line-height:1.8;white-space:nowrap">'+amtLines+'</td>'
@@ -1938,11 +2305,15 @@ async function loadUnpaid(){
               +(balance>0?balance.toLocaleString()+'원':balance<0?'초과 '+Math.abs(balance).toLocaleString()+'원':g.totalAmount.toLocaleString()+'원')
             +'</div>'
           +'</td>'
-          +'<td style="white-space:nowrap"><input type="number" id="paid-amt-'+gid+'" placeholder="입금액" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모" style="width:76px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px"></td>'
-          +'<td><button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button></td>'
-          +'</tr>'+historyRow;
+          +'<td style="white-space:nowrap"><input type="text" inputmode="numeric" id="paid-amt-'+gid+'" value="'+Math.max(0,balance).toLocaleString()+'" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px;text-align:right" oninput="formatAmtInput(this)" onfocus="this.select()" onkeydown="if(event.keyCode===13){event.preventDefault();jumpNextMatch();}"></td>'
+          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
+          +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
+          +'<td style="white-space:nowrap;display:flex;gap:4px;align-items:center">'
+          +(g.status==='완납'
+            ?'<button class="btn btn-d btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" onclick="cancelPayment(this.dataset.sid,this.dataset.sem)">취소</button>'
+            :'<button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||'')+'" data-name="'+escapeHtml(g.name||'')+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button>')
+          +'</td>'
++'</tr>'+historyRow;
       }).join('')
       +'</tbody></table></div>';
   }catch(e){console.error(e);el.innerHTML='<div class="empty">불러오기 실패</div>';}
@@ -1952,11 +2323,195 @@ function togglePayHistory(gid){
   if(row) row.style.display=row.style.display==='none'?'':'none';
 }
 
+// ── 입금 대기 큐 ──
+var _payQueue=[]; // [{studentId, semester, gid, totalAmount, amt, date, memo, name}]
+
+function formatAmtInput(el){
+  var raw=el.value.replace(/[^0-9]/g,'');
+  var num=parseInt(raw)||0;
+  el.value=num>0?num.toLocaleString():'';
+}
+function triggerPayment(gid){
+  if(!gid) return;
+  var amtEl=document.getElementById('paid-amt-'+gid);
+  var dateEl=document.getElementById('paid-date-'+gid);
+  var memoEl=document.getElementById('paid-memo-'+gid);
+  var amt=amtEl?Number(String(amtEl.value).replace(/,/g,''))||0:0;
+  var date=dateEl?dateEl.value.trim():'';
+  if(!amt){toast('입금액을 입력해주세요.',false);if(amtEl)amtEl.focus();return;}
+  if(!date){toast('날짜를 입력해주세요.',false);if(dateEl)dateEl.focus();return;}
+
+  // input에서 직접 row 찾기 (gid 특수문자로 querySelector 실패 방지)
+  var amtInput=document.getElementById('paid-amt-'+gid);
+  if(!amtInput) return;
+  var row=amtInput.closest('tr');
+  if(!row) return;
+  var btn=row.querySelector('.btn[data-sid]');
+  if(!btn) return;
+  var sid=btn.dataset.sid||null; // 퇴원 학생은 빈 문자열 → null
+  var sem=btn.dataset.sem||'';
+  var total=Number(btn.dataset.total||0);
+  var nameEl=row.querySelector('td:first-child b');
+  var name=btn.dataset.name||(nameEl?nameEl.textContent:'');
+
+  // 이미 큐에 있으면 덮어쓰기
+  var existing=_payQueue.findIndex(function(q){return q.gid===gid;});
+  var item={studentId:sid,semester:sem,gid:gid,totalAmount:total,amt:amt,date:date,memo:memoEl?memoEl.value.trim():'',name:name};
+  if(existing>=0) _payQueue[existing]=item;
+  else _payQueue.push(item);
+
+  // 행 초록 표시
+  if(row) row.style.background='rgba(19,180,138,.08)';
+  // 입력칸 연하게
+  [amtEl,dateEl,memoEl].forEach(function(el){if(el)el.style.opacity='0.5';});
+
+  updatePaymentQueueBar();
+  // 검색창으로 포커스 복귀 (다음 학생 바로 검색 가능)
+  var searchEl=document.getElementById('unpaid-name-search');
+  if(searchEl){
+    setTimeout(function(){
+      searchEl.focus();
+      searchEl.select();
+    },100);
+  }
+}
+
+function updatePaymentQueueBar(){
+  var bar=document.getElementById('payment-queue-bar');
+  if(!bar) return;
+  if(!_payQueue.length){
+    bar.style.display='none';
+    return;
+  }
+  // 바 HTML 항상 재구성 (처리 중 로딩으로 덮어쓴 경우 복구)
+  var total=_payQueue.reduce(function(s,q){return s+q.amt;},0);
+  var names=_payQueue.map(function(q){return q.name+'('+q.amt.toLocaleString()+'원)';}).join(' · ');
+  bar.innerHTML=''
+    +'<span style="font-size:13px;font-weight:700">📋 입금 대기</span>'
+    +'<span style="background:rgba(255,255,255,.25);padding:2px 10px;border-radius:999px;font-size:13px;font-weight:700">'+_payQueue.length+'명</span>'
+    +'<span style="font-size:12px;color:#d6e4f7">합계 '+total.toLocaleString()+'원</span>'
+    +'<div style="font-size:11px;color:#b8d4f5;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+escapeHtml(names)+'</div>'
+    +'<div style="display:flex;gap:8px;flex-shrink:0">'
+    +'<button class="btn btn-g btn-sm" onclick="clearPaymentQueue()" style="font-size:11px;padding:4px 10px;color:#344251">큐 비우기</button>'
+    +'<button class="btn btn-y btn-sm" onclick="processPaymentQueue()" style="font-size:12px;padding:4px 14px;font-weight:700">전체 처리</button>'
+    +'</div>';
+  bar.style.display='flex';
+}
+
+function clearPaymentQueue(){
+  if(!confirm('대기 중인 입금 내역 '+_payQueue.length+'건을 모두 취소할까요?')) return;
+  _payQueue=[];
+  updatePaymentQueueBar();
+  // 행 표시 초기화
+  document.querySelectorAll('#unpaid-list tbody tr').forEach(function(tr){
+    tr.style.background='';
+    tr.querySelectorAll('input').forEach(function(el){el.style.opacity='';});
+  });
+}
+
+async function processPaymentQueue(){
+  if(!_payQueue.length) return;
+  if(!confirm(_payQueue.length+'명 입금 처리를 진행할까요?')) return;
+  var bar=document.getElementById('payment-queue-bar');
+  if(bar) bar.innerHTML='<div class="spinner" style="width:18px;height:18px;border-width:2px;display:inline-block"></div> <span style="font-size:13px">처리 중...</span>';
+
+  // 병렬 처리 (semester 없으면 학기별 자동 분배)
+  var results=await Promise.allSettled(_payQueue.map(async function(q){
+      var pd=q.date;
+      var m=pd.match(/^(\d{1,2})[\/\-](\d{1,2})$/);
+      if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
+      var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      var ph=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+      var _sid=q.studentId||null;
+      var _sname=q.name||null;
+      var _sem=q.semester||'';
+
+      if(_sem){
+        // ── 학기 지정된 경우: 기존 방식 그대로 ──
+        var _semQ=_sem?'&semester=eq.'+encodeURIComponent(_sem):'';
+        var body={branch:currentBranch,student_id:_sid,student_name:_sid?null:_sname,semester:_sem||null,paid_amount:q.amt,paid_date:pd,memo:q.memo||null};
+        var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
+        if(!res.ok) throw new Error('payment fail');
+        var _idQ=_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname);
+        var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고'+_idQ+_semQ+'&branch=eq.'+encodeURIComponent(currentBranch));
+        var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
+        var pmtRes=await sbGet('payments','select=paid_amount'+((_sid)?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname))+_semQ+'&branch=eq.'+encodeURIComponent(currentBranch));
+        var totalPaid=pmtRes.reduce(function(s,r){return s+Number(r.paid_amount||0);},0);
+        var newStatus=totalPaid>=totalSales?'완납':totalPaid>0?'부분납':'미납';
+        await fetch(SB_URL+'/sales_history?type=eq.출고'+_idQ+_semQ+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph,body:JSON.stringify({pay_status:newStatus})});
+
+      } else {
+        // ── 전체 조회에서 처리: 학기별 자동 분배 ──
+        // 해당 학생의 학기별 미납 목록 조회 (오래된 학기 순)
+        var _idQ2=_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname);
+        var allSales=await sbGet('sales_history','select=semester,sale_date,total&type=eq.출고'+_idQ2+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.asc');
+        // 학기별 출고 합계
+        var salesBySem={};
+        allSales.forEach(function(r){var s=r.semester||'';if(!salesBySem[s])salesBySem[s]=0;salesBySem[s]+=Number(r.total||0);});
+        // 학기별 기존 payments 조회
+        var allPmts=await sbGet('payments','select=semester,paid_amount'+(_sid?'&student_id=eq.'+encodeURIComponent(_sid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_sname))+'&branch=eq.'+encodeURIComponent(currentBranch));
+        var paidBySem={};
+        allPmts.forEach(function(p){var s=p.semester||'';if(!paidBySem[s])paidBySem[s]=0;paidBySem[s]+=Number(p.paid_amount||0);});
+        // 미납 학기 목록 (첫 출고날짜 오래된 순)
+        var semFirstDate={};
+        allSales.forEach(function(r){var s=r.semester||'';if(!semFirstDate[s]||r.sale_date<semFirstDate[s]) semFirstDate[s]=r.sale_date;});
+        var semKeys=Object.keys(salesBySem).sort(function(a,b){return (semFirstDate[a]||'').localeCompare(semFirstDate[b]||'');});
+        var remaining=q.amt;
+        for(var si=0;si<semKeys.length&&remaining>0;si++){
+          var sk=semKeys[si];
+          var semSales=salesBySem[sk]||0;
+          var semPaid=paidBySem[sk]||0;
+          var semBalance=semSales-semPaid;
+          if(semBalance<=0) continue; // 이미 완납
+          var payAmt=Math.min(remaining,semBalance);
+          remaining-=payAmt;
+          // 해당 학기 payments INSERT
+          var semBody={branch:currentBranch,student_id:_sid,student_name:_sid?null:_sname,semester:sk||null,paid_amount:payAmt,paid_date:pd,memo:q.memo||null};
+          var semRes=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(semBody)});
+          if(!semRes.ok) throw new Error('sem payment fail');
+          // pay_status 업데이트
+          var newPaid=semPaid+payAmt;
+          var newStatus=newPaid>=semSales?'완납':newPaid>0?'부분납':'미납';
+          var semSemQ=sk?'&semester=eq.'+encodeURIComponent(sk):'&semester=is.null';
+          await fetch(SB_URL+'/sales_history?type=eq.출고'+_idQ2+semSemQ+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph,body:JSON.stringify({pay_status:newStatus})});
+        }
+        // 남은 금액이 있으면 마지막 학기에 추가 (초과 입금)
+        if(remaining>0&&semKeys.length>0){
+          var lastSk=semKeys[semKeys.length-1];
+          var lastBody={branch:currentBranch,student_id:_sid,student_name:_sid?null:_sname,semester:lastSk||null,paid_amount:remaining,paid_date:pd,memo:q.memo||null};
+          await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(lastBody)});
+        }
+      }
+  }));
+  var ok=results.filter(function(r){return r.status==='fulfilled';}).length;
+  var fail=results.filter(function(r){return r.status==='rejected';}).length;
+  _payQueue=[];
+  updatePaymentQueueBar(); // 바 원래대로 복구 (innerHTML 덮어쓴 것 복구)
+  toast('처리 완료: '+ok+'명 성공'+(fail?' · '+fail+'명 실패':''),ok>0);
+  loadUnpaid();
+}
+async function cancelPayment(studentId, semester){
+  if(!confirm('입금 내역을 취소하면 해당 학생/학기의 모든 payments가 삭제됩니다.\n정말 취소하시겠습니까?')) return;
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // 해당 학생+학기 payments 전체 삭제
+    var delParams='student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch);
+    if(semester) delParams+='&semester=eq.'+encodeURIComponent(semester);
+    else delParams+='&semester=is.null';
+    await fetch(SB_URL+'/payments?'+delParams,{method:'DELETE',headers:h});
+    // sales_history pay_status 미납으로 되돌리기
+    var salesParams='type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch);
+    if(semester) salesParams+='&semester=eq.'+encodeURIComponent(semester);
+    await fetch(SB_URL+'/sales_history?'+salesParams,{method:'PATCH',headers:h,body:JSON.stringify({pay_status:'미납'})});
+    toast('입금 취소 완료',true);
+    loadUnpaid();
+  }catch(e){toast('취소 실패',false);}
+}
 async function doPayment(studentId, semester, gid, totalAmount){
   var amtEl=document.getElementById('paid-amt-'+gid);
   var dateEl=document.getElementById('paid-date-'+gid);
   var memoEl=document.getElementById('paid-memo-'+gid);
-  var amt=amtEl?Number(amtEl.value)||0:0;
+  var amt=amtEl?Number(String(amtEl.value).replace(/,/g,''))||0:0;
   var dateVal=dateEl?dateEl.value.trim():'';
   var memo=memoEl?memoEl.value.trim():'';
   if(!amt) return toast('입금액을 입력해주세요.',false);
@@ -1967,21 +2522,57 @@ async function doPayment(studentId, semester, gid, totalAmount){
   if(m) pd=new Date().getFullYear()+'-'+String(m[1]).padStart(2,'0')+'-'+String(m[2]).padStart(2,'0');
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var body={branch:currentBranch,student_id:studentId,semester:semester,paid_amount:amt,paid_date:pd,memo:memo||null};
-    var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
-    if(!res.ok){var err=await res.text();toast('처리 실패: '+err,false);return;}
-    // sales_history에서 해당 학생/학기 출고 건들 pay_status 업데이트
+    var ph2=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    // 학기 지정된 경우에만 먼저 INSERT (전체조회는 분배 로직에서 직접 INSERT)
+    if(semester){
+      var body={branch:currentBranch,student_id:studentId,semester:semester||null,paid_amount:amt,paid_date:pd,memo:memo||null};
+      var res=await fetch(SB_URL+'/payments',{method:'POST',headers:h,body:JSON.stringify(body)});
+      if(!res.ok){var err=await res.text();toast('처리 실패: '+err,false);return;}
+    }
     var sem=document.getElementById('unpaid-semester').value||semester;
-    var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&semester=eq.'+encodeURIComponent(semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
-    var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
-    // payments 합계
-    var pmtRes=await sbGet('payments','select=paid_amount&student_id=eq.'+encodeURIComponent(studentId)+'&semester=eq.'+encodeURIComponent(semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
-    var totalPaid=pmtRes.reduce(function(s,r){return s+Number(r.paid_amount||0);},0);
-    var newStatus=totalPaid>=totalSales?'완납':totalPaid>0?'부분납':'미납';
-    // sales_history pay_status 일괄 업데이트
-    var ph=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    await fetch(SB_URL+'/sales_history?type=eq.출고&student_id=eq.'+encodeURIComponent(studentId)+'&semester=eq.'+encodeURIComponent(semester)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph,body:JSON.stringify({pay_status:newStatus})});
-    toast('입금 처리 완료! ('+amt.toLocaleString()+'원 · '+newStatus+')',true);
+    var _doSid=studentId||null;
+    // 퇴원학생 이름 찾기
+    var _doRow=document.getElementById('paid-amt-'+gid)?document.getElementById('paid-amt-'+gid).closest('tr'):null;
+    var _doNameEl=_doRow?_doRow.querySelector('td:first-child b'):null;
+    var _doSname=_doSid?null:(_doNameEl?_doNameEl.textContent:'');
+    var _doIdQ=_doSid?'&student_id=eq.'+encodeURIComponent(_doSid):'&student_id=is.null&student_name=eq.'+encodeURIComponent(_doSname);
+
+    if(semester){ // 이미 위에서 INSERT 완료, pay_status 업데이트만
+      var _semQ2='&semester=eq.'+encodeURIComponent(semester);
+      var salesRes=await sbGet('sales_history','select=id,total&type=eq.출고'+_doIdQ+_semQ2+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var totalSales=salesRes.reduce(function(s,r){return s+Number(r.total||0);},0);
+      var pmtRes=await sbGet('payments','select=paid_amount'+_doIdQ+_semQ2+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var totalPaid=pmtRes.reduce(function(s,r){return s+Number(r.paid_amount||0);},0);
+      var newStatus=totalPaid>=totalSales?'완납':totalPaid>0?'부분납':'미납';
+      await fetch(SB_URL+'/sales_history?type=eq.출고'+_doIdQ+_semQ2+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph2,body:JSON.stringify({pay_status:newStatus})});
+    } else {
+      // 전체 조회 처리: 학기별 자동 분배
+      var allSales2=await sbGet('sales_history','select=semester,sale_date,total&type=eq.출고'+_doIdQ+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.asc');
+      var salesBySem2={};
+      allSales2.forEach(function(r){var s=r.semester||'';if(!salesBySem2[s])salesBySem2[s]=0;salesBySem2[s]+=Number(r.total||0);});
+      var allPmts2=await sbGet('payments','select=semester,paid_amount'+_doIdQ+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var paidBySem2={};
+      allPmts2.forEach(function(p){var s=p.semester||'';if(!paidBySem2[s])paidBySem2[s]=0;paidBySem2[s]+=Number(p.paid_amount||0);});
+      var semFirstDate2={};
+      allSales2.forEach(function(r){var s=r.semester||'';if(!semFirstDate2[s]||r.sale_date<semFirstDate2[s]) semFirstDate2[s]=r.sale_date;});
+      var semKeys2=Object.keys(salesBySem2).sort(function(a,b){return (semFirstDate2[a]||'').localeCompare(semFirstDate2[b]||'');});
+      var remaining2=amt;
+      for(var si2=0;si2<semKeys2.length&&remaining2>0;si2++){
+        var sk2=semKeys2[si2];
+        var semBalance2=(salesBySem2[sk2]||0)-(paidBySem2[sk2]||0);
+        if(semBalance2<=0) continue;
+        var payAmt2=Math.min(remaining2,semBalance2);
+        remaining2-=payAmt2;
+        var semBody2={branch:currentBranch,student_id:_doSid,student_name:_doSid?null:_doSname,semester:sk2||null,paid_amount:payAmt2,paid_date:pd,memo:memo||null};
+        var semRes2=await fetch(SB_URL+'/payments',{method:'POST',headers:Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'}),body:JSON.stringify(semBody2)});
+        if(!semRes2.ok) continue;
+        var newPaid2=(paidBySem2[sk2]||0)+payAmt2;
+        var newStatus2=newPaid2>=(salesBySem2[sk2]||0)?'완납':newPaid2>0?'부분납':'미납';
+        var semSemQ2=sk2?'&semester=eq.'+encodeURIComponent(sk2):'&semester=is.null';
+        await fetch(SB_URL+'/sales_history?type=eq.출고'+_doIdQ+semSemQ2+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:ph2,body:JSON.stringify({pay_status:newStatus2})});
+      }
+    }
+    toast('입금 처리 완료! ('+amt.toLocaleString()+'원)',true);
     loadUnpaid();
   }catch(e){toast('오류 발생',false);}
 }
@@ -2040,8 +2631,15 @@ function renderHistoryFilter(){
   var type=document.getElementById('history-type').value;
   var isLoan=type==='loan';
   var isSales=type.startsWith('sales');
-  ['ft-teacher','ft-status'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isLoan?'':'none';});
+  ['ft-teacher','ft-status','ft-loan-sem'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isLoan?'':'none';});
   ['ft-stype','ft-sem','ft-student','ft-division'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isSales?'':'none';});
+  // 대여이력 학기 드롭다운 채우기
+  if(isLoan){
+    var lsemSel=document.getElementById('filter-loan-sem');
+    if(lsemSel&&lsemSel.options.length<=1&&semesters.length){
+      semesters.forEach(function(s){var o=document.createElement('option');o.value=s;o.textContent=s;lsemSel.appendChild(o);});
+    }
+  }
   // 분원 필터: 관리자만 표시
   var ftBranch=document.getElementById('ft-branch');
   if(ftBranch){
@@ -2070,8 +2668,11 @@ async function loadHistory(){
       // 관리자: 분원 필터 적용
       var loanQ='select=*&order=loan_date.desc&limit=300';
       if(targetBranch) loanQ+='&branch=eq.'+encodeURIComponent(targetBranch);
+      else loanQ+='&branch=not.in.(testjls,varon)';
+      var loanSemFilter=document.getElementById('filter-loan-sem')?document.getElementById('filter-loan-sem').value:'';
       if(params.teacherId) loanQ+='&teacher_id=eq.'+encodeURIComponent(params.teacherId);
       if(params.status) loanQ+='&status=eq.'+encodeURIComponent(params.status);
+      if(loanSemFilter) loanQ+='&semester=eq.'+encodeURIComponent(loanSemFilter);
       var data=await sbGet('loan_history',loanQ);
       el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>분원</th><th>교재명</th><th>바코드</th><th>선생님</th><th>대여일</th><th>반납예정</th><th>반납일</th><th>학기</th><th>상태</th></tr></thead><tbody>'+
         data.map(function(r){
@@ -2087,13 +2688,15 @@ async function loadHistory(){
       var studentKw=(document.getElementById('filter-student-search')||{}).value||'';
       var salesQ='select=*&order=sale_date.desc,id.desc&limit=300';
       if(targetBranch) salesQ+='&branch=eq.'+encodeURIComponent(targetBranch);
+      else salesQ+='&branch=not.in.(testjls,varon)';
       if(typeVal) salesQ+='&type=eq.'+encodeURIComponent(typeVal);
       if(isBranch) salesQ+='&type=in.(분원출고,분원입고)';
       if(semVal) salesQ+='&semester=eq.'+encodeURIComponent(semVal);
       var data=await sbGet('sales_history',salesQ);
       if(studentKw.trim()) data=data.filter(function(r){return (r.student_name||'').toLowerCase().includes(studentKw.trim().toLowerCase());});
-      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>분원</th><th>교재명</th><th>유형</th><th>수량</th><th>단가</th><th>합계</th><th>학생/분원</th><th>학기</th><th>날짜</th><th>메모</th></tr></thead><tbody>'+
-        data.map(function(r){
+      var _histData=data;
+      el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>분원</th><th>교재명</th><th>유형</th><th>수량</th><th>단가</th><th>합계</th><th>학생/분원</th><th>학기</th><th>날짜</th><th>메모</th><th></th></tr></thead><tbody>'+
+        data.map(function(r,idx){
           var brName=(BRANCHES[r.branch||'']||{}).name||r.branch||'-';
           var typeColor=r.type==='입고'||r.type==='분원입고'?'b-blue':r.type==='출고'?'b-red':r.type==='반품'?'b-green':'b-yellow';
           var isInType=['입고','분원입고','반품','분원출고'].includes(r.type);
@@ -2112,12 +2715,77 @@ async function loadHistory(){
             +'<td>'+(r.semester||'-')+'</td>'
             +'<td class="mono" style="font-size:11px">'+escapeHtml(r.sale_date||'')+'</td>'
             +'<td style="font-size:11px;color:var(--muted)">'+escapeHtml(r.memo||'')+'</td>'
+            +'<td><button class="btn btn-d btn-sm" data-rid="'+r.id+'" data-rname="'+escapeHtml(r.book_name||'')+'" data-rtype="'+escapeHtml(r.type||'')+'" data-paystatus="'+escapeHtml(r.pay_status||'')+'" onclick="deleteHistoryRow(this.dataset.rid,this.dataset.rname,this.dataset.rtype,this.dataset.paystatus,this)">삭제</button></td>'
             +'</tr>';
         }).join('')+'</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
     }
   }catch(e){console.error(e);el.innerHTML='<div class="empty">조회 실패</div>';}
 }
 
+async function deleteHistoryRow(id,bookName,type,payStatus,btn){
+  if(!id) return;
+  if(type==='출고'&&payStatus==='완납'){
+    toast('완납 처리된 출고 이력은 삭제할 수 없습니다. 먼저 입금 취소를 해주세요.',false);
+    return;
+  }
+  if(!confirm('['+bookName+'] '+type+' 이력을 삭제할까요?\n이 작업은 되돌릴 수 없습니다.')) return;
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    var res=await fetch(SB_URL+'/sales_history?id=eq.'+encodeURIComponent(id),{method:'DELETE',headers:h});
+    if(res.ok){
+      // 해당 행 제거
+      var row=btn.closest('tr');
+      if(row) row.remove();
+      toast('삭제 완료',true);
+    } else {
+      toast('삭제 실패',false);
+    }
+  }catch(e){toast('오류 발생',false);}
+}
+var _levelEditBarcode='';
+function renderLevelEditResults(){
+  var kw=(document.getElementById('level-edit-search').value||'').trim().toLowerCase();
+  var box=document.getElementById('level-edit-results');
+  if(!kw){box.style.display='none';return;}
+  var list=(books||[]).filter(function(b){
+    return String(b['교재명']||'').toLowerCase().includes(kw)||String(b['바코드']||'').toLowerCase().includes(kw);
+  }).slice(0,20);
+  if(!list.length){box.innerHTML='<div style="padding:10px 12px;font-size:12px;color:var(--muted)">검색 결과 없음</div>';box.style.display='block';return;}
+  box.innerHTML=list.map(function(b){
+    var payload=encodeURIComponent(JSON.stringify({barcode:b['바코드'],name:b['교재명'],level:b['레벨']}));
+    return '<button type="button" data-book="'+payload+'" style="width:100%;text-align:left;padding:9px 12px;border:none;border-bottom:1px solid #ecd89b;background:#fffdf5;cursor:pointer">'
+      +'<div style="font-size:13px;font-weight:700">'+escapeHtml(b['교재명'])+'</div>'
+      +'<div class="mono" style="font-size:11px;color:var(--muted);margin-top:2px">'+escapeHtml(b['바코드'])+' · 레벨: '+(b['레벨']||'미설정')+'</div>'
+      +'</button>';
+  }).join('');
+  box.style.display='block';
+  box.querySelectorAll('button[data-book]').forEach(function(btn){
+    btn.onclick=function(){
+      var info=JSON.parse(decodeURIComponent(btn.getAttribute('data-book')));
+      _levelEditBarcode=info.barcode;
+      document.getElementById('level-edit-picked').style.display='block';
+      document.getElementById('level-edit-picked').textContent=info.name+' · 현재 레벨: '+(info.level||'미설정');
+      document.getElementById('level-edit-value').value=info.level||'';
+      box.style.display='none';
+    };
+  });
+}
+async function doEditLevel(){
+  if(!_levelEditBarcode) return toast('교재를 먼저 검색해서 선택하세요.',false);
+  var newLevel=document.getElementById('level-edit-value').value.trim();
+  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+  try{
+    await fetch(SB_URL+'/books?barcode=eq.'+encodeURIComponent(_levelEditBarcode),{method:'PATCH',headers:h,body:JSON.stringify({level:newLevel||null})});
+    var bk=books.find(function(b){return b['바코드']===_levelEditBarcode;});
+    if(bk) bk['레벨']=newLevel;
+    toast('레벨 저장 완료: '+newLevel,true);
+    document.getElementById('level-edit-picked').textContent=document.getElementById('level-edit-picked').textContent.replace(/현재 레벨:.*/,'현재 레벨: '+newLevel);
+    _levelEditBarcode='';
+    document.getElementById('level-edit-search').value='';
+    document.getElementById('level-edit-picked').style.display='none';
+    document.getElementById('level-edit-value').value='';
+  }catch(e){toast('저장 실패',false);}
+}
 var _priceEditBarcode='';
 var _vendorEditBarcode='';
 function renderVendorEditResults(){
@@ -2232,13 +2900,166 @@ async function doAddBook(){
     if(res.ok){['book-barcode','book-name','book-subject','book-publisher','book-vendor','book-price','book-note'].forEach(function(id){document.getElementById(id).value='';});var bb=await call('getBooks');books=bb.data||[];initBarcodePage();}
   }catch(e){toast('오류 발생',false);}
 }
+// ── 레벨별 교재 체크리스트 ──
+var _checklistChecked={}; // barcode → true/false
+
+// 교사용 바코드 교재명 → 일반 교재명으로 정규화
+// "[교사용] LSA1_01.제목 01번" → "LSA1_01.제목"
+function normalizeTeacherBookName(name){
+  return (name||'')
+    .replace(/^\[교사용\]\s*/,'')  // 앞 [교사용] 제거
+    .replace(/\s+\d+번\s*$/,'')    // 뒤 01번/02번 등 제거
+    .trim();
+}
+
+var _checklistSelectedLevel=''; // 현재 선택된 레벨
+
+function renderLevelDropdown(){
+  var kw=(document.getElementById('checklist-search').value||'').trim().toLowerCase();
+  var box=document.getElementById('checklist-level-dropdown');
+  var selEl=document.getElementById('checklist-selected-level');
+  if(!box) return;
+  // 선택 초기화
+  _checklistSelectedLevel='';
+  _checklistChecked={};
+  if(selEl) selEl.style.display='none';
+  var wrap=document.getElementById('checklist-wrap');
+  if(wrap) wrap.style.display='none';
+  if(!kw){box.style.display='none';return;}
+  // books에서 레벨 목록 추출 (JLS자체교재만 제외, 교사용도 레벨 포함)
+  var allLevels={};
+  (books||[]).forEach(function(b){
+    if(b['비고']==='JLS자체교재') return;
+    (b['레벨']||'').split(',').forEach(function(l){
+      l=l.trim();
+      if(l) allLevels[l]=true;
+    });
+  });
+  var matched=Object.keys(allLevels).filter(function(l){return l.toLowerCase().includes(kw);}).sort();
+  if(!matched.length){box.style.display='none';return;}
+  box.innerHTML=matched.map(function(l){
+    return '<button type="button" data-level="'+escapeHtml(l)+'" style="width:100%;text-align:left;padding:9px 14px;border:none;border-bottom:1px solid #eee;background:#fff;cursor:pointer;font-size:13px;font-weight:700">'
+      +escapeHtml(l)+'</button>';
+  }).join('');
+  box.style.display='block';
+  box.querySelectorAll('button[data-level]').forEach(function(btn){
+    btn.addEventListener('mousedown',function(e){
+      e.preventDefault();
+      var level=btn.getAttribute('data-level');
+      _checklistSelectedLevel=level;
+      document.getElementById('checklist-search').value=level;
+      box.style.display='none';
+      if(selEl){selEl.style.display='block';selEl.textContent='선택된 레벨: '+level;}
+      renderChecklist();
+    });
+  });
+}
+
+document.addEventListener('click',function(e){
+  var box=document.getElementById('checklist-level-dropdown');
+  var inp=document.getElementById('checklist-search');
+  if(box&&inp&&!inp.contains(e.target)&&!box.contains(e.target)) box.style.display='none';
+});
+
+function renderChecklist(){
+  var el=document.getElementById('checklist-list');
+  var wrap=document.getElementById('checklist-wrap');
+  var summaryEl=document.getElementById('checklist-summary');
+  if(!el) return;
+  if(!_checklistSelectedLevel){
+    if(wrap) wrap.style.display='none';
+    return;
+  }
+  var selectedLevel=_checklistSelectedLevel;
+  // 선택된 레벨과 정확히 일치하는 일반 교재만
+  var filtered=(books||[]).filter(function(b){
+    if(b['비고']==='JLS교사용') return false;
+    return (b['레벨']||'').split(',').some(function(l){return l.trim()===selectedLevel;});
+  });
+  if(!filtered.length){
+    if(wrap) wrap.style.display='none';
+    return;
+  }
+  if(wrap) wrap.style.display='';
+  var total=filtered.length;
+  var done=filtered.filter(function(b){return _checklistChecked[b['교재명']];}).length;
+  if(summaryEl){
+    summaryEl.textContent='체크 '+done+' / '+total+(done===total?' ✅':'');
+    summaryEl.style.color=done===total?'var(--accent2)':'var(--warn)';
+  }
+  el.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:13px">'+
+    filtered.map(function(b){
+      var checked=_checklistChecked[b['교재명']];
+      return '<tr style="border-top:1px solid #eee;'+(checked?'background:rgba(19,180,138,.08)':'')+'">'
+        +'<td style="padding:7px 10px;text-align:center;font-size:16px;width:32px">'+(checked?'✅':'⬜')+'</td>'
+        +'<td style="padding:7px 10px"><b>'+escapeHtml(b['교재명'])+'</b></td>'
+        +'<td style="padding:7px 10px;font-size:11px;color:var(--muted)">'+(b['레벨']?'레벨: '+escapeHtml(b['레벨']):'')+'</td>'
+        +'<td style="padding:7px 10px">'+(checked?'<span class="badge b-green" style="font-size:10px">체크</span>':'<span class="badge b-red" style="font-size:10px">미체크</span>')+'</td>'
+        +'</tr>';
+    }).join('')+'</table>';
+}
+
+function checklistMark(barcode){
+  if(!barcode||!_checklistSelectedLevel) return;
+  var book=(books||[]).find(function(b){return b['바코드']===barcode;});
+  if(!book) return;
+  // 정규화된 교재명으로 체크리스트 항목 매칭 ([교사용], 01번 등 제거)
+  var normalizedName=normalizeTeacherBookName(book['교재명']);
+  // 현재 선택된 레벨의 체크리스트 목록에서 정규화 교재명과 정확히 일치하는 것만 체크
+  var checklistBooks=(books||[]).filter(function(b){
+    if(b['비고']==='JLS교사용') return false;
+    return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
+  });
+  var matched=checklistBooks.find(function(b){return b['교재명']===normalizedName;});
+  if(!matched) return;
+  _checklistChecked[matched['교재명']]=true;
+  renderChecklist();
+}
+
+function clearChecklist(){
+  _checklistChecked={};
+  _checklistSelectedLevel='';
+  var s=document.getElementById('checklist-search');
+  if(s) s.value='';
+  var el=document.getElementById('checklist-list');
+  if(el) el.innerHTML='';
+  var wrap=document.getElementById('checklist-wrap');
+  if(wrap) wrap.style.display='none';
+  var selEl=document.getElementById('checklist-selected-level');
+  if(selEl) selEl.style.display='none';
+}
+
+async function loadTeacherList(){
+  var el=document.getElementById('teacher-list');
+  if(!el) return;
+  if(!teachers.length){el.innerHTML='<div class="empty">등록된 선생님이 없습니다.</div>';return;}
+  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>과목</th><th>연락처</th><th></th></tr></thead><tbody>'+
+    teachers.map(function(t){
+      return '<tr>'
+        +'<td class="mono" style="font-size:11px">'+escapeHtml(t['교사ID'])+'</td>'
+        +'<td><b>'+escapeHtml(t['이름'])+'</b></td>'
+        +'<td style="font-size:12px">'+escapeHtml(t['담당과목']||'-')+'</td>'
+        +'<td class="mono" style="font-size:12px">'+escapeHtml(t['연락처']||'-')+'</td>'
+        +'<td><button class="btn btn-d btn-sm" data-tid="'+escapeHtml(t['교사ID'])+'" data-tname="'+escapeHtml(t['이름'])+'" onclick="deleteTeacher(this.dataset.tid,this.dataset.tname)">삭제</button></td>'
+        +'</tr>';
+    }).join('')+'</tbody></table></div>';
+}
+async function deleteTeacher(tid,name){
+  if(!confirm('['+name+'] 선생님을 삭제할까요?\n대여 이력은 유지됩니다.')) return;
+  try{
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    var res=await fetch(SB_URL+'/teachers?teacher_id=eq.'+encodeURIComponent(tid)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'DELETE',headers:h});
+    if(res.ok){toast(name+' 선생님 삭제 완료',true);var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();loadTeacherList();}
+    else toast('삭제 실패',false);
+  }catch(e){toast('오류 발생',false);}
+}
 async function doAddTeacher(){
   var id=document.getElementById('teacher-id').value.trim();var name=document.getElementById('teacher-name').value.trim();
-  if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
+  if(!name) return toast('이름은 필수입니다.',false);
   try{
     var res=await call('addTeacher',{id:id,name:name,subject:document.getElementById('teacher-subject').value.trim(),contact:document.getElementById('teacher-contact').value.trim()});
     toast(res.msg,res.ok);
-    if(res.ok){['teacher-id','teacher-name','teacher-subject','teacher-contact'].forEach(function(i){document.getElementById(i).value='';});var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();}
+    if(res.ok){['teacher-name','teacher-subject'].forEach(function(i){document.getElementById(i).value='';});var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();loadTeacherList();}
   }catch(e){toast('오류 발생',false);}
 }
 async function doAddStudent(){
@@ -2247,7 +3068,8 @@ async function doAddStudent(){
   try{
     var semester=document.getElementById('student-semester').value.trim();
     if(!semester) return toast('학기를 입력해주세요.',false);
-    var res=await call('addStudent',{id:id,name:name,semester:semester,grade:document.getElementById('student-grade').value.trim(),classNum:document.getElementById('student-class').value.trim(),contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim()});
+    var statusVal=(document.getElementById('student-status')||{value:'재원'}).value||'재원';
+    var res=await call('addStudent',{id:id,name:name,semester:semester,grade:document.getElementById('student-grade').value.trim(),classNum:document.getElementById('student-class').value.trim(),contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim(),status:statusVal});
     toast(res.msg,res.ok);
     if(res.ok){['student-id','student-name','student-semester','student-grade','student-class','student-contact','student-note'].forEach(function(i){document.getElementById(i).value='';}); var sb=await call('getStudents');students=sb.data||[];populateSelects();loadStudentList();}
   }catch(e){toast('오류 발생',false);}
@@ -2286,75 +3108,130 @@ function showAllStudents(){
   renderStudentTable(el,students);
 }
 function renderStudentTable(el,list){
-  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학년부</th><th>학부모 연락처</th><th>비고</th><th>수정</th></tr></thead><tbody>'+
+  el.innerHTML='<div class="twrap"><table><thead><tr><th>ID</th><th>이름</th><th>반</th><th>학년부</th><th>상태</th><th>학부모 연락처</th><th>비고</th><th>수정</th></tr></thead><tbody>'+
     list.map(function(s){
       var div=s['구분']||'CHESS';
       var badge=div==='ACE'?'b-blue':'b-green';
-      return '<tr><td class="mono" style="font-size:11px">'+s['학생ID']+'</td><td><b>'+s['이름']+'</b></td><td style="font-size:12px">'+(s['반']||'-')+'</td>'
-        +'<td><span class="badge '+badge+'" style="cursor:pointer" data-sid="'+s['학생ID']+'" data-div="'+div+'" onclick="toggleDivision(this.dataset.sid,this.dataset.div,this)">'+div+'</span></td>'
-        +'<td class="mono">'+(s['학부모연락처']||'-')+'</td>'
-        +'<td style="color:var(--muted);font-size:12px">'+(s['비고']||'')+'</td>'
-        +'<td><button class="btn btn-g btn-sm" data-sid="'+escapeHtml(s['학생ID'])+'" onclick="openStudentEdit(this.dataset.sid)">수정</button></td>'
+      var status=s['상태']||'재원';
+      var isWithdrawn=status==='퇴원';
+      var payload=encodeURIComponent(JSON.stringify({
+        id:s['학생ID'],name:s['이름'],grade:s['학년']||'',classNum:s['반']||'',
+        contact:s['학부모연락처']||'',note:s['비고']||'',division:div,semester:s['학기']||''
+      }));
+      return '<tr style="'+(isWithdrawn?'opacity:0.5':'')+'">'
+        +'<td class="mono" style="font-size:11px">'+escapeHtml(s['학생ID'])+'</td>'
+        +'<td><b>'+escapeHtml(s['이름'])+'</b></td>'
+        +'<td style="font-size:12px">'+escapeHtml(s['반']||'-')+'</td>'
+        +'<td><span class="badge '+badge+'" style="cursor:pointer" data-sid="'+escapeHtml(s['학생ID'])+'" data-div="'+div+'" onclick="toggleDivision(this.dataset.sid,this.dataset.div,this)">'+div+'</span></td>'
+        +'<td><span class="badge '+(isWithdrawn?'b-red':'b-green')+'" style="cursor:pointer;white-space:nowrap" data-sid="'+escapeHtml(s['학생ID'])+'" data-status="'+status+'" onclick="toggleStudentStatus(this.dataset.sid,this.dataset.status,this)">'+(isWithdrawn?'퇴원':'재원')+'</span></td>'
+        +'<td class="mono">'+escapeHtml(s['학부모연락처']||'-')+'</td>'
+        +'<td style="color:var(--muted);font-size:12px">'+escapeHtml(s['비고']||'')+'</td>'
+        +'<td><button class="btn btn-y btn-sm" data-student="'+payload+'" onclick="openStudentEdit(this)">✏️ 수정</button></td>'
         +'</tr>';
     }).join('')+
     '</tbody></table></div>';
 }
 
-// 학생 수정 모달
+// ── 학생 정보 수정 모달 ──────────────────────────────────
+var _studentEditId='';
+function openStudentEdit(btn){
+  var data;
+  try{data=JSON.parse(decodeURIComponent(btn.getAttribute('data-student')));}catch(e){return;}
+  _studentEditId=data.id;
+  var modal=document.getElementById('student-edit-modal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='student-edit-modal';
+    modal.style.cssText='display:none;position:fixed;inset:0;z-index:4000;background:rgba(20,16,9,.55);align-items:center;justify-content:center;';
+    modal.innerHTML='<div style="background:linear-gradient(180deg,var(--surface),var(--card));border:2px solid var(--border);border-radius:14px;padding:24px;width:min(480px,94vw);box-shadow:6px 6px 0 rgba(0,0,0,.18);max-height:92vh;overflow-y:auto">'
+      +'<div style="font-family:\'VT323\',monospace;font-size:26px;color:#2450a6;margin-bottom:14px">✏️ 학생 정보 수정</div>'
+      +'<div id="student-edit-id-display" style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:monospace"></div>'
+      +'<div class="fgrid" style="margin-bottom:14px">'
+      +'<div class="fg"><label class="fl">이름 *</label><input type="text" id="se-name"></div>'
+      +'<div class="fg"><label class="fl">학기</label><input type="text" id="se-semester" placeholder="예: 26년봄"></div>'
+      +'<div class="fg"><label class="fl">학년</label><input type="text" id="se-grade" placeholder="예: 초등3"></div>'
+      +'<div class="fg"><label class="fl">반</label><input type="text" id="se-class" placeholder="예: [IS1]SP1/MWF/F"></div>'
+      +'<div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="se-contact"></div>'
+      +'<div class="fg"><label class="fl">담임 (비고)</label><input type="text" id="se-note" placeholder="예: Sonya이예지"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap">'
+      +'<button class="btn btn-g" onclick="closeStudentEdit()">취소</button>'
+      +'<button class="btn btn-p" onclick="saveStudentEdit()">저장</button>'
+      +'</div>'
+      +'</div>';
+    document.body.appendChild(modal);
+    modal.addEventListener('click',function(e){if(e.target===modal) closeStudentEdit();});
+  }
+  document.getElementById('student-edit-id-display').textContent='학생 ID: '+data.id;
+  document.getElementById('se-name').value=data.name||'';
+  document.getElementById('se-semester').value=data.semester||'';
+  document.getElementById('se-grade').value=data.grade||'';
+  document.getElementById('se-class').value=data.classNum||'';
+  document.getElementById('se-contact').value=data.contact||'';
+  document.getElementById('se-note').value=data.note||'';
+  modal.style.display='flex';
+  setTimeout(function(){document.getElementById('se-name').focus();},50);
+}
 function closeStudentEdit(){
-  var m=document.getElementById('student-edit-modal');
-  if(m) m.remove();
+  var modal=document.getElementById('student-edit-modal');
+  if(modal) modal.style.display='none';
+  _studentEditId='';
 }
-function openStudentEdit(studentId){
-  var s=students.find(function(x){return x['학생ID']===studentId;});
-  if(!s) return toast('학생 정보를 찾을 수 없습니다.',false);
-  // 기존 모달 제거
-  var old=document.getElementById('student-edit-modal');
-  if(old) old.remove();
-  var modal=document.createElement('div');
-  modal.id='student-edit-modal';
-  modal.style.cssText='position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:16px';
-  modal.innerHTML='<div style="background:var(--surface);border:2px solid var(--border);border-radius:14px;padding:24px;width:100%;max-width:480px;box-shadow:0 8px 32px rgba(0,0,0,.2)">'
-    +'<div style="font-family:VT323,monospace;font-size:22px;color:#2450a6;margin-bottom:16px">학생 정보 수정</div>'
-    +'<div class="fgrid">'
-    +'<div class="fg"><label class="fl">학생 ID</label><input type="text" id="edit-sid" value="'+escapeHtml(s['학생ID']||'')+'" readonly style="background:#f5f5f5;color:var(--muted)"></div>'
-    +'<div class="fg"><label class="fl">이름</label><input type="text" id="edit-name" value="'+escapeHtml(s['이름']||'')+'"></div>'
-    +'<div class="fg"><label class="fl">학기</label><input type="text" id="edit-semester" value="'+escapeHtml(s['학기']||'')+'" placeholder="예: 26년봄"></div>'
-    +'<div class="fg"><label class="fl">학년</label><input type="text" id="edit-grade" value="'+escapeHtml(s['학년']||'')+'"></div>'
-    +'<div class="fg"><label class="fl">반</label><input type="text" id="edit-class" value="'+escapeHtml(s['반']||'')+'"></div>'
-    +'<div class="fg"><label class="fl">학부모 연락처</label><input type="text" id="edit-contact" value="'+escapeHtml(s['학부모연락처']||'')+'"></div>'
-    +'<div class="fg"><label class="fl">담임 (비고)</label><input type="text" id="edit-note" value="'+escapeHtml(s['비고']||'')+'"></div>'
-    +'</div>'
-    +'<div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px">'
-    +'<button class="btn btn-g" onclick="closeStudentEdit()">취소</button>'
-    +'<button class="btn btn-p" data-sid="'+escapeHtml(s['학생ID'])+'" data-sem="'+escapeHtml(s['학기']||'')+'" onclick="saveStudentEdit(this.dataset.sid,this.dataset.sem)">저장</button>'
-    +'</div></div>';
-  document.body.appendChild(modal);
-  modal.addEventListener('click',function(e){if(e.target===modal) modal.remove();});
-}
-
-async function saveStudentEdit(studentId, semester){
-  var name=document.getElementById('edit-name').value.trim();
-  var newSemester=document.getElementById('edit-semester').value.trim();
-  var grade=document.getElementById('edit-grade').value.trim();
-  var classNum=document.getElementById('edit-class').value.trim();
-  var contact=document.getElementById('edit-contact').value.trim();
-  var note=document.getElementById('edit-note').value.trim();
+async function saveStudentEdit(){
+  if(!_studentEditId) return;
+  var name=document.getElementById('se-name').value.trim();
   if(!name) return toast('이름은 필수입니다.',false);
+  var body={
+    name:name,
+    semester:document.getElementById('se-semester').value.trim()||null,
+    grade:document.getElementById('se-grade').value.trim()||null,
+    class_name:document.getElementById('se-class').value.trim()||null,
+    contact:document.getElementById('se-contact').value.trim()||null,
+    note:document.getElementById('se-note').value.trim()||null
+  };
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-    var body={name:name,semester:newSemester||semester,grade:grade||null,class_name:classNum||null,contact:contact||null,note:note||null};
-    var res=await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify(body)});
+    var res=await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(_studentEditId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify(body)});
     if(!res.ok){var err=await res.text();toast('수정 실패: '+err,false);return;}
-    toast('수정 완료!',true);
-    document.getElementById('student-edit-modal').remove();
-    // 로컬 캐시 업데이트
-    var st=students.find(function(x){return x['학생ID']===studentId;});
-    if(st){st['이름']=name;st['학기']=newSemester||semester;st['학년']=grade;st['반']=classNum;st['학부모연락처']=contact;st['비고']=note;}
-    searchStudentList();
+    var st=students.find(function(s){return s['학생ID']===_studentEditId;});
+    if(st){
+      st['이름']=name;
+      if(body.semester!==null) st['학기']=body.semester;
+      if(body.grade!==null) st['학년']=body.grade;
+      if(body.class_name!==null) st['반']=body.class_name;
+      if(body.contact!==null) st['학부모연락처']=body.contact;
+      if(body.note!==null) st['비고']=body.note;
+    }
+    writeCache();
+    toast(name+' 정보가 수정됐어요!',true);
+    closeStudentEdit();
+    var listEl=document.getElementById('student-list');
+    var kw=(document.getElementById('student-search-input')||{}).value||'';
+    kw=kw.trim().toLowerCase();
+    var displayList=kw?students.filter(function(s){return (s['이름']||'').toLowerCase().includes(kw)||(s['학생ID']||'').toLowerCase().includes(kw);}):students;
+    renderStudentTable(listEl,displayList);
   }catch(e){toast('오류 발생',false);}
 }
 
+async function toggleStudentStatus(studentId, currentStatus, el){
+  var newStatus=currentStatus==='퇴원'?'재원':'퇴원';
+  var label=el.closest('tr').querySelector('td:nth-child(2)').textContent;
+  if(!confirm('['+label+'] 학생을 '+newStatus+' 처리할까요?')) return;
+  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+  try{
+    await fetch(SB_URL+'/students?student_id=eq.'+encodeURIComponent(studentId)+'&branch=eq.'+encodeURIComponent(currentBranch),{method:'PATCH',headers:h,body:JSON.stringify({status:newStatus,updated_at:new Date().toISOString()})});
+    el.textContent=newStatus;
+    el.className='badge '+(newStatus==='퇴원'?'b-red':'b-green')+' cursor:pointer;white-space:nowrap';
+    el.className='badge '+(newStatus==='퇴원'?'b-red':'b-green');
+    el.dataset.status=newStatus;
+    el.style.cursor='pointer';
+    var row=el.closest('tr');
+    row.style.opacity=newStatus==='퇴원'?'0.5':'';
+    var st=students.find(function(s){return s['학생ID']===studentId;});
+    if(st) st['상태']=newStatus;
+    toast(label+' → '+newStatus+' 처리됨',true);
+  }catch(e){toast('변경 실패',false);}
+}
 async function toggleDivision(studentId, currentDiv, el){
   var newDiv=currentDiv==='ACE'?'CHESS':'ACE';
   var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
@@ -2485,10 +3362,14 @@ function renderAllStock(data){
   var el=document.getElementById('allstock-list');
   if(!data.length){el.innerHTML='<div class="empty">데이터가 없습니다</div>';return;}
   // 내 분원 맨 앞, 나머지 가나다순
-  var orderedKeys=[currentBranch].concat(
-    BRANCH_KEYS.filter(function(k){return k!==currentBranch;})
-    .sort(function(a,b){return BRANCHES[a].name.localeCompare(BRANCHES[b].name,'ko');})
-  );
+  // 관리자(varon)/테스트(testjls)는 재고가 없으므로 컬럼에서 완전 제외
+  var _excludedKeys=['varon','testjls'];
+  var _baseKeys=BRANCH_KEYS.filter(function(k){return !_excludedKeys.includes(k);})
+    .sort(function(a,b){return BRANCHES[a].name.localeCompare(BRANCHES[b].name,'ko');});
+  // 일반 분원 로그인 시엔 내 분원을 맨 앞으로
+  var orderedKeys=_excludedKeys.includes(currentBranch)
+    ? _baseKeys
+    : [currentBranch].concat(_baseKeys.filter(function(k){return k!==currentBranch;}));
   var head='<tr><th>교재명</th>'+orderedKeys.map(function(k,i){
     var isMine=k===currentBranch;
     return '<th class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'" style="'+(isMine?'font-weight:800;':'')+'">'+BRANCHES[k].name+(isMine?' ★':'')+'</th>';
@@ -2555,14 +3436,79 @@ function doPreview(){
     '</tbody></table></div>';
   document.getElementById('preview-section').style.display='';document.getElementById('preview-section').scrollIntoView({behavior:'smooth'});
 }
+// 퇴원 확인 후 업로드 진입점
+var _withdrawCandidates=[]; // {student_id, name, class_name, semester}
+async function checkWithdrawAndUpload(){
+  if(!previewData.length){toast('미리보기를 먼저 확인하세요.',false);return;}
+  var semester=document.getElementById('upload-semester').value.trim();
+  if(!semester){toast('학기를 입력해야 업로드할 수 있어요.',false);return;}
+
+  // 현재 재원생 조회 (status가 퇴원이 아닌 학생)
+  var existing=await sbGet('students','select=student_id,name,class_name,semester,status&branch=eq.'+encodeURIComponent(currentBranch)+'&order=semester.desc');
+  // student_id 기준 중복 제거 - 가장 최근 학기 1건만 유지
+  var seenIds={};
+  var deduped=existing.filter(function(s){
+    if(seenIds[s.student_id]) return false;
+    seenIds[s.student_id]=true;
+    return true;
+  });
+  var activeStudents=deduped.filter(function(s){return s.status!=='퇴원';});
+  var newIds=previewData.map(function(r){return r.id;});
+
+  // 새 파일에 없는 재원생 = 퇴원 후보
+  _withdrawCandidates=activeStudents.filter(function(s){return !newIds.includes(s.student_id);});
+
+  if(_withdrawCandidates.length===0){
+    // 퇴원 후보 없으면 바로 업로드
+    doUpload();
+    return;
+  }
+
+  // 퇴원 확인 패널 표시
+  var listEl=document.getElementById('withdraw-list');
+  listEl.innerHTML=_withdrawCandidates.map(function(s,i){
+    return '<label style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:#fff;border:1px solid #e8d89a;border-radius:6px;cursor:pointer">'
+      +'<input type="checkbox" class="withdraw-chk" data-idx="'+i+'" style="width:16px;height:16px;cursor:pointer">'
+      +'<span style="font-weight:700;font-size:13px">'+escapeHtml(s.name)+'</span>'
+      +'<span class="mono" style="font-size:11px;color:var(--muted)">'+escapeHtml(s.student_id)+'</span>'
+      +'<span style="font-size:12px;color:var(--muted)">'+escapeHtml(s.class_name||'-')+' · '+escapeHtml(s.semester||'-')+'</span>'
+      +'</label>';
+  }).join('');
+  document.getElementById('withdraw-check-section').style.display='';
+  document.getElementById('withdraw-check-section').scrollIntoView({behavior:'smooth'});
+}
+
+function toggleAllWithdraw(checked){
+  document.querySelectorAll('.withdraw-chk').forEach(function(c){c.checked=checked;});
+}
+function cancelWithdrawCheck(){
+  document.getElementById('withdraw-check-section').style.display='none';
+  _withdrawCandidates=[];
+}
+
 async function doUpload(){
   if(!previewData.length){toast('미리보기를 먼저 확인하세요.',false);return;}
   var semester=document.getElementById('upload-semester').value.trim();
   if(!semester){toast('학기를 입력해야 업로드할 수 있어요.',false);return;}
   var rows=previewData.map(function(r){return {id:r.id,name:r.name,contact:r.contact,grade:r.grade,classNum:r.classNum,note:r.note};});
   try{
-    var res=await call('bulkAddStudents',{rows:rows,semester:semester});toast(res.msg,res.ok);
-    if(res.ok){var sb=await call('getStudents');students=sb.data||[];var semR=await call('getSemesters');semesters=semR.data||[];populateSelects();loadStudentList();document.getElementById('preview-section').style.display='none';previewData=[];}
+    // 체크된 퇴원 학생 처리
+    var withdrawIds=[];
+    document.querySelectorAll('.withdraw-chk:checked').forEach(function(c){
+      var idx=Number(c.getAttribute('data-idx'));
+      if(_withdrawCandidates[idx]) withdrawIds.push(_withdrawCandidates[idx].student_id);
+    });
+    var res=await call('bulkAddStudents',{rows:rows,semester:semester,withdrawIds:withdrawIds});
+    toast(res.msg,res.ok);
+    if(res.ok){
+      document.getElementById('withdraw-check-section').style.display='none';
+      _withdrawCandidates=[];
+      var sb=await call('getStudents');students=sb.data||[];
+      var semR=await call('getSemesters');semesters=semR.data||[];
+      populateSelects();loadStudentList();
+      document.getElementById('preview-section').style.display='none';
+      previewData=[];
+    }
   }catch(e){toast('업로드 실패',false);}
 }
 
@@ -2878,6 +3824,7 @@ async function loadFinanceSummary(){
 
     // sales_history 전체 조회
     var salesParams='select=barcode,book_name,type,total,unit_price,qty,purchase_price,student_id,student_name,semester,branch';
+    if(!isAdmin()) salesParams+='&branch=eq.'+encodeURIComponent(currentBranch);
     if(selectedSem) salesParams+='&semester=eq.'+encodeURIComponent(selectedSem);
     var sales=await sbGet('sales_history',salesParams);
     // books vendor 맵
@@ -2886,7 +3833,8 @@ async function loadFinanceSummary(){
     booksData.forEach(function(b){vendorMap[b.barcode]=b.vendor||'미등록';bookNameMap[b.barcode]=b.name||b.barcode;});
 
     // payments 조회
-    var pmtParams='select=paid_amount,branch,semester';
+    var pmtParams='select=paid_amount,branch,semester,student_id,student_name';
+    if(!isAdmin()) pmtParams+='&branch=eq.'+encodeURIComponent(currentBranch);
     if(selectedSem) pmtParams+='&semester=eq.'+encodeURIComponent(selectedSem);
     var pmts=await sbGet('payments',pmtParams);
 
@@ -2932,11 +3880,11 @@ async function loadFinanceSummary(){
       // 분원별 데이터 저장
       // 관리자용 - 분원별 미납자 목록도 계산
       var pmtByStudentAll={};
-      pmts.forEach(function(p){var k=(p.student_id||'')+'__'+(p.semester||'')+'__'+(p.branch||'');if(!pmtByStudentAll[k]) pmtByStudentAll[k]=0;pmtByStudentAll[k]+=Number(p.paid_amount||0);});
+      pmts.forEach(function(p){var k=((p.student_id&&p.student_id!=='null')?p.student_id:(p.student_name||''))+'__'+(p.branch||'');if(!pmtByStudentAll[k]) pmtByStudentAll[k]=0;pmtByStudentAll[k]+=Number(p.paid_amount||0);});
       branchList.forEach(function(br){
         var salesBySt={};
         sales.filter(function(r){return r.type==='출고'&&r.branch===br;}).forEach(function(r){
-          var k=(r.student_id||'')+'__'+(r.semester||'')+'__'+br;
+          var k=((r.student_id&&r.student_id!=='null')?r.student_id:(r.student_name||''))+'__'+br;
           if(!salesBySt[k]) salesBySt[k]={name:r.student_name,id:r.student_id,total:0};
           salesBySt[k].total+=Number(r.total||0);
         });
@@ -2959,13 +3907,13 @@ async function loadFinanceSummary(){
       var totalMisugeum=totalSales-totalPaid;
       var totalProfit=totalPaid-totalPurchase+totalReturn;
       var totalCard='<div class="scard" style="grid-column:1/-1;background:linear-gradient(180deg,#1a3a6e,#2d6cc0);color:#fff;border:2px solid #4a84ea">'
-        +'<div class="sl" style="color:#d6e4f7;letter-spacing:2px">📊 전체 분원 합산</div>'
-        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin-top:8px">'
-        +'<div><div style="font-size:11px;color:#d6e4f7">판매 총액</div><div style="font-size:18px;font-weight:900;color:#fff">'+totalSales.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">실제 입금</div><div style="font-size:18px;font-weight:900;color:#86d389">'+totalPaid.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">미수금</div><div style="font-size:18px;font-weight:900;color:#ea8c89">'+Math.max(0,totalMisugeum).toLocaleString()+'원 <span style="font-size:12px">('+totalUnpaid+'명)</span></div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">매입 총액</div><div style="font-size:18px;font-weight:900;color:#f6db86">'+totalPurchase.toLocaleString()+'원</div></div>'
-        +'<div><div style="font-size:11px;color:#d6e4f7">순이익 추정</div><div style="font-size:18px;font-weight:900;color:'+(totalProfit>=0?'#86d389':'#ea8c89')+'">'+totalProfit.toLocaleString()+'원</div></div>'
+        +'<div class="sl" style="color:#d6e4f7;letter-spacing:2px;margin-bottom:12px">📊 전체 분원 합산</div>'
+        +'<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:16px;margin-top:8px">'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">판매 총액</div><div style="font-size:20px;font-weight:900;color:#fff">'+totalSales.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">실제 입금</div><div style="font-size:20px;font-weight:900;color:#86d389">'+totalPaid.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">미수금</div><div style="font-size:20px;font-weight:900;color:#ea8c89">'+Math.max(0,totalMisugeum).toLocaleString()+'원</div><div style="font-size:12px;color:#ea8c89;margin-top:4px">미납 '+totalUnpaid+'명</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">매입 총액</div><div style="font-size:20px;font-weight:900;color:#f6db86">'+totalPurchase.toLocaleString()+'원</div></div>'
+        +'<div style="background:rgba(255,255,255,.08);border-radius:8px;padding:12px 14px"><div style="font-size:12px;color:#d6e4f7;margin-bottom:6px">순이익 추정</div><div style="font-size:20px;font-weight:900;color:'+(totalProfit>=0?'#86d389':'#ea8c89')+'">'+totalProfit.toLocaleString()+'원</div></div>'
         +'</div></div>';
 
       window._financeByBranch=byBranch;
@@ -2992,12 +3940,16 @@ async function loadFinanceSummary(){
       var profit=b.paidTotal-b.purchaseTotal+b.returnTotal;
       var unpaidCount=Object.keys(b.unpaidStudents).length;
 
-      // 미납자 계산 (payments 기준 실제 미납)
+      // 미납자 계산: student_id 기준으로 전체 합산 (학기 구분 없이)
       var pmtByStudent={};
-      pmts.forEach(function(p){var k=(p.student_id||'')+'__'+(p.semester||'');if(!pmtByStudent[k]) pmtByStudent[k]=0;pmtByStudent[k]+=Number(p.paid_amount||0);});
+      pmts.forEach(function(p){
+        var k=(p.student_id&&p.student_id!=='null')?p.student_id:(p.student_name||'');
+        if(!pmtByStudent[k]) pmtByStudent[k]=0;
+        pmtByStudent[k]+=Number(p.paid_amount||0);
+      });
       var salesByStudent={};
       sales.filter(function(r){return r.type==='출고'&&(r.branch===currentBranch);}).forEach(function(r){
-        var k=(r.student_id||'')+'__'+(r.semester||'');
+        var k=(r.student_id&&r.student_id!=='null')?r.student_id:(r.student_name||'');
         if(!salesByStudent[k]) salesByStudent[k]={name:r.student_name,id:r.student_id,total:0};
         salesByStudent[k].total+=Number(r.total||0);
       });
@@ -3078,7 +4030,7 @@ function showBranchDetail(br){
       +'<div class="sl">실제 입금액</div><div class="sn" style="color:var(--accent2);font-size:24px">'+b.paidTotal.toLocaleString()+'</div><div class="ss">원</div>'
     +'</div>'
     +'<div class="scard" style="cursor:pointer" data-br="'+br+'" data-type="unpaid" onclick="showBranchSubDetail(this.dataset.br,this.dataset.type)">'
-      +'<div class="sl">미수금 🔍</div><div class="sn" style="color:var(--warn);font-size:24px">'+Math.max(0,unpaid).toLocaleString()+'</div><div class="ss">원</div>'
+      +'<div class="sl">미수금 🔍</div><div class="sn" style="color:var(--warn);font-size:24px">'+Math.max(0,unpaid).toLocaleString()+'</div><div class="ss">원 / '+(b.unpaidList?b.unpaidList.length:0)+'명 미납</div>'
     +'</div>'
     +'<div class="scard" style="cursor:pointer" data-br="'+br+'" data-type="purchase" onclick="showBranchSubDetail(this.dataset.br,this.dataset.type)">'
       +'<div class="sl">매입 총액 🔍</div><div class="sn" style="color:#9e7400;font-size:24px">'+b.purchaseTotal.toLocaleString()+'</div><div class="ss">원</div>'
@@ -3102,14 +4054,20 @@ function showBranchSubDetail(br,type){
   if(!el) return;
   var html='';
   if(type==='sales'){
-    var items=Object.entries(b.salesDetail||{}).sort(function(a,b){return b[1]-a[1];});
-    html='<div class="twrap"><table><thead><tr><th>교재명</th><th>판매 권수</th></tr></thead><tbody>'
-      +items.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+    var items=Object.entries(b.salesDetail||{}).sort(function(a,b){return (b[1].qty||0)-(a[1].qty||0);});
+    html='<div class="twrap"><table><thead><tr><th>교재명</th><th>업체</th><th>판매 권수</th></tr></thead><tbody>'
+      +items.map(function(e){
+        var v=typeof e[1]==='object'?e[1]:{qty:e[1],vendor:'-'};
+        return '<tr><td>'+escapeHtml(e[0])+'</td><td style="font-size:12px;color:var(--muted)">'+escapeHtml(v.vendor||'-')+'</td><td class="mono"><b>'+v.qty+'권</b></td></tr>';
+      }).join('')
       +'</tbody></table></div>';
   } else if(type==='purchase'){
-    var items=Object.entries(b.purchaseDetail||{}).sort(function(a,b){return b[1]-a[1];});
+    var items=Object.entries(b.purchaseDetail||{}).sort(function(a,b){return (b[1].amount||0)-(a[1].amount||0);});
     html='<div class="twrap"><table><thead><tr><th>교재명</th><th>매입 권수</th></tr></thead><tbody>'
-      +items.map(function(e){return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+e[1]+'권</b></td></tr>';}).join('')
+      +items.map(function(e){
+        var v=typeof e[1]==='object'?e[1]:{qty:e[1],amount:0};
+        return '<tr><td>'+escapeHtml(e[0])+'</td><td class="mono"><b>'+v.qty+'권</b></td></tr>';
+      }).join('')
       +'</tbody></table></div>';
   } else if(type==='unpaid'){
     // 미납 학생 - 해당 분원 데이터
@@ -3221,11 +4179,11 @@ async function _uploadBankRows(rows,filename){
   if(!rows.length){statusEl.innerHTML='<div class="empty">데이터가 없습니다.</div>';return;}
   // 컬럼: 거래일시(0) 적요(1) 의뢰인/수취인(2) 내통장표시내용(3) 출금금액(4) 입금금액(5) 잔액(6) 취급점(7) 구분(8)
   var records=rows.map(function(r){
-    var dt=String(r[0]||'').trim();
+    var dt=String(r[0]||'').trim().replace(/\s+/g,' '); // 줄바꿈 정규화
     var counterpart=String(r[2]||'').trim();
     var withdraw=Number(String(r[4]||'0').replace(/,/g,''))||0;
     var deposit=Number(String(r[5]||'0').replace(/,/g,''))||0;
-    if(!dt) return null;
+    if(!dt||dt==='거래일시') return null;
     return {
       branch:currentBranch,
       tx_datetime:dt,
@@ -3241,31 +4199,59 @@ async function _uploadBankRows(rows,filename){
   }).filter(Boolean);
 
   if(!records.length){statusEl.innerHTML='<div class="empty">유효한 행이 없습니다.</div>';return;}
-  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>'+records.length+'건 저장 중...</div>';
+  statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>중복 확인 중...</div>';
 
-  // 50개씩 나눠서 upsert (중복은 ON CONFLICT DO NOTHING)
-  var saved=0,skipped=0;
-  var CHUNK=50;
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'resolution=ignore-duplicates,return=representation'});
-  for(var i=0;i<records.length;i+=CHUNK){
-    var chunk=records.slice(i,i+CHUNK);
-    try{
-      var res=await fetch(SB_URL+'/bank_transactions',{method:'POST',headers:h,body:JSON.stringify(chunk)});
-      if(res.ok){
-        var inserted=await res.json();
-        saved+=Array.isArray(inserted)?inserted.length:0;
-      }
-    }catch(e){}
+  // DB에서 기존 데이터 조회 후 JS에서 중복 제거 → 신규만 INSERT
+  try{
+    var existing=await sbGet('bank_transactions',
+      'select=tx_datetime,counterpart,deposit,withdraw&branch=eq.'+encodeURIComponent(currentBranch)+'&limit=5000');
+    // 기존 데이터 key set 생성 (줄바꿈 정규화 포함)
+    var existingKeys=new Set(existing.map(function(e){
+      return (String(e.tx_datetime||'').replace(/\s+/g,' ').trim())
+        +'|'+(e.counterpart||'')
+        +'|'+Number(e.deposit||0)
+        +'|'+Number(e.withdraw||0);
+    }));
+
+    // 신규 행만 필터
+    var toInsert=records.filter(function(r){
+      var k=(r.tx_datetime||'')+'|'+(r.counterpart||'')+'|'+r.deposit+'|'+r.withdraw;
+      return !existingKeys.has(k);
+    });
+    var skipped=records.length-toInsert.length;
+
+    if(!toInsert.length){
+      statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#fff8e8;border:1px solid var(--yellow);font-size:13px">'
+        +'⚠️ 신규 내역 없음 · <b>'+skipped+'건 모두 중복</b></div>';
+      return;
+    }
+
+    statusEl.innerHTML='<div class="loading"><div class="spinner"></div><br>신규 '+toInsert.length+'건 저장 중...</div>';
+
+    // 50개씩 나눠서 INSERT
+    var saved=0;
+    var CHUNK=50;
+    var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+    for(var i=0;i<toInsert.length;i+=CHUNK){
+      var chunk=toInsert.slice(i,i+CHUNK);
+      try{
+        var res=await fetch(SB_URL+'/bank_transactions',{method:'POST',headers:h,body:JSON.stringify(chunk)});
+        if(res.ok) saved+=chunk.length;
+        else{var err=await res.text();console.error('bank insert err:',err);}
+      }catch(e){console.error(e);}
+    }
+
+    statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#e8f8f0;border:1px solid var(--accent2);font-size:13px">'
+      +'✅ 업로드 완료 · <b>'+saved+'건 새로 저장</b>'+(skipped?' · '+skipped+'건 중복 건너뜀':'')
+      +'</div>';
+    document.getElementById('bank-drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div>'
+      +'<div style="font-size:14px;font-weight:700">'+filename+'</div>'
+      +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'+records.length+'행 처리 · 클릭하여 파일 변경</div>'
+      +'<input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">';
+  }catch(e){
+    console.error(e);
+    statusEl.innerHTML='<div class="empty">업로드 실패: '+e.message+'</div>';
   }
-  skipped=records.length-saved;
-  statusEl.innerHTML='<div style="padding:12px;border-radius:8px;background:#e8f8f0;border:1px solid var(--accent2);font-size:13px">'
-    +'✅ 업로드 완료 · <b>'+saved+'건 새로 저장</b>'+(skipped?' · '+skipped+'건 중복 건너뜀':'')
-    +'</div>';
-  // 드롭존 업데이트
-  document.getElementById('bank-drop-zone').innerHTML='<div style="font-size:22px;margin-bottom:6px">✅</div>'
-    +'<div style="font-size:14px;font-weight:700">'+filename+'</div>'
-    +'<div style="font-size:12px;color:var(--muted);margin-top:4px">'+records.length+'행 처리 · 클릭하여 파일 변경</div>'
-    +'<input type="file" id="bank-file-input" accept=".xlsx,.xls" style="display:none" onchange="handleBankUpload(this.files[0])">';
 }
 
 async function loadBankHistory(){
@@ -3279,10 +4265,18 @@ async function loadBankHistory(){
     var params='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=tx_datetime.desc&limit=500';
     if(from) params+='&tx_datetime=gte.'+encodeURIComponent(from.replace(/-/g,'.'));
     if(to) params+='&tx_datetime=lte.'+encodeURIComponent(to.replace(/-/g,'.')+'Z');
-    if(search) params+='&counterpart=ilike.'+encodeURIComponent('%'+search+'%');
     if(typeFilter==='deposit') params+='&deposit=gt.0';
     else if(typeFilter==='withdraw') params+='&withdraw=gt.0';
     var data=await sbGet('bank_transactions',params);
+    // 검색어: 입금자(counterpart) + 적요(summary) + 내용(memo) 통합 검색
+    if(search){
+      var kw=search.toLowerCase();
+      data=data.filter(function(r){
+        return (r.counterpart||'').toLowerCase().includes(kw)
+          ||(r.summary||'').toLowerCase().includes(kw)
+          ||(r.memo||'').toLowerCase().includes(kw);
+      });
+    }
     if(!data.length){el.innerHTML='<div class="empty">조회 결과가 없습니다</div>';return;}
     var totalDeposit=data.reduce(function(s,r){return s+Number(r.deposit||0);},0);
     var totalWithdraw=data.reduce(function(s,r){return s+Number(r.withdraw||0);},0);
@@ -3290,18 +4284,19 @@ async function loadBankHistory(){
     document.getElementById('bank-result-summary').textContent=
       '입금 합계: '+totalDeposit.toLocaleString()+'원 · 출금 합계: '+totalWithdraw.toLocaleString()+'원';
     el.innerHTML='<div class="twrap"><table><thead><tr>'
-      +'<th>거래일시</th><th>적요</th><th>의뢰인/수취인</th><th>내용</th><th>출금</th><th>입금</th><th>잔액</th>'
+      +'<th>적요</th><th>의뢰인/수취인</th><th>내용</th><th>거래일시</th><th>입금</th><th>출금</th><th>잔액</th>'
       +'</tr></thead><tbody>'
-      +data.map(function(r){
+      +data.map(function(r,idx){
         var isDeposit=Number(r.deposit||0)>0;
         var isWithdraw=Number(r.withdraw||0)>0;
-        return '<tr style="'+(isDeposit?'background:#f0fff8':'')+(isWithdraw?'background:#fff5f5':'')+'">'
-          +'<td class="mono" style="font-size:11px;white-space:nowrap">'+escapeHtml(r.tx_datetime||'')+'</td>'
+        var rowBg=idx%2===0?'background:#f9fbfd':'background:#ffffff';
+        return '<tr style="'+rowBg+'">'
           +'<td style="font-size:12px">'+escapeHtml(r.summary||'')+'</td>'
-          +'<td><b>'+escapeHtml(r.counterpart||'')+'</b></td>'
+          +'<td><b style="font-size:14px;font-weight:400;letter-spacing:-.3px">'+escapeHtml(r.counterpart||'')+'</b></td>'
           +'<td style="font-size:12px;color:var(--muted)">'+escapeHtml(r.memo||'')+'</td>'
-          +'<td class="mono" style="color:var(--warn)">'+(isWithdraw?Number(r.withdraw).toLocaleString()+'원':'')+'</td>'
-          +'<td class="mono" style="color:var(--accent2);font-weight:700">'+(isDeposit?Number(r.deposit).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="font-size:13px;white-space:nowrap;color:var(--muted)">'+escapeHtml(r.tx_datetime||'')+'</td>'
+          +'<td class="mono" style="font-size:14px;color:var(--accent2);font-weight:400;letter-spacing:-.3px">'+(isDeposit?Number(r.deposit).toLocaleString()+'원':'')+'</td>'
+          +'<td class="mono" style="font-size:14px;color:var(--warn);font-weight:400;letter-spacing:-.3px">'+(isWithdraw?Number(r.withdraw).toLocaleString()+'원':'')+'</td>'
           +'<td class="mono" style="font-size:11px;color:var(--muted)">'+Number(r.balance||0).toLocaleString()+'</td>'
           +'</tr>';
       }).join('')
@@ -3317,6 +4312,28 @@ async function loadBankHistory(){
   dz.addEventListener('drop',function(e){e.preventDefault();dz.style.borderColor='var(--border-soft)';var f=e.dataTransfer.files[0];if(f) handleBankUpload(f);});
 })();
 
+// 전역 단축키: / → 학생 검색창 포커스 (납입내역 탭)
+document.addEventListener('keydown',function(e){
+  // 입력 중인 곳에서는 무시
+  var tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select') return;
+  if(e.key==='/'){
+    e.preventDefault();
+    // 납입내역 탭이 아니면 먼저 이동
+    var unpaidPage=document.getElementById('page-unpaid');
+    if(!unpaidPage||!unpaidPage.classList.contains('active')){
+      var unpaidTab=document.querySelector('.tab[onclick*="unpaid"]');
+      if(unpaidTab) unpaidTab.click();
+      setTimeout(function(){
+        var el=document.getElementById('unpaid-name-search');
+        if(el){el.focus();el.select();}
+      },200);
+    } else {
+      var el=document.getElementById('unpaid-name-search');
+      if(el){el.focus();el.select();}
+    }
+  }
+});
 window.addEventListener('load',init);
 </script>
 </body>
