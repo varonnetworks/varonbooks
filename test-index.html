@@ -178,6 +178,12 @@ td{padding:10px 13px;vertical-align:middle}
 }
 
 @media (max-width:768px){header{padding:0 14px;height:62px}nav{padding:6px 8px;gap:5px}main{padding:14px}.card{padding:16px}.fgrid{grid-template-columns:1fr}.shead{align-items:flex-start}.bulk-footer-row{flex-direction:column;align-items:stretch}.bulk-action-row{width:100%}.bulk-action-row .btn{flex:1}.bulk-cam-btn{width:100%}.tab{min-width:88px;padding:8px 10px;font-size:11px}}
+
+#we-grid .we-cell{padding:6px 2px;text-align:center;font-size:9px;cursor:pointer;background:#fff;color:#7b8798;transition:background .1s;min-height:28px;display:flex;align-items:center;justify-content:center;}
+#we-grid .we-cell:hover{background:#e8f0fb;}
+#we-grid .we-cell.we-start{background:#1f62d0;color:#fff;font-weight:700;}
+#we-grid .we-cell.we-skip{background:#e0e4ea;color:#aaa;}
+#we-grid .we-cell.we-fill{background:rgba(31,98,208,.15);color:#1f62d0;}
 </style>
 </head>
 <body>
@@ -186,7 +192,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 4.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 5.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -197,7 +203,7 @@ td{padding:10px 13px;vertical-align:middle}
 <header>
   <div class="logo">
     <div class="logo-mark" style="padding:0;overflow:hidden"><img src="data:image/png;base64,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" style="width:34px;height:34px;object-fit:cover;display:block;border-radius:6px"></div>
-    <span style="color:#ffffff;font-weight:700">정상어학원 교재 관리 4.0</span>
+    <span style="color:#ffffff;font-weight:700">정상어학원 교재 관리 5.0</span>
 
   </div>
   <div class="hright">
@@ -587,8 +593,7 @@ td{padding:10px 13px;vertical-align:middle}
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" onkeydown="if(event.key==='Enter') loadBarcodeHistory()">
       <button class="btn btn-p" onclick="loadBarcodeHistory()">검색</button>
-      <button class="btn btn-y" id="bc-history-excel-btn" onclick="downloadHistoryExcel()" style="display:none">엑셀 저장</button>
-      <button class="btn btn-s" id="bc-history-print-btn" onclick="printSelectedHistory()" style="display:none">선택 출력</button>
+      <button class="btn btn-p" id="bc-history-word-btn" onclick="openWordExportModal()" style="display:none">📄 Word 저장</button>
     </div>
     <div id="bc-history-list"><div class="empty">바코드를 생성하면 여기에 이력이 쌓여요.</div></div>
   </div>
@@ -873,6 +878,36 @@ td{padding:10px 13px;vertical-align:middle}
   </div>
 </div>
 
+
+<!-- Word 저장 모달 -->
+<div id="word-export-modal" style="display:none;position:fixed;inset:0;z-index:5000;background:rgba(0,0,0,.5);align-items:center;justify-content:center;">
+  <div style="background:#f2f4f8;border:2px solid #7b8798;border-radius:16px;padding:28px;width:520px;max-width:95vw;box-shadow:6px 6px 0 rgba(0,0,0,.18);">
+    <div style="font-family:'VT323',monospace;font-size:26px;color:#2450a6;margin-bottom:4px;">📄 Word 파일 저장</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:16px;">이미 사용한 라벨지라면 빈 칸부터 시작할 위치를 클릭하세요.</div>
+
+    <!-- 라벨 그리드 (4열×10행) -->
+    <div style="overflow-x:auto;margin-bottom:10px;">
+      <div id="we-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2px;background:#d0d7e3;border:2px solid #7b8798;border-radius:6px;overflow:hidden;"></div>
+    </div>
+
+    <!-- 범례 -->
+    <div style="display:flex;gap:14px;font-size:11px;margin-bottom:10px;flex-wrap:wrap;">
+      <span><span style="display:inline-block;width:12px;height:12px;background:#1f62d0;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>시작 위치</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:#e0e4ea;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>건너뜀</span>
+      <span><span style="display:inline-block;width:12px;height:12px;background:rgba(31,98,208,.18);border:1px solid #a0b8e0;border-radius:2px;vertical-align:middle;margin-right:4px;"></span>라벨 출력</span>
+    </div>
+
+    <div style="font-size:13px;margin-bottom:14px;">
+      시작: <b id="we-start-text">1행 1열 (1번칸부터)</b> &nbsp;·&nbsp; <span id="we-info" style="color:var(--muted)"></span>
+      <button class="btn btn-g btn-sm" onclick="_weStartIdx=0;renderWordModal();" style="margin-left:10px;">처음부터</button>
+    </div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-g" onclick="closeWordModal()">취소</button>
+      <button class="btn btn-p" onclick="doWordExport()">📄 Word 다운로드</button>
+    </div>
+  </div>
+</div>
 </main>
 
 <div id="cam-modal">
@@ -2930,7 +2965,7 @@ var _checklistChecked={}; // barcode → true/false
 function normalizeTeacherBookName(name){
   return (name||'')
     .replace(/^\[교사용\]\s*/,'')  // 앞 [교사용] 제거
-    .replace(/\s*\d+번\s*$/,'')    // 뒤 01번/02번 등 제거 (공백 없어도 처리)
+    .replace(/\s+\d+번\s*$/,'')    // 뒤 01번/02번 등 제거
     .trim();
 }
 
@@ -3023,21 +3058,16 @@ function renderChecklist(){
 
 function checklistMark(barcode){
   if(!barcode||!_checklistSelectedLevel) return;
-  // 바코드 정규화 후 비교 (공백·특수문자 차이 무시)
-  var normBarcode=normalizeBarcode(barcode);
-  var book=(books||[]).find(function(b){return normalizeBarcode(b['바코드'])===normBarcode;});
+  var book=(books||[]).find(function(b){return b['바코드']===barcode;});
   if(!book) return;
-  // 교재명 정규화: [교사용] 접두사, 01번 등 제거
+  // 정규화된 교재명으로 체크리스트 항목 매칭 ([교사용], 01번 등 제거)
   var normalizedName=normalizeTeacherBookName(book['교재명']);
+  // 현재 선택된 레벨의 체크리스트 목록에서 정규화 교재명과 정확히 일치하는 것만 체크
   var checklistBooks=(books||[]).filter(function(b){
     if(b['비고']==='JLS교사용') return false;
     return (b['레벨']||'').split(',').some(function(l){return l.trim()===_checklistSelectedLevel;});
   });
-  // 정확히 일치 → 없으면 포함 관계로 fallback
   var matched=checklistBooks.find(function(b){return b['교재명']===normalizedName;});
-  if(!matched) matched=checklistBooks.find(function(b){
-    return normalizedName.includes(b['교재명'])||b['교재명'].includes(normalizedName);
-  });
   if(!matched) return;
   _checklistChecked[matched['교재명']]=true;
   renderChecklist();
@@ -3535,8 +3565,7 @@ async function loadBarcodeHistory(){
   if(!kw){
     // 검색어 없으면 안내만
     el.innerHTML='<div class="empty" style="padding:20px">교재명 또는 코드를 검색하면 결과가 표시됩니다.<br><button class="btn btn-g btn-sm" style="margin-top:10px" onclick="loadAllBarcodeHistory()">전체 목록 보기</button></div>';
-    document.getElementById('bc-history-print-btn').style.display='none';
-    document.getElementById('bc-history-excel-btn').style.display='none';
+    document.getElementById('bc-history-word-btn').style.display='none';
     return;
   }
   el.innerHTML='<div class="loading"><div class="spinner"></div></div>';
@@ -3560,9 +3589,8 @@ async function loadAllBarcodeHistory(){
 function renderBarcodeHistory(){
   var el=document.getElementById('bc-history-list');
   var data=_bcHistoryCache;
-  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-print-btn').style.display='none';document.getElementById('bc-history-excel-btn').style.display='none';return;}
-  document.getElementById('bc-history-print-btn').style.display='';
-  document.getElementById('bc-history-excel-btn').style.display='';
+  if(!data.length){el.innerHTML='<div class="empty">이력이 없습니다.</div>';document.getElementById('bc-history-word-btn').style.display='none';return;}
+  document.getElementById('bc-history-word-btn').style.display='';
   el.innerHTML='<div class="twrap"><table><thead><tr><th><input type="checkbox" id="bc-hist-all" onchange="toggleAllHistory(this.checked)"></th><th>교재명</th><th>바코드</th><th>생성일시</th><th>삭제</th></tr></thead><tbody>'+
     data.map(function(r){
       var dt=(r.created_at||'').replace('T',' ').slice(0,16);
@@ -3578,76 +3606,339 @@ function toggleAllHistory(checked){
   document.querySelectorAll('.bc-hist-chk').forEach(function(c){c.checked=checked;});
 }
 function downloadHistoryExcel(){
-  var kw=(document.getElementById('bc-history-search')||{}).value||'';
-  kw=kw.trim().toLowerCase();
-  var data=_bcHistoryCache.filter(function(r){
-    return !kw||r.label.toLowerCase().includes(kw)||r.code.toLowerCase().includes(kw);
-  });
-  if(!data.length) return toast('저장할 이력이 없습니다.',false);
-  var rows=[['교재명','바코드','생성일시']];
-  data.forEach(function(r){
-    var dt=(r.created_at||'').replace('T',' ').slice(0,16);
-    rows.push([r.label,r.code,dt]);
-  });
-  function doHistXlsx(){
-    var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:30},{wch:20},{wch:18}];
-    var wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'바코드이력');
-    XLSX.writeFile(wb,'바코드이력_'+new Date().toISOString().slice(0,10)+'.xlsx');
-    toast('엑셀 파일로 저장됐어요!',true);
-  }
-  if(window.XLSX){doHistXlsx();}
-  else{var sc=document.createElement('script');sc.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';sc.onload=doHistXlsx;document.head.appendChild(sc);}
+  // 엑셀 저장 기능 제거됨 (Word 저장으로 대체)
 }
-function renderBarcodeGrid(){
-  var grid=document.getElementById('barcode-grid');var result=document.getElementById('barcode-result');
-  if(!generatedBarcodes.length){result.style.display='none';return;}
-  result.style.display='';document.getElementById('barcode-count').textContent=generatedBarcodes.length+'개';
-  grid.innerHTML=generatedBarcodes.map(function(b,idx){return '<div style="background:linear-gradient(180deg,var(--surface),var(--card));border:2px solid '+(b.selected?'var(--accent)':'var(--border-soft)')+';border-radius:12px;padding:14px;cursor:pointer;text-align:center;box-shadow:var(--shadow)" onclick="toggleBarcode('+idx+')"><svg id="bc-svg-'+idx+'"></svg><div style="font-size:11px;color:var(--muted);margin-top:6px;word-break:break-all">'+b.label+'</div><div style="font-size:10px;color:var(--accent);font-family:monospace;margin-top:2px">'+b.code+'</div><div style="font-size:10px;margin-top:6px;color:'+(b.selected?'var(--accent2)':'var(--muted)')+'">'+(b.selected?'선택됨':'클릭하여 선택')+'</div></div>';}).join('');
-  generatedBarcodes.forEach(function(b,idx){try{JsBarcode('#bc-svg-'+idx,b.code,{format:'CODE128',width:2,height:50,displayValue:true,fontSize:12,margin:4,background:'transparent',lineColor:'#2d2415'});}catch(e){}});
-}
-function toggleBarcode(idx){generatedBarcodes[idx].selected=!generatedBarcodes[idx].selected;renderBarcodeGrid();}
-function clearBarcodes(){if(!confirm('생성된 바코드를 모두 지울까요?')) return;generatedBarcodes=[];renderBarcodeGrid();}
-async function deleteBarcodeHistory(id){
-  if(!confirm('이 바코드 이력을 삭제할까요?')) return;
-  var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-  await fetch(SB_URL+'/barcode_history?id=eq.'+id,{method:'DELETE',headers:h});
-  loadBarcodeHistory();
-}
-// 공통 출력 함수 - 애니라벨 V3410 (47x26.9mm, 4열x10행)
-function printLabelWindow(items){  if(!items.length) return toast('출력할 바코드를 선택하세요.',false);
-  var labelHTML=items.map(function(b){
-    return '<div class="label"><div class="lname">'+b.label+'</div><svg class="lsvg" id="print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_')+'"></svg><div class="lcode">'+b.code+'</div></div>';
-  }).join('');
-  var win=window.open('','_blank');
-  var style='body{margin:0;padding:0;font-family:sans-serif}'
-    +'.grid{display:grid;grid-template-columns:repeat(4,47mm);grid-auto-rows:26.9mm;gap:0;margin:13mm 9mm}'
-    +'.label{width:47mm;height:26.9mm;box-sizing:border-box;padding:1mm 2mm;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden}'
-    +'.lname{font-size:5.5pt;color:#333;margin-bottom:0.5mm;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;max-width:100%;line-height:1.1}'
-    +'.lsvg{max-width:43mm;height:13mm}'
-    +'.lcode{font-size:5.5pt;color:#444;font-family:monospace;margin-top:0.3mm;letter-spacing:0}'
-    +'@media print{body{margin:0}@page{size:A4;margin:0}}';
-  var jscodes=items.map(function(b){
-    var id='print-'+b.code.replace(/[^a-zA-Z0-9]/g,'_');
-    return 'try{JsBarcode("#'+id+'","'+b.code+'",{format:"CODE128",width:1.2,height:36,displayValue:false,margin:1,background:"transparent"});}catch(e){}';
-  }).join('');
-  win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><title>바코드 출력 - V3410</title><style>'+style+'</style>'
-    +'<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.5/JsBarcode.all.min.js"><\/script></head>'
-    +'<body><div class="grid">'+labelHTML+'</div>'
-    +'<script>window.onload=function(){'+jscodes+'setTimeout(function(){window.print();},800);};<\/script></body></html>');
-  win.document.close();
-}
-function printSelectedHistory(){
-  var selected=[];
+
+// ── Word 저장 모달 ──
+var _wordExportItems=[];
+function openWordExportModal(){
+  _wordExportItems=[];
   document.querySelectorAll('.bc-hist-chk:checked').forEach(function(c){
-    selected.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
+    _wordExportItems.push({code:c.getAttribute('data-code'),label:c.getAttribute('data-label')});
   });
-  printLabelWindow(selected);
+  if(!_wordExportItems.length) return toast('먼저 교재를 선택해주세요.',false);
+  var modal=document.getElementById('word-export-modal');
+  if(modal){
+    _weStartIdx=0;
+    renderWordModal();
+    modal.style.display='flex';
+  }
+}
+var _weStartIdx=0;
+function renderWordModal(){
+  var grid=document.getElementById('we-grid');
+  if(!grid) return;
+  var n=_wordExportItems.length;
+  var html='';
+  for(var r=0;r<10;r++){
+    for(var c=0;c<4;c++){
+      var idx=r*4+c;
+      var cls='we-cell';
+      var label='';
+      if(idx===_weStartIdx){cls+=' we-start';label='▶시작';}
+      else if(idx<_weStartIdx){cls+=' we-skip';label='';}
+      else if(idx<_weStartIdx+n){cls+=' we-fill';label='';}
+      html+='<div class="'+cls+'" data-idx="'+idx+'" onclick="setWeStart('+idx+')">'+label+'</div>';
+    }
+  }
+  grid.innerHTML=html;
+  var row=Math.floor(_weStartIdx/4)+1;
+  var col=(_weStartIdx%4)+1;
+  document.getElementById('we-start-text').textContent=row+'행 '+col+'열 ('+(_weStartIdx+1)+'번칸부터)';
+  var pages=Math.ceil((_weStartIdx+n)/40);
+  document.getElementById('we-info').textContent=_wordExportItems.length+'개 선택 · 약 '+pages+'페이지';
+}
+function setWeStart(idx){_weStartIdx=idx;renderWordModal();}
+function closeWordModal(){
+  var modal=document.getElementById('word-export-modal');
+  if(modal) modal.style.display='none';
+}
+async function doWordExport(){
+  if(!_wordExportItems.length) return;
+  toast('Word 파일 생성 중...',true);
+  try{
+    await buildAndDownloadDocx(_wordExportItems, _weStartIdx);
+    closeWordModal();
+    toast('✅ Word 파일 다운로드 완료!',true);
+  }catch(e){
+    console.error(e);
+    toast('Word 생성 실패: '+e.message,false);
+  }
+}
+
+// ── docx 생성 (PizZip + docxtemplater 없이 순수 XML) ──
+async function buildAndDownloadDocx(items, startIdx){
+  // JSZip 로드
+  if(!window.JSZip){
+    await new Promise(function(resolve,reject){
+      var s=document.createElement('script');
+      s.src='https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+      s.onload=resolve; s.onerror=reject;
+      document.head.appendChild(s);
+    });
+  }
+
+  // 슬롯 배열 구성 (null = 빈칸)
+  var slots=[];
+  for(var i=0;i<startIdx;i++) slots.push(null);
+  items.forEach(function(it){slots.push(it);});
+  while(slots.length%40!==0) slots.push(null);
+
+  var totalPages=slots.length/40;
+
+  // mm → EMU 변환 (1mm = 36000 EMU)
+  var cellW=47*36000;   // 1692000
+  var cellH=26.9*36000; // 968400
+  var labelW=43*36000;  // 1548000  (바코드 SVG 너비)
+  var labelH=13*36000;  // 468000   (바코드 SVG 높이)
+
+  // 페이지 XML 생성
+  var sectionsXml='';
+  for(var p=0;p<totalPages;p++){
+    var pageSlots=slots.slice(p*40,(p+1)*40);
+    // 10행 × 4열 표 생성
+    var tableRows='';
+    for(var r=0;r<10;r++){
+      var cells='';
+      for(var c=0;c<4;c++){
+        var slot=pageSlots[r*4+c];
+        var cellContent='';
+        if(slot){
+          // 바코드 SVG → base64
+          var svgB64=makeSvgBase64(slot.code);
+          var nameText=escapeXml(slot.label);
+          var codeText=escapeXml(slot.code);
+          cellContent=
+            '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr>'+
+            '<w:r><w:rPr><w:sz w:val="8"/><w:szCs w:val="8"/></w:rPr><w:t>'+nameText+'</w:t></w:r></w:p>'+
+            '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr>'+
+            '<w:r><w:rPr></w:rPr>'+
+            '<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'+
+            '<wp:extent cx="'+labelW+'" cy="'+labelH+'"/>'+
+            '<wp:effectExtent l="0" t="0" r="0" b="0"/>'+
+            '<wp:docPr id="'+(p*40+r*4+c+1)+'" name="bc'+(p*40+r*4+c)+'" descr="barcode"/>'+
+            '<wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr>'+
+            '<a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">'+
+            '<a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">'+
+            '<pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">'+
+            '<pic:nvPicPr><pic:cNvPr id="0" name="bc"/><pic:cNvPicPr/></pic:nvPicPr>'+
+            '<pic:blipFill><a:blip r:embed="rId'+(100+p*40+r*4+c)+'"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill>'+
+            '<pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="'+labelW+'" cy="'+labelH+'"/></a:xfrm>'+
+            '<a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr>'+
+            '</pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing>'+
+            '</w:r></w:p>'+
+            '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr>'+
+            '<w:r><w:rPr><w:sz w:val="8"/><w:szCs w:val="8"/><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/></w:rPr><w:t>'+codeText+'</w:t></w:r></w:p>';
+        } else {
+          cellContent='<w:p><w:pPr><w:spacing w:before="0" w:after="0"/></w:pPr><w:r><w:t> </w:t></w:r></w:p>';
+        }
+        // 셀 높이: 26.9mm = 1531 twips (1twip=1/1440inch, 26.9mm/25.4*1440≈1524)
+        cells+=
+          '<w:tc>'+
+          '<w:tcPr>'+
+          '<w:tcW w:w="2671" w:type="dxa"/>'+
+          '<w:tcBorders>'+
+          '<w:top w:val="none" w:sz="0" w:space="0" w:color="auto"/>'+
+          '<w:left w:val="none" w:sz="0" w:space="0" w:color="auto"/>'+
+          '<w:bottom w:val="none" w:sz="0" w:space="0" w:color="auto"/>'+
+          '<w:right w:val="none" w:sz="0" w:space="0" w:color="auto"/>'+
+          '</w:tcBorders>'+
+          '<w:vAlign w:val="center"/>'+
+          '</w:tcPr>'+
+          cellContent+
+          '</w:tc>';
+      }
+      tableRows+=
+        '<w:tr>'+
+        '<w:trPr><w:trHeight w:val="1524" w:hRule="exact"/></w:trPr>'+
+        cells+
+        '</w:tr>';
+    }
+    var table=
+      '<w:tbl>'+
+      '<w:tblPr>'+
+      '<w:tblW w:w="10684" w:type="dxa"/>'+
+      '<w:tblBorders>'+
+      '<w:top w:val="none"/><w:left w:val="none"/>'+
+      '<w:bottom w:val="none"/><w:right w:val="none"/>'+
+      '<w:insideH w:val="none"/><w:insideV w:val="none"/>'+
+      '</w:tblBorders>'+
+      '<w:tblLayout w:type="fixed"/>'+
+      '</w:tblPr>'+
+      '<w:tblGrid>'+
+      '<w:gridCol w:w="2671"/><w:gridCol w:w="2671"/><w:gridCol w:w="2671"/><w:gridCol w:w="2671"/>'+
+      '</w:tblGrid>'+
+      tableRows+
+      '</w:tbl>';
+
+    var isLast=(p===totalPages-1);
+    sectionsXml+=table;
+    if(!isLast) sectionsXml+='<w:p><w:pPr><w:pageBreakBefore/></w:pPr></w:p>';
+  }
+
+  // document.xml
+  var docXml='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:document xmlns:wpc="http://schemas.microsoft.com/office/word/2010/wordprocessingCanvas"'+
+    ' xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"'+
+    ' xmlns:o="urn:schemas-microsoft-com:office:office"'+
+    ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"'+
+    ' xmlns:m="http://schemas.openxmlformats.org/officeDocument/2006/math"'+
+    ' xmlns:v="urn:schemas-microsoft-com:vml"'+
+    ' xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"'+
+    ' xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"'+
+    ' xmlns:w14="http://schemas.microsoft.com/office/word/2010/wordml"'+
+    ' xmlns:wpg="http://schemas.microsoft.com/office/word/2010/wordprocessingGroup"'+
+    ' xmlns:wpi="http://schemas.microsoft.com/office/word/2010/wordprocessingInk"'+
+    ' xmlns:wne="http://schemas.microsoft.com/office/word/2006/wordml"'+
+    ' xmlns:wps="http://schemas.microsoft.com/office/word/2010/wordprocessingShape" mc:Ignorable="w14 wp14">'+
+    '<w:body>'+
+    sectionsXml+
+    '<w:sectPr>'+
+    '<w:pgSz w:w="11906" w:h="16838"/>'+  // A4
+    '<w:pgMar w:top="794" w:right="624" w:bottom="794" w:left="624" w:header="0" w:footer="0" w:gutter="0"/>'+
+    // 13mm top/bottom = 737twip, 9mm left/right = 510twip (A4 11906 - 4*2671=624 / 2 ≈ 624 each side)
+    '</w:sectPr>'+
+    '</w:body></w:document>';
+
+  // 이미지 수집 (SVG base64 → PNG via canvas)
+  var imageMap={};
+  for(var si=0;si<slots.length;si++){
+    if(slots[si] && !imageMap[slots[si].code]){
+      imageMap[slots[si].code]=await svgToPngBlob(slots[si].code);
+    }
+  }
+
+  // relationships 생성
+  var rels='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">';
+  rels+='<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>';
+
+  // 슬롯별 rId 할당
+  var rIdMap={};
+  var rIdCounter=100;
+  for(var si2=0;si2<slots.length;si2++){
+    if(slots[si2]){
+      var code=slots[si2].code;
+      if(!rIdMap[code]){
+        rIdMap[code]='rId'+rIdCounter;
+        rIdCounter++;
+      }
+      // 개별 슬롯 rId (중복 허용 안됨 - 각 위치마다 고유 rId)
+    }
+  }
+  // 슬롯별 고유 rId 재할당
+  var slotRIds=[];
+  rIdCounter=100;
+  var codeToFirstRId={};
+  for(var si3=0;si3<slots.length;si3++){
+    if(slots[si3]){
+      var c2=slots[si3].code;
+      if(!codeToFirstRId[c2]){
+        codeToFirstRId[c2]='rId'+rIdCounter;
+        rels+='<Relationship Id="rId'+rIdCounter+'" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/bc'+si3+'.png"/>';
+        rIdCounter++;
+      }
+      slotRIds.push(codeToFirstRId[c2]);
+    } else {
+      slotRIds.push(null);
+    }
+  }
+  // document.xml의 rId를 슬롯별로 수정 (위에서 100+idx 사용했으므로 교체)
+  for(var si4=0;si4<slots.length;si4++){
+    if(slots[si4]){
+      docXml=docXml.replace('rId'+(100+si4), slotRIds[si4]);
+    }
+  }
+
+  rels+='</Relationships>';
+
+  // ZIP 생성
+  var zip=new JSZip();
+  zip.file('[Content_Types].xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">'+
+    '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>'+
+    '<Default Extension="xml" ContentType="application/xml"/>'+
+    '<Default Extension="png" ContentType="image/png"/>'+
+    '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>'+
+    '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>'+
+    '</Types>');
+  zip.file('_rels/.rels',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'+
+    '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>'+
+    '</Relationships>');
+  zip.file('word/document.xml', docXml);
+  zip.file('word/_rels/document.xml.rels', rels);
+  zip.file('word/styles.xml',
+    '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>'+
+    '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">'+
+    '<w:style w:type="paragraph" w:styleId="Normal"><w:name w:val="Normal"/>'+
+    '<w:rPr><w:sz w:val="8"/></w:rPr></w:style>'+
+    '</w:styles>');
+
+  // 이미지 추가
+  for(var si5=0;si5<slots.length;si5++){
+    if(slots[si5]){
+      var pngBlob=imageMap[slots[si5].code];
+      var pngBuf=await pngBlob.arrayBuffer();
+      zip.file('word/media/bc'+si5+'.png', pngBuf);
+    }
+  }
+
+  var blob=await zip.generateAsync({type:'blob',mimeType:'application/vnd.openxmlformats-officedocument.wordprocessingml.document'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;
+  a.download='바코드라벨_'+new Date().toISOString().slice(0,10)+'.docx';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function makeSvgBase64(code){
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('xmlns','http://www.w3.org/2000/svg');
+  try{JsBarcode(svg,code,{format:'CODE128',width:1.2,height:36,displayValue:false,margin:1,background:'transparent'});}
+  catch(e){JsBarcode(svg,'ERROR',{format:'CODE128',width:1.2,height:36,displayValue:false,margin:1});}
+  return new XMLSerializer().serializeToString(svg);
+}
+
+function svgToPngBlob(code){
+  return new Promise(function(resolve){
+    var svgStr=makeSvgBase64(code);
+    var W=516, H=150; // ~43mm × ~13mm at 96dpi (300dpi would be 507x154 but 96 is fine for label)
+    var img=new Image();
+    var blob2=new Blob([svgStr],{type:'image/svg+xml'});
+    var url2=URL.createObjectURL(blob2);
+    img.onload=function(){
+      var canvas=document.createElement('canvas');
+      canvas.width=W; canvas.height=H;
+      var ctx=canvas.getContext('2d');
+      ctx.fillStyle='white';
+      ctx.fillRect(0,0,W,H);
+      ctx.drawImage(img,0,0,W,H);
+      URL.revokeObjectURL(url2);
+      canvas.toBlob(function(b){resolve(b);},'image/png');
+    };
+    img.src=url2;
+  });
+}
+
+function escapeXml(str){
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function printSelectedHistory(){
+  openWordExportModal();
 }
 function printBarcodes(){
+  // 바코드 생성 탭 선택 출력도 동일하게
   var selected=generatedBarcodes.filter(function(b){return b.selected;});
-  printLabelWindow(selected);
+  if(!selected.length) return toast('출력할 바코드를 선택하세요.',false);
+  _wordExportItems=selected.map(function(b){return {code:b.code,label:b.label};});
+  _weStartIdx=0;
+  renderWordModal();
+  document.getElementById('word-export-modal').style.display='flex';
 }
 
 // 카메라 (BarcodeDetector API)
