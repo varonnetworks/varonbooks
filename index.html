@@ -1171,13 +1171,14 @@ async function call(action,payload){
       var qty=Number(payload.qty)||1;
       var studentName=payload.forcedName||'',className='';
       if(payload.studentId){
-        var st=(await sbGet('students','select=name,class_name&student_id=eq.'+encodeURIComponent(payload.studentId)+'&limit=1'))[0];
+        var st=(await sbGet('students','select=name,class_name,division&student_id=eq.'+encodeURIComponent(payload.studentId)+'&limit=1'))[0];
         if(st){studentName=st.name;className=st.class_name||'';}
       }
       var memoStr=payload.memo||'';
       if(payload.branchTarget) memoStr=(memoStr?memoStr+' | ':'')+(payload.type==='분원출고'?'→':'←')+BRANCHES[payload.branchTarget]?.name;
       if(payload.handler) memoStr=(memoStr?memoStr+' | ':'')+'처리자:'+payload.handler;
-      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:currentBranch,purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
+      var divisionVal=st?st.division||null:null;
+      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,division:divisionVal,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:currentBranch,purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
       return {ok:true,msg:(payload.type)+' 처리 완료: '+book.name};
     }
     if(action==='getSalesHistory'){
@@ -2117,12 +2118,12 @@ async function doSales(){
   try{
     // 다중 학생 처리
     var studentsToProcess=_targetStudents.length?_targetStudents:[{id:studentId||null,name:_forcedName||null}];
-    var successCount=0, failCount=0;
-    for(var _si=0;_si<studentsToProcess.length;_si++){
-      var _st=studentsToProcess[_si];
-      var res=await call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:_st.id||null,forcedName:(!_st.id&&_st.name)?_st.name:null,payStatus:payStatus,memo:memo,branchTarget:branchTarget||null,handler:handler||null});
-      if(res.ok) successCount++; else failCount++;
-    }
+    // 병렬 처리
+    var results=await Promise.all(studentsToProcess.map(function(_st){
+      return call('addSales',{barcode:barcode,type:type,qty:qty,price:price?Number(price):null,semester:semester,studentId:_st.id||null,forcedName:(!_st.id&&_st.name)?_st.name:null,payStatus:payStatus,memo:memo,branchTarget:branchTarget||null,handler:handler||null});
+    }));
+    var successCount=results.filter(function(r){return r.ok;}).length;
+    var failCount=results.length-successCount;
     var msg=studentsToProcess.length>1?(successCount+'명 처리 완료'+(failCount?', '+failCount+'명 실패':'')):studentsToProcess[0].id||studentsToProcess[0].name?'처리 완료':'처리 완료';
     toast(msg,failCount===0);
     if(successCount>0){
@@ -2457,7 +2458,7 @@ async function loadUnpaid(){
             +(_subInfo?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(_subInfo)+'</div>':'');
         }
 
-        return '<tr>'
+        return '<tr style="vertical-align:middle">'
           +'<td>'+nameCell+'</td>'
           +'<td style="white-space:nowrap"><span class="badge b-blue" style="white-space:nowrap">'+escapeHtml(g.semester||'-')+'</span></td>'
           +'<td style="font-size:12px">'+escapeHtml(g.class||'-')+'</td>'
@@ -2473,7 +2474,7 @@ async function loadUnpaid(){
           +'<td style="white-space:nowrap"><input type="text" inputmode="numeric" id="paid-amt-'+gid+'" value="'+Math.max(0,balance).toLocaleString()+'" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px;text-align:right" oninput="formatAmtInput(this)" onfocus="this.select()" onkeydown="if(event.keyCode===13){event.preventDefault();jumpNextMatch();}"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
-          +'<td style="white-space:nowrap;display:flex;gap:4px;align-items:center">'
+          +'<td style="white-space:nowrap;vertical-align:middle">'
           +(g.status==='완납'
             ?'<button class="btn btn-d btn-sm" data-sid="'+escapeHtml(g.studentId||g.name)+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" onclick="cancelPayment(this.dataset.sid,this.dataset.sem)">취소</button>'
             :'<button class="btn btn-s btn-sm" data-sid="'+escapeHtml(g.studentId||'')+'" data-name="'+escapeHtml(g.name||'')+'" data-sem="'+escapeHtml(g.semester==='전체'?'':g.semester||'')+'" data-gid="'+gid+'" data-total="'+g.totalAmount+'" onclick="doPayment(this.dataset.sid,this.dataset.sem,this.dataset.gid,Number(this.dataset.total))">입금처리</button>')
@@ -2889,17 +2890,17 @@ async function loadHistory(){
           if(r.type==='분원출고'){var m=(r.memo||'').match(/→([^\s|]+)/);studentCell=m?m[1]:'타분원';}
           else if(r.type==='분원입고'){var m=(r.memo||'').match(/←([^\s|]+)/);studentCell=m?m[1]:'타분원';}
           return '<tr>'
-            +'<td><span class="badge b-blue" style="font-size:10px">'+escapeHtml(brName)+'</span></td>'
-            +'<td><b>'+escapeHtml(r.book_name||'')+'</b></td>'
-            +'<td><span class="badge '+typeColor+'">'+({'입고':'입','출고':'출','반품':'반','분원출고':'분출','분원입고':'분입'}[r.type]||r.type||'')+'</span></td>'
-            +'<td>'+escapeHtml(String(r.qty||1))+'</td>'
-            +'<td class="mono" style="font-size:11px">'+(r.unit_price?Number(r.unit_price).toLocaleString()+'원':'-')+'</td>'
-            +'<td class="mono"><b>'+Number(r.total||0).toLocaleString()+'원</b></td>'
-            +'<td>'+escapeHtml(studentCell)+pb+'</td>'
-            +'<td>'+(r.semester||'-')+'</td>'
-            +'<td class="mono" style="font-size:11px">'+escapeHtml(r.sale_date||'')+'</td>'
-            +'<td style="font-size:11px;color:var(--muted)">'+escapeHtml(r.memo||'')+'</td>'
-            +'<td><button class="btn btn-d btn-sm" data-rid="'+r.id+'" data-rname="'+escapeHtml(r.book_name||'')+'" data-rtype="'+escapeHtml(r.type||'')+'" data-paystatus="'+escapeHtml(r.pay_status||'')+'" onclick="deleteHistoryRow(this.dataset.rid,this.dataset.rname,this.dataset.rtype,this.dataset.paystatus,this)">삭제</button></td>'
+            +'<td style="white-space:nowrap"><span class="badge b-blue" style="font-size:10px">'+escapeHtml(brName)+'</span></td>'
+            +'<td style="max-width:180px;word-break:keep-all"><b>'+escapeHtml(r.book_name||'')+'</b></td>'
+            +'<td style="white-space:nowrap"><span class="badge '+typeColor+'">'+({'입고':'입','출고':'출','반품':'반','분원출고':'분출','분원입고':'분입'}[r.type]||r.type||'')+'</span></td>'
+            +'<td style="white-space:nowrap">'+escapeHtml(String(r.qty||1))+'</td>'
+            +'<td class="mono" style="font-size:11px;white-space:nowrap">'+(r.unit_price?Number(r.unit_price).toLocaleString()+'원':'-')+'</td>'
+            +'<td class="mono" style="white-space:nowrap"><b>'+Number(r.total||0).toLocaleString()+'원</b></td>'
+            +'<td style="white-space:nowrap">'+escapeHtml(studentCell)+(pb?' &nbsp;'+pb:'')+'</td>'
+            +'<td style="white-space:nowrap">'+(r.semester||'-')+'</td>'
+            +'<td class="mono" style="font-size:11px;white-space:nowrap">'+escapeHtml(r.sale_date||'')+'</td>'
+            +'<td style="font-size:11px;color:var(--muted);white-space:nowrap">'+escapeHtml(r.memo||'')+'</td>'
+            +'<td style="white-space:nowrap"><button class="btn btn-d btn-sm" data-rid="'+r.id+'" data-rname="'+escapeHtml(r.book_name||'')+'" data-rtype="'+escapeHtml(r.type||'')+'" data-paystatus="'+escapeHtml(r.pay_status||'')+'" onclick="deleteHistoryRow(this.dataset.rid,this.dataset.rname,this.dataset.rtype,this.dataset.paystatus,this)">삭제</button></td>'
             +'</tr>';
         }).join('')+'</tbody></table></div>':'<div class="empty">해당 이력 없음</div>';
     }
@@ -3370,18 +3371,40 @@ async function generateSmsAll(){
     return r['입금상태']==='미납'||r['입금상태']==='부분납';
   });
   if(!data.length){toast('미납/부분납 데이터가 없습니다.',false);return;}
+  // 학생별로 출고 순서대로 입금 차감 후 미납 잔액 교재만 집계
+  // getUnpaid에서 이미 입금상태(미납/부분납/완납)가 계산되어 있음
+  // 교재별로 입금 여부를 파악하기 위해 출고 순서 + 입금액으로 교재별 배분
   var byStudent={};
+  // 학생별 전체 출고 목록(날짜순) + 입금액 집계
+  var allByKey={};
   data.forEach(function(r){
     var key=r['학생ID']||r['학생명'];
-    if(!byStudent[key]) byStudent[key]={studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],books:[],total:0,paid:Number(r['입금액']||0),status:r['입금상태']};
-    byStudent[key].books.push(r['교재명']);
-    byStudent[key].total+=Number(r['합계']||0);
-    byStudent[key].paid=Number(r['입금액']||0); // 최신값 유지
-    byStudent[key].status=r['입금상태'];
+    if(!allByKey[key]) allByKey[key]={studentId:r['학생ID'],name:r['학생명'],class:r['반'],semester:r['학기'],rows:[],paid:Number(r['입금액']||0),status:r['입금상태']};
+    allByKey[key].rows.push({book:r['교재명'],amt:Number(r['합계']||0),date:r['날짜']||''});
+    allByKey[key].paid=Number(r['입금액']||0);
+    allByKey[key].status=r['입금상태'];
   });
-  // 부분납은 잔액(total-paid)으로 문자 금액 설정
-  Object.values(byStudent).forEach(function(s){
-    if(s.status==='부분납') s.total=s.total-s.paid;
+  Object.values(allByKey).forEach(function(s){
+    // 날짜순 정렬 (오래된 순)
+    s.rows.sort(function(a,b){return a.date.localeCompare(b.date);});
+    // 입금액을 오래된 교재부터 차감
+    var remaining=s.paid;
+    var unpaidBooks=[];
+    var unpaidTotal=0;
+    s.rows.forEach(function(row){
+      if(remaining>=row.amt){
+        remaining-=row.amt; // 이 교재는 완납 → 문자에서 제외
+      } else {
+        var paidPart=remaining;
+        remaining=0;
+        unpaidBooks.push(row.book);
+        unpaidTotal+=(row.amt-paidPart);
+      }
+    });
+    if(unpaidBooks.length>0){
+      var key=s.studentId||s.name;
+      byStudent[key]={studentId:s.studentId,name:s.name,class:s.class,semester:s.semester,books:unpaidBooks,total:unpaidTotal,status:s.status};
+    }
   });
   _unpaidForSms=Object.values(byStudent);
   var branchInfo=BRANCHES[currentBranch]||{};
@@ -3907,7 +3930,7 @@ async function buildAndDownloadDocx(items, startIdx){
       var codeText=escapeXml(slot.code);
       cellContent=
         '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="60" w:after="0"/></w:pPr>'+
-        '<w:r><w:rPr><w:sz w:val="16"/><w:szCs w:val="16"/></w:rPr><w:t>'+nameText+'</w:t></w:r></w:p>'+
+        '<w:r><w:rPr><w:sz w:val="14"/><w:szCs w:val="14"/></w:rPr><w:t>'+nameText+'</w:t></w:r></w:p>'+
         '<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:before="0" w:after="0"/></w:pPr>'+
         '<w:r><w:rPr></w:rPr>'+
         '<w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0">'+
@@ -3938,7 +3961,7 @@ async function buildAndDownloadDocx(items, startIdx){
       '<w:tcPr>'+
       '<w:tcW w:w="2806" w:type="dxa"/>'+
       '<w:tcBorders/>'+
-      '<w:tcMar><w:top w:w="0" w:type="dxa"/><w:start w:w="71" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:end w:w="71" w:type="dxa"/></w:tcMar>'+
+      '<w:tcMar><w:top w:w="0" w:type="dxa"/><w:start w:w="28" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:end w:w="28" w:type="dxa"/></w:tcMar>'+
       '<w:vAlign w:val="center"/>'+
       '</w:tcPr>'+
       cellContent+
@@ -3949,7 +3972,9 @@ async function buildAndDownloadDocx(items, startIdx){
     }
   }
 
+  // 표 앞 1pt 빈 단락 (위 여백 맞춤)
   var sectionsXml=
+    '<w:p><w:pPr><w:spacing w:before="0" w:after="0" w:line="20" w:lineRule="exact"/></w:pPr></w:p>'+
     '<w:tbl>'+
     '<w:tblPr>'+
     '<w:tblW w:w="11224" w:type="dxa"/>'+
