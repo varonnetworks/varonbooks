@@ -2459,8 +2459,8 @@ async function loadUnpaid(){
     if(!groups.length){el.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
 
     el.innerHTML='<div class="twrap"><table style="table-layout:fixed;width:100%"><thead><tr>'
-      +'<th style="width:100px">이름</th><th style="width:70px">학기</th><th style="width:130px">반</th><th style="width:180px">교재명</th><th style="width:90px">금액</th><th style="width:90px">출고일</th><th style="width:90px">상태</th>'
-      +'<th style="width:100px">입금액</th><th style="width:80px">날짜</th><th style="width:90px">메모</th><th style="width:80px">처리</th>'
+      +'<th style="width:138px">이름</th><th style="width:70px">학기</th><th style="width:130px">반</th><th style="width:180px">교재명</th><th style="width:90px">금액</th><th style="width:90px">출고일</th><th style="width:90px">상태</th>'
+      +'<th style="width:81px">입금액</th><th style="width:61px">날짜</th><th style="width:90px">메모</th><th style="width:80px">처리</th>'
       +'</tr></thead><tbody>'
       +groups.map(function(g){
         var balance=g.totalAmount-g.totalPaid;
