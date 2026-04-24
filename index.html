@@ -222,7 +222,7 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab" onclick="showTab('stock', this)"><span class="tab-ico">📦</span><span class="tab-txt">재고 현황</span></div>
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
-  <div class="tab" id="tab-barcode" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
+  <div class="tab" id="tab-barcode" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 출력</span></div>
   <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">계좌 내역</span></div>
   <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
@@ -566,7 +566,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="page-barcode" class="page">
   <div class="card" id="bc-custom-card">
     <div class="retro-strip"></div>
-    <div class="card-title">자체제작 교재 바코드</div>
+    <div class="card-title">바코드 출력 (자체제작)</div>
     <div class="fgrid">
       <div class="fg"><label class="fl">코드 prefix</label><input type="text" id="bc-prefix" placeholder="예: ZNS, JS"></div>
       <div class="fg" style="grid-column:span 2"><label class="fl">교재명</label><input type="text" id="bc-bookname" placeholder="예: T Map Starter Basic A1-A3"></div>
@@ -576,7 +576,7 @@ td{padding:10px 13px;vertical-align:middle}
   </div>
   <div class="card" id="bc-generate-card">
     <div class="retro-strip"></div>
-    <div class="card-title">교사용 교재 바코드</div>
+    <div class="card-title">바코드 출력 (교사용)</div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg">
         <label class="fl">레벨 검색</label>
@@ -595,26 +595,26 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="empty" style="padding:16px">교재 목록 로딩 중...</div>
     </div>
     <div style="display:flex;justify-content:flex-end">
-      <button class="btn btn-p" onclick="generateBarcodes('teacher')">선택 교재 바코드 생성</button>
+      <button class="btn btn-p" onclick="generateBarcodes('teacher')">선택 교재 출력</button>
     </div>
   </div>
   <div id="barcode-result" style="display:none">
     <div class="shead">
-      <span class="stitle">생성된 바코드 <span id="barcode-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></span>
+      <span class="stitle">출력 목록 <span id="barcode-count" style="color:var(--muted);font-weight:400;font-size:13px"></span></span>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button class="btn btn-g" onclick="clearBarcodes()">초기화</button>
         <button class="btn btn-s" onclick="printBarcodes()">선택 출력</button>
       </div>
     </div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">카드를 클릭해서 선택/해제하세요.</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">카드를 클릭해서 선택/해제하세요. 선택 후 Word 저장하세요.</div>
     <div id="barcode-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px"></div>
   </div>
 
   <!-- 바코드 이력 -->
   <div class="card" style="margin-top:20px">
     <div class="retro-strip"></div>
-    <div class="card-title">🗂️ 바코드 생성 이력</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">생성된 바코드가 자동 저장됩니다. 오염·분실 시 여기서 다시 출력하세요.</p>
+    <div class="card-title">🗂️ 바코드 출력 이력</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">출력된 바코드가 자동 저장됩니다. 오염·분실 시 여기서 다시 출력하세요.</p>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px">
       <input type="text" id="bc-history-search" placeholder="교재명 또는 코드 검색" style="max-width:260px" onkeydown="if(event.key==='Enter') loadBarcodeHistory()">
       <button class="btn btn-p" onclick="loadBarcodeHistory()">검색</button>
@@ -897,12 +897,6 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
   </div>
 
-  <div class="card">
-    <div class="retro-strip"></div>
-    <div class="card-title">시스템 초기화</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">구글 스프레드시트에 필요한 시트를 자동 생성합니다. 최초 1회만 실행하면 됩니다.</p>
-    <button class="btn btn-d" onclick="doInit()">시트 초기화 실행</button>
-  </div>
 </div>
 
 
