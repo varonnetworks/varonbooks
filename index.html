@@ -222,7 +222,7 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="tab" onclick="showTab('stock', this)"><span class="tab-ico">📦</span><span class="tab-txt">재고 현황</span></div>
   <div class="tab" onclick="showTab('allstock', this)"><span class="tab-ico">🏢</span><span class="tab-txt">전분원재고</span></div>
   <div class="tab" onclick="showTab('history', this)"><span class="tab-ico">🔍</span><span class="tab-txt">이력 조회</span></div>
-  <div class="tab" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
+  <div class="tab" id="tab-barcode" onclick="showTab('barcode', this)"><span class="tab-ico">🏷️</span><span class="tab-txt">바코드 생성</span></div>
   <div class="tab" onclick="showTab('finance', this)"><span class="tab-ico">💳</span><span class="tab-txt">계좌 내역</span></div>
   <div class="tab" onclick="showTab('settings', this)"><span class="tab-ico">⚙️</span><span class="tab-txt">등록·설정</span></div>
 </nav>
@@ -705,7 +705,7 @@ td{padding:10px 13px;vertical-align:middle}
 </div>
 
 <div id="page-settings" class="page">
-  <div class="card">
+  <div class="card" id="book-register-card">
     <div class="retro-strip"></div>
     <div class="card-title">교재 등록</div>
     <div class="fgrid">
@@ -1102,6 +1102,7 @@ function doLogin(){
   if(!BRANCHES[code]){document.getElementById('login-err').textContent='분원 코드가 올바르지 않습니다.';return;}
   currentBranch=code;
   sessionStorage.setItem('jls_branch',code);
+  var _bt=document.getElementById('tab-barcode');if(_bt) _bt.style.display=(code==='namdongtanjls')?'':'none';
   document.getElementById('login-screen').style.display='none';
   document.getElementById('branch-display').innerHTML='<span class="branch-badge">'+BRANCHES[code].name+'</span>';
   // 관리자 탭 제어
@@ -1529,7 +1530,14 @@ function showTab(id,tabEl){
   if(id==='stock') loadStock();
   if(id==='allstock') loadAllStock();
   if(id==='barcode') initBarcodePage();
-  if(id==='settings'){loadStudentList();loadTeacherList();var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=currentBranch==='namdongtanjls'?'':'none';}
+  if(id==='settings'){
+    loadStudentList();loadTeacherList();
+    var isMain=currentBranch==='namdongtanjls';
+    var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=isMain?'':'none';
+    var vc=document.getElementById('vendor-edit-card');if(vc) vc.style.display=isMain?'':'none';
+    var bc=document.getElementById('book-register-card');if(bc) bc.style.display=isMain?'':'none';
+    var barcodeTab=document.getElementById('tab-barcode');if(barcodeTab) barcodeTab.style.display=isMain?'':'none';
+  }
   if(id==='finance'){loadFinanceSummary();}
 }
 
@@ -1919,7 +1927,7 @@ function toggleStudentField(){
   if((isBranchOut||isBranchIn)&&document.getElementById('sales-branch')){
     var sel=document.getElementById('sales-branch');
     sel.innerHTML='<option value="">-- 분원 선택 --</option>'+
-      Object.keys(BRANCHES).filter(function(k){return k!==currentBranch;}).map(function(k){
+      Object.keys(BRANCHES).filter(function(k){return k!==currentBranch&&k!=='varon'&&k!=='testjls';}).map(function(k){
         return '<option value="'+k+'">'+BRANCHES[k].name+'</option>';
       }).join('');
   }
@@ -2196,10 +2204,12 @@ async function loadSalesHistory(){
       var studentCell=r['학생명']||'-';
       if(r['유형']==='분원출고'){
         var toMatch=(r['메모']||'').match(/→([^\s|]+)/);
-        studentCell=toMatch?toMatch[1]:'타분원';
+        var toKey=toMatch?toMatch[1]:'';
+        studentCell=toKey?(BRANCHES[toKey]?BRANCHES[toKey].name:toKey):'타분원';
       } else if(r['유형']==='분원입고'){
         var fromMatch=(r['메모']||'').match(/←([^\s|]+)/);
-        studentCell=fromMatch?fromMatch[1]:'타분원';
+        var fromKey=fromMatch?fromMatch[1]:'';
+        studentCell=fromKey?(BRANCHES[fromKey]?BRANCHES[fromKey].name:fromKey):'타분원';
       }
       var cancelBtn='<button class="btn btn-d btn-sm" data-idx="'+idx+'">삭제</button>';
       return '<tr>'
@@ -2486,7 +2496,7 @@ async function loadUnpaid(){
         var nameCell;
         if(g.history&&g.history.length){
           nameCell='<b style="cursor:pointer;text-decoration:underline dotted;color:var(--accent)" data-gid="'+gid+'" onclick="togglePayHistory(this.dataset.gid)">'+escapeHtml(g.name||'-')+'</b>'
-            +(_subInfo?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(_subInfo)+'</div>':'');
+            +(_subInfo?'<div style="font-size:11px;color:var(--muted);margin-top:2px;white-space:nowrap">'+escapeHtml(_subInfo)+'</div>':'');
         } else {
           nameCell='<b>'+escapeHtml(g.name||'-')+'</b>'
             +(_subInfo?'<div style="font-size:12px;color:var(--muted);margin-top:2px">'+escapeHtml(_subInfo)+'</div>':'');
@@ -2505,8 +2515,8 @@ async function loadUnpaid(){
               +(balance>0?balance.toLocaleString()+'원':balance<0?'초과 '+Math.abs(balance).toLocaleString()+'원':g.totalAmount.toLocaleString()+'원')
             +'</div>'
           +'</td>'
-          +'<td style="white-space:nowrap"><input type="text" inputmode="numeric" id="paid-amt-'+gid+'" value="'+Math.max(0,balance).toLocaleString()+'" style="width:88px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px;text-align:right" oninput="formatAmtInput(this)" onfocus="this.select()" onkeydown="if(event.keyCode===13){event.preventDefault();jumpNextMatch();}"></td>'
-          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:68px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
+          +'<td style="white-space:nowrap"><input type="text" inputmode="numeric" id="paid-amt-'+gid+'" value="'+Math.max(0,balance).toLocaleString()+'" style="width:69px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px;text-align:right" oninput="formatAmtInput(this)" onfocus="this.select()" onkeydown="if(event.keyCode===13){event.preventDefault();jumpNextMatch();}"></td>'
+          +'<td style="white-space:nowrap"><input type="text" id="paid-date-'+gid+'" placeholder="4/14" style="width:49px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
           +'<td style="white-space:nowrap"><input type="text" id="paid-memo-'+gid+'" placeholder="메모(선택)" style="width:80px;font-size:11px;padding:4px 6px;border:1px solid var(--border-soft);border-radius:4px" onkeydown="if(event.keyCode===13){event.preventDefault();triggerPayment(this.dataset.gid);}" data-gid="'+gid+'"></td>'
           +'<td style="white-space:nowrap;vertical-align:middle">'
           +(g.status==='완납'
@@ -2921,8 +2931,8 @@ async function loadHistory(){
           var isInType=['입고','분원입고','반품','분원출고'].includes(r.type);
           var pb=isInType?'':(r.pay_status==='완납'?'<span class="badge b-green">완</span>':(r.pay_status==='미납'?'<span class="badge b-red">미</span>':''));
           var studentCell=r.student_name||'-';
-          if(r.type==='분원출고'){var m=(r.memo||'').match(/→([^\s|]+)/);studentCell=m?m[1]:'타분원';}
-          else if(r.type==='분원입고'){var m=(r.memo||'').match(/←([^\s|]+)/);studentCell=m?m[1]:'타분원';}
+          if(r.type==='분원출고'){var m=(r.memo||'').match(/→([^\s|]+)/);var mk=m?m[1]:'';studentCell=mk?(BRANCHES[mk]?BRANCHES[mk].name:mk):'타분원';}
+          else if(r.type==='분원입고'){var m=(r.memo||'').match(/←([^\s|]+)/);var mk=m?m[1]:'';studentCell=mk?(BRANCHES[mk]?BRANCHES[mk].name:mk):'타분원';}
           return '<tr>'
             +'<td style="white-space:nowrap"><span class="badge b-blue" style="font-size:10px">'+escapeHtml(brName)+'</span></td>'
             +'<td style="max-width:180px;word-break:keep-all"><b>'+escapeHtml(r.book_name||'')+'</b></td>'
@@ -3729,6 +3739,11 @@ function initBarcodePage(){
 function renderTeacherBookList(keyword){
   var el=document.getElementById('bc-teacher-booklist');
   if(!el) return;
+  // 렌더 전 현재 체크 상태 저장
+  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){
+    if(c.checked) _bcCheckedCodes.add(c.getAttribute('data-code'));
+    else if(!_bcCheckedCodes.has(c.getAttribute('data-code'))) _bcCheckedCodes.delete(c.getAttribute('data-code'));
+  });
   var list=(books||[]).filter(function(b){
     if(!keyword) return true;
     return String(b['교재명']||'').toLowerCase().includes(keyword.toLowerCase())||
@@ -3738,12 +3753,20 @@ function renderTeacherBookList(keyword){
   el.innerHTML=list.map(function(b){
     var code=escapeHtml(String(b['바코드']||''));
     var name=escapeHtml(String(b['교재명']||''));
+    var isChecked=_bcCheckedCodes.has(String(b['바코드']||''));
     return '<label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #eee;cursor:pointer;font-size:13px" onmouseover="this.style.background=\'#f3f5fb\'" onmouseout="this.style.background=\'\'">'
-      +'<input type="checkbox" class="bc-teacher-chk" data-code="'+code+'" data-name="'+name+'" onchange="updateTeacherSelectedCount()">'
+      +'<input type="checkbox" class="bc-teacher-chk" data-code="'+code+'" data-name="'+name+'" '+(isChecked?'checked':'')+' onchange="onBcTeacherChkChange(this)">'
       +'<span style="flex:1">'+name+'</span>'
       +'<span class="mono" style="font-size:11px;color:var(--muted)">'+code+'</span>'
       +'</label>';
   }).join('');
+  updateTeacherSelectedCount();
+}
+var _bcCheckedCodes=new Set();
+function onBcTeacherChkChange(el){
+  var code=el.getAttribute('data-code');
+  if(el.checked) _bcCheckedCodes.add(code);
+  else _bcCheckedCodes.delete(code);
   updateTeacherSelectedCount();
 }
 function filterTeacherBooks(){
@@ -3751,28 +3774,41 @@ function filterTeacherBooks(){
   renderTeacherBookList(kw);
 }
 function toggleAllTeacherBooks(checked){
-  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){c.checked=checked;});
+  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){
+    c.checked=checked;
+    var code=c.getAttribute('data-code');
+    if(checked) _bcCheckedCodes.add(code);
+    else _bcCheckedCodes.delete(code);
+  });
   updateTeacherSelectedCount();
 }
 function updateTeacherSelectedCount(){
-  var cnt=document.querySelectorAll('.bc-teacher-chk:checked').length;
+  var cnt=_bcCheckedCodes.size;
   var el=document.getElementById('bc-teacher-selected-count');
   if(el) el.textContent=cnt?cnt+'개 선택됨':'';
   var allChk=document.getElementById('bc-teacher-all');
   var total=document.querySelectorAll('.bc-teacher-chk').length;
-  if(allChk) allChk.checked=cnt>0&&cnt===total;
+  var visibleChecked=document.querySelectorAll('.bc-teacher-chk:checked').length;
+  if(allChk) allChk.checked=total>0&&visibleChecked===total;
 }
 function generateBarcodes(mode){
   var newBarcodes=[];
   if(mode==='custom'){var prefix=document.getElementById('bc-prefix').value.trim().toUpperCase();var name=document.getElementById('bc-bookname').value.trim();var start=parseInt(document.getElementById('bc-start').value)||1;if(!prefix) return toast('코드 prefix를 입력하세요.',false);if(!name) return toast('교재명을 입력하세요.',false);newBarcodes.push({code:prefix+'-'+String(start).padStart(3,'0'),label:name,selected:true});document.getElementById('bc-start').value=start+1;document.getElementById('bc-bookname').value='';document.getElementById('bc-bookname').focus();}
   else if(mode==='teacher'){
-    var checked=document.querySelectorAll('.bc-teacher-chk:checked');
-    if(!checked.length) return toast('교재를 하나 이상 선택하세요.',false);
+    // 현재 화면 체크 상태도 반영
+    document.querySelectorAll('.bc-teacher-chk').forEach(function(c){
+      var code=c.getAttribute('data-code');
+      if(c.checked) _bcCheckedCodes.add(code); else _bcCheckedCodes.delete(code);
+    });
+    if(!_bcCheckedCodes.size) return toast('교재를 하나 이상 선택하세요.',false);
+    // _bcCheckedCodes 기준으로 books에서 직접 찾기
+    var checkedBooks=(books||[]).filter(function(b){return _bcCheckedCodes.has(String(b['바코드']||''));});
+    if(!checkedBooks.length) return toast('교재를 하나 이상 선택하세요.',false);
     var count=Math.min(parseInt(document.getElementById('bc-teacher-count').value)||1,50);
     var start=parseInt(document.getElementById('bc-teacher-start').value)||1;
-    checked.forEach(function(chk){
-      var isbn=chk.getAttribute('data-code');
-      var bname=chk.getAttribute('data-name');
+    checkedBooks.forEach(function(bk){
+      var isbn=String(bk['바코드']||'');
+      var bname=String(bk['교재명']||'');
       for(var i=0;i<count;i++){
         var num=String(start+i).padStart(2,'0');
         newBarcodes.push({code:'T-'+isbn.slice(-6)+'-'+num,label:'[교사용] '+bname+' '+num+'번',selected:true});
@@ -3780,6 +3816,10 @@ function generateBarcodes(mode){
     });
   }
   generatedBarcodes=generatedBarcodes.concat(newBarcodes);
+  // 생성 후 선택 초기화
+  _bcCheckedCodes.clear();
+  document.querySelectorAll('.bc-teacher-chk').forEach(function(c){c.checked=false;});
+  updateTeacherSelectedCount();
   renderBarcodeGrid();
   // DB에 저장
   if(newBarcodes.length){
