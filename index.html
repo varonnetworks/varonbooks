@@ -3733,10 +3733,11 @@ function initBarcodePage(){
 function renderTeacherBookList(keyword){
   var el=document.getElementById('bc-teacher-booklist');
   if(!el) return;
-  // 렌더 전 현재 체크 상태 저장
+  // 렌더 전 현재 체크 상태 저장 (체크된 것만 추가, 해제된 것도 반영)
   document.querySelectorAll('.bc-teacher-chk').forEach(function(c){
-    if(c.checked) _bcCheckedCodes.add(c.getAttribute('data-code'));
-    else if(!_bcCheckedCodes.has(c.getAttribute('data-code'))) _bcCheckedCodes.delete(c.getAttribute('data-code'));
+    var code=c.getAttribute('data-code');
+    if(c.checked) _bcCheckedCodes.add(code);
+    else _bcCheckedCodes.delete(code);
   });
   var list=(books||[]).filter(function(b){
     if(!keyword) return true;
@@ -3779,7 +3780,7 @@ function toggleAllTeacherBooks(checked){
 function updateTeacherSelectedCount(){
   var cnt=_bcCheckedCodes.size;
   var el=document.getElementById('bc-teacher-selected-count');
-  if(el) el.textContent=cnt?cnt+'개 선택됨':'';
+  if(el) el.textContent=cnt?'총 '+cnt+'개 선택됨 (검색어 바꿔도 유지)':'';
   var allChk=document.getElementById('bc-teacher-all');
   var total=document.querySelectorAll('.bc-teacher-chk').length;
   var visibleChecked=document.querySelectorAll('.bc-teacher-chk:checked').length;
