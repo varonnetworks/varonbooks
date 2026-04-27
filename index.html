@@ -1185,6 +1185,9 @@ async function call(action,payload){
       var isOut=payload.type==='출고';
       // 출고: 정가 사용, 입고: 매입단가(payload.price) 사용
       var unitPrice=isOut?(book.price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
+      var vendor=String(book['업체']||'');
+      var isVATVendor=vendor.includes('비비시스템')||vendor.includes('애디즈');
+      var taxAmount=(!isOut&&isVATVendor)?Math.round(unitPrice*qty*0.1):0;
       var qty=Number(payload.qty)||1;
       var studentName=payload.forcedName||'',className='';
       if(payload.studentId){
@@ -1195,8 +1198,9 @@ async function call(action,payload){
       if(payload.branchTarget) memoStr=(memoStr?memoStr+' | ':'')+(payload.type==='분원출고'?'→':'←')+BRANCHES[payload.branchTarget]?.name;
       if(payload.handler) memoStr=(memoStr?memoStr+' | ':'')+'처리자:'+payload.handler;
       var divisionVal=st?st.division||null:null;
-      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,division:divisionVal,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:currentBranch,purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
-      return {ok:true,msg:(payload.type)+' 처리 완료: '+book.name};
+      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty+taxAmount,tax_amount:taxAmount,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,division:divisionVal,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:currentBranch,purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
+      var msgTax=taxAmount>0?' (공급가 '+(unitPrice*qty).toLocaleString()+'원 + 세액 '+taxAmount.toLocaleString()+'원 = '+(unitPrice*qty+taxAmount).toLocaleString()+'원)':'';
+      return {ok:true,msg:(payload.type)+' 처리 완료: '+book.name+msgTax};
     }
     if(action==='getSalesHistory'){
       var params='select=*&order=sale_date.desc,id.desc&limit=200&branch=eq.'+encodeURIComponent(currentBranch);
