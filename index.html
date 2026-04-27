@@ -556,7 +556,7 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg" id="ft-loan-sem"><label class="fl">학기</label><select id="filter-loan-sem"><option value="">전체 학기</option></select></div>
       <div class="fg" id="ft-stype" style="display:none"><label class="fl">입/출고</label><select id="filter-stype"><option value="">전체</option><option value="입고">입고</option><option value="출고">출고</option></select></div>
       <div class="fg" id="ft-sem" style="display:none"><label class="fl">학기</label><select id="filter-sem"><option value="">전체</option></select></div>
-      <div class="fg" id="ft-student" style="display:none"><label class="fl">학생 이름 검색</label><input type="text" id="filter-student-search" placeholder="이름 입력" style="width:100%"></div>
+      <div class="fg" id="ft-student" style="display:none"><label class="fl" id="filter-student-label">학생 이름 검색</label><input type="text" id="filter-student-search" placeholder="이름 입력" style="width:100%"></div>
       <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadHistory()">조회</button></div>
     </div>
   </div>
@@ -721,6 +721,7 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg"><label class="fl">출판사</label><input type="text" id="book-publisher"></div>
       <div class="fg"><label class="fl">매입 업체</label><input type="text" id="book-vendor" placeholder="예: A업체, 자체제작"></div>
       <div class="fg"><label class="fl">정가 (원)</label><input type="text" id="book-price" inputmode="numeric" placeholder="예: 12,000" oninput="this.value=this.value.replace(/[^0-9]/g,'');formatNumberInput(this)" onblur="formatNumberInput(this)" onfocus="this.value=this.value.replace(/,/g,'')"></div>
+        <div class="fg"><label class="fl">매입단가</label><input type="text" id="book-purchase-price" inputmode="numeric" placeholder="예: 8,000" oninput="this.value=this.value.replace(/[^0-9]/g,'');formatNumberInput(this)" onblur="formatNumberInput(this)" onfocus="this.value=this.value.replace(/,/g,'')"></div>
       <div class="fg"><label class="fl">비고</label><input type="text" id="book-note"></div>
       <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="doAddBook()">교재 등록</button></div>
     </div>
@@ -1141,7 +1142,7 @@ async function call(action,payload){
   payload=payload||{};
   try{
     if(action==='getTeachers'){var d=await sbGet('teachers','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(t){return {'교사ID':t.teacher_id,'이름':t.name,'담당과목':t.subject||'','연락처':t.contact||''};})};}
-    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name&limit=5000');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'비고':b.note||'','레벨':b.level||''};})};}
+    if(action==='getBooks'){var d=await sbGet('books','select=*&order=name&limit=5000');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'매입단가':b.purchase_price||0,'비고':b.note||'','레벨':b.level||''};})};}
     if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','학교':s.school||'','비고':s.note||'','구분':s.division||'CHESS','상태':s.status||'재원'};})};}
     if(action==='getSemesters'){var d1=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var d2=await sbGet('sales_history','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch)+'&type=eq.출고');var sems=[...new Set([...d1,...d2].map(function(r){return r.semester;}).filter(Boolean))].sort(function(a,b){return b.localeCompare(a,'ko');});return {ok:true,data:sems};}
     if(action==='getClassesBySemester'){
@@ -1183,7 +1184,7 @@ async function call(action,payload){
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var isOut=payload.type==='출고';
       // 출고: 정가 사용, 입고: 매입단가(payload.price) 사용
-      var unitPrice=isOut?(book.price||0):(payload.price!=null?Number(payload.price):0);
+      var unitPrice=isOut?(book.price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
       var qty=Number(payload.qty)||1;
       var studentName=payload.forcedName||'',className='';
       if(payload.studentId){
@@ -1325,7 +1326,7 @@ async function call(action,payload){
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
       return {ok:true,data:Object.values(m)};
     }
-    if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,vendor:payload.vendor||null,price:payload.price?Number(String(payload.price).replace(/,/g,'')):0,note:payload.note||null});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
+    if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,vendor:payload.vendor||null,price:payload.price?Number(String(payload.price).replace(/,/g,'')):0,purchase_price:payload.purchasePrice?Number(String(payload.purchasePrice).replace(/,/g,'')):0,note:payload.note||null});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
     if(action==='addTeacher'){
       var tid=payload.id||('T'+Date.now().toString().slice(-6));
       // ID 중복 체크
@@ -1751,7 +1752,10 @@ function selectBookForInput(inputId,resultsId,title,barcode){
   input.value=title;
   input.dataset.selectedBarcode=barcode;
   if(box) box.style.display='none';
-  if(inputId==='sales-barcode') updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+  if(inputId==='sales-barcode'){
+    updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+    toggleStudentField();
+  }
   if(inputId==='bulk-barcode') updateBookPreview('bulk-barcode','bulk-book-preview','bulk-book-preview-name','bulk-book-preview-barcode');
 }
 function finalizeBookInput(inputId,wrapId,nameId,barcodeId){
@@ -1909,7 +1913,12 @@ function toggleStudentField(){
   ['sf-semester','sf-student','sf-pay'].forEach(function(id){var el=document.getElementById(id);if(el) el.style.display=isOut?'':'none';});
   var priceEl=document.getElementById('sf-price');
   var priceLabel=document.getElementById('sales-price-label');
-  if(priceEl) priceEl.style.display=(isIn||isReturn)?'':'none';
+  // 지내수 교재 + 입고일 때만 단가 표시
+  var salesBarcodeEl=document.getElementById('sales-barcode');
+  var selectedBarcode=salesBarcodeEl?salesBarcodeEl.dataset.selectedBarcode||'':'';
+  var currentBook=(books||[]).find(function(b){return normalizeBarcode(b['바코드'])===normalizeBarcode(selectedBarcode);});
+  var hasPurchasePrice=currentBook&&Number(currentBook['매입단가']||0)>0;
+  if(priceEl) priceEl.style.display=(isIn&&!hasPurchasePrice)||isReturn?'':'none';
   if(priceLabel) priceLabel.textContent=isIn?'매입단가':'반품단가';
   var branchEl=document.getElementById('sf-branch');
   var handlerEl=document.getElementById('sf-handler');
@@ -2878,6 +2887,12 @@ function renderHistoryFilter(){
   // ft-stype 숨김 (유형 드랍다운은 history-type으로 통합)
   var ftStype=document.getElementById('ft-stype');
   if(ftStype) ftStype.style.display='none';
+  // 입고 선택 시 검색 라벨을 교재명으로 변경
+  var isIn=type==='sales_in';
+  var lbl=document.getElementById('filter-student-label');
+  var inp=document.getElementById('filter-student-search');
+  if(lbl) lbl.textContent=isIn?'교재명 검색':'학생 이름 검색';
+  if(inp){inp.placeholder=isIn?'교재명 입력':'이름 입력';inp.value='';}
 }
 async function loadHistory(){
   var el=document.getElementById('history-list');
@@ -2916,7 +2931,13 @@ async function loadHistory(){
       if(isBranch) salesQ+='&type=in.(분원출고,분원입고)';
       if(semVal) salesQ+='&semester=eq.'+encodeURIComponent(semVal);
       var data=await sbGet('sales_history',salesQ);
-      if(studentKw.trim()) data=data.filter(function(r){return (r.student_name||'').toLowerCase().includes(studentKw.trim().toLowerCase());});
+      if(studentKw.trim()){
+        var isInType=type==='sales_in';
+        data=data.filter(function(r){
+          if(isInType) return (r.book_name||'').toLowerCase().includes(studentKw.trim().toLowerCase());
+          return (r.student_name||'').toLowerCase().includes(studentKw.trim().toLowerCase());
+        });
+      }
       var _histData=data;
       el.innerHTML=data.length?'<div class="twrap"><table><thead><tr><th>분원</th><th>교재명</th><th>유형</th><th>수량</th><th>단가</th><th>합계</th><th>학생/분원</th><th>입금</th><th>학기</th><th>날짜</th><th>메모</th><th></th></tr></thead><tbody>'+
         data.map(function(r,idx){
@@ -3119,7 +3140,7 @@ async function doAddBook(){
   var name=document.getElementById('book-name').value.trim();
   if(!barcode||!name) return toast('바코드와 교재명은 필수입니다.',false);
   try{
-    var res=await call('addBook',{barcode:barcode,name:name,subject:document.getElementById('book-subject').value.trim(),publisher:document.getElementById('book-publisher').value.trim(),vendor:document.getElementById('book-vendor').value.trim(),price:document.getElementById('book-price').value.replace(/,/g,''),note:document.getElementById('book-note').value.trim()});
+    var pp=document.getElementById('book-purchase-price');var res=await call('addBook',{barcode:barcode,name:name,subject:document.getElementById('book-subject').value.trim(),publisher:document.getElementById('book-publisher').value.trim(),vendor:document.getElementById('book-vendor').value.trim(),price:document.getElementById('book-price').value.replace(/,/g,''),note:document.getElementById('book-note').value.trim()});
     toast(res.msg,res.ok);
     if(res.ok){['book-barcode','book-name','book-subject','book-publisher','book-vendor','book-price','book-note'].forEach(function(id){document.getElementById(id).value='';});var bb=await call('getBooks');books=bb.data||[];initBarcodePage();}
   }catch(e){toast('오류 발생',false);}
