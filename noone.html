@@ -132,9 +132,9 @@ table.mtbl tr:last-child td{border-bottom:none;}
   <div class="card">
     <div class="clabel">시험 선택</div>
     <div class="row">
-      <select id="exam-select" onchange="onExamSelect()" style="min-width:200px;">
-        <option value="">시험 선택 (정답지 등록 후 표시)</option>
-      </select>
+      <select id="sy" onchange="updateBadge()"><option value="">연도</option></select>
+      <select id="sm" onchange="updateBadge()"><option value="">월</option></select>
+      <select id="sg" onchange="updateBadge()"><option value="">학년</option><option value="1">고1</option><option value="2">고2</option><option value="3">고3</option></select>
       <span id="hbadge2"></span>
     </div>
   </div>
@@ -209,27 +209,29 @@ function go(pg,btn){
 }
 function kid(y,m,g){return y+'_'+m+'_'+g;}
 function parseKid(k){const[y,m,g]=k.split('_');return{y,m,g};}
-function selectedKid(){return document.getElementById('exam-select').value;}
+function selectedKid(){
+  const y=document.getElementById('sy').value,m=document.getElementById('sm').value,g=document.getElementById('sg').value;
+  return(y&&m&&g)?kid(y,m,g):null;
+}
 
 function updateExamDropdown(){
-  const sel=document.getElementById('exam-select');
-  const cur=sel.value;
-  sel.innerHTML='<option value="">시험 선택 (정답지 등록 후 표시)</option>';
-  Object.keys(KEYS).forEach(k=>{
-    const{y,m,g}=parseKid(k);
-    const opt=document.createElement('option');opt.value=k;
-    opt.textContent=`${y}학년도 ${m}월 고${g}`;
-    if(k===cur)opt.selected=true;
-    sel.appendChild(opt);
-  });
+  // 저장된 정답지에서 연도·월 옵션 추출
+  const years=new Set(),months=new Set();
+  Object.keys(KEYS).forEach(k=>{const{y,m}=parseKid(k);years.add(y);months.add(m);});
+  const sy=document.getElementById('sy'),sm=document.getElementById('sm');
+  const curY=sy.value,curM=sm.value;
+  sy.innerHTML='<option value="">연도</option>';
+  [...years].sort((a,b)=>b-a).forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y+'학년도';if(y===curY)o.selected=true;sy.appendChild(o);});
+  sm.innerHTML='<option value="">월</option>';
+  [...months].sort((a,b)=>a-b).forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m+'월';if(m===curM)o.selected=true;sm.appendChild(o);});
   updateBadge();
 }
 function onExamSelect(){updateBadge();}
 function updateBadge(){
   const k=selectedKid(),el=document.getElementById('hbadge');
-  const el2=document.getElementById('hbadge2');
-  if(k){el.innerHTML='<span class="badge bg">정답지 있음</span>';if(el2)el2.innerHTML='';}
-  else{el.innerHTML='';if(el2)el2.innerHTML='';}
+  if(k&&KEYS[k])el.innerHTML='<span class="badge bg">정답지 있음</span>';
+  else if(k)el.innerHTML='<span class="badge br">정답지 없음</span>';
+  else el.innerHTML='';
 }
 
 function buildHeader(){
@@ -297,9 +299,9 @@ function gClass(g){return g===1?'g1':g===2?'g2':g===3?'g3':g>=7?'glo':'g4';}
 
 function doGradeAll(){
   const k=selectedKid();
-  if(!k){alert('시험을 선택해주세요.');return;}
+  if(!k){alert('연도, 월, 학년을 선택해주세요.');return;}
   const keyData=KEYS[k];
-  if(!keyData){alert('정답지가 없습니다.');return;}
+  if(!keyData){alert('정답지가 없습니다.\n정답 관리 탭에서 먼저 등록해주세요.');return;}
   const{y,m,g}=parseKid(k);const gr=g;
 
   const rows=[...document.getElementById('tbody').querySelectorAll('tr')];
@@ -355,7 +357,7 @@ function buildKeyGrid(){
   const g=document.getElementById('kgrid');g.innerHTML='';
   for(let i=1;i<=45;i++){
     const c=document.createElement('div');c.className='kcell';
-    c.innerHTML=`<span class="kcell-num">${i}</span><input class="kans" id="ka${i}" type="text" maxlength="3" inputmode="numeric" placeholder="—"/><input class="kpt" id="kp${i}" type="text" maxlength="1" inputmode="numeric" placeholder="${DPTS[i]||2}"/>`;
+    c.innerHTML=`<span class="kcell-num">${i}</span><input class="kans" id="ka${i}" type="text" maxlength="3" inputmode="numeric" placeholder="—"/><input class="kpt" id="kp${i}" type="text" maxlength="1" inputmode="numeric" value="2"/>`;
     g.appendChild(c);
   }
   const ins=[...g.querySelectorAll('.kans')];
