@@ -1723,8 +1723,11 @@ function renderBookResults(inputId,resultsId,keyword){
     var title=String(b['교재명']||'');
     var barcode=String(b['바코드']||'');
     // 판매 가능 교재: vendor 있는 것만 (판매입출고 검색창에서만 적용)
-    if(inputId==='sales-barcode' && !b['업체']) return false;
-    if((inputId==='sales-barcode'||inputId==='bulk-barcode') && b['비고']==='JLS교사용') return false;
+    if(inputId==='sales-barcode'||inputId==='bulk-barcode'){
+      if(b['비고']==='JLS교사용') return false;
+      var vendorNames=(vendors||[]).map(function(v){return v.name;});
+      if(vendorNames.length&&!vendorNames.includes(b['업체']||'')) return false;
+    }
     if(!keyword) return false;
     keyword=keyword.toLowerCase();
     return title.toLowerCase().includes(keyword)||barcode.toLowerCase().includes(keyword);
