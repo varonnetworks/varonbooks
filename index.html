@@ -1194,16 +1194,16 @@ async function call(action,payload){
     }
     if(action==='addSales'){
       var bc=String(payload.barcode||'').trim();
-      var book=(await sbGet('books','select=name,price,vendor&barcode=eq.'+encodeURIComponent(bc)))[0];
+      var book=(await sbGet('books','select=name,price,purchase_price,vendor&barcode=eq.'+encodeURIComponent(bc)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var isOut=payload.type==='출고';
       // 출고: 정가 사용, 입고: 매입단가(payload.price) 사용
       var unitPrice=isOut?(book.price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
+      var qty=Number(payload.qty)||1;
       var vendor=String(book['업체']||'');
       var vendorInfo=vendors.find(function(v){return v.name===vendor;});
       var isVATVendor=vendorInfo?vendorInfo.vat_yn:false;
       var taxAmount=(!isOut&&isVATVendor)?Math.round(unitPrice*qty*0.1):0;
-      var qty=Number(payload.qty)||1;
       var studentName=payload.forcedName||'',className='';
       if(payload.studentId){
         var st=(await sbGet('students','select=name,class_name,division&student_id=eq.'+encodeURIComponent(payload.studentId)+'&limit=1'))[0];
