@@ -1359,7 +1359,7 @@ async function call(action,payload){
       await sbPost('teachers',{teacher_id:tid,name:payload.name,subject:payload.subject||null,contact:payload.contact||null,branch:currentBranch});
       return {ok:true,msg:'선생님 등록 완료: '+payload.name+' (ID: '+tid+')'};
     }
-    if(action==='addStudent'){await sbPost('students',{student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,school:payload.school||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원'});return {ok:true,msg:'학생 등록 완료: '+payload.name+' ('+( payload.status||'재원')+')'};}
+    if(action==='addStudent'){var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});await fetch(SB_URL+'/students',{method:'POST',headers:h2,body:JSON.stringify({student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,school:payload.school||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원',updated_at:new Date().toISOString()})}); return {ok:true,msg:'학생 등록/업데이트 완료: '+payload.name+' ('+(payload.status||'재원')+')'};}
     if(action==='bulkAddStudents'){
       var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,school:r.school||null,note:r.note||null,branch:currentBranch,status:'재원',updated_at:new Date().toISOString()};});
       // upsert로 한 번에 처리 (신규 INSERT + 기존 UPDATE 동시)
