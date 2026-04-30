@@ -267,12 +267,10 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
     <div style="background:linear-gradient(180deg,var(--surface2),#fff4d2);border:2px solid var(--border-soft);border-radius:12px;padding:14px;margin-bottom:10px">
       <div style="font-size:11px;font-weight:700;color:var(--accent2);letter-spacing:1px;margin-bottom:10px">⚡ 바코드를 찍는 대로 목록에 자동 추가되고, 잘못 들어간 건 삭제 후 한 번에 대여처리</div>
-      <div style="position:relative;margin-bottom:8px">
-        <input type="text" id="loan-book-search" placeholder="교재명 검색 (교사용)" autocomplete="off" style="width:100%" oninput="renderLoanBookResults(this.value.trim())" onfocus="renderLoanBookResults(this.value.trim())">
-        <div id="loan-book-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;background:#fff;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
-      </div>
       <div class="scan-row">
-        <div class="sinput-wrap" style="flex:1"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔하면 자동 추가 / 입력 후 Enter" autocomplete="off"></div>
+        <div class="sinput-wrap" style="flex:1;position:relative"><span class="sicon">📷</span><input class="sinput" id="loan-barcode" placeholder="바코드 스캔 또는 교재명 검색" autocomplete="off" oninput="renderLoanBookResults(this.value.trim())" onfocus="renderLoanBookResults(this.value.trim())">
+        <div id="loan-book-results" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:40;background:#fff;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
+        </div>
         <button class="btn btn-cam" onclick="openCam('loan-barcode', true)">카메라</button>
         <button class="btn btn-p" onclick="processLoanQueue()">대여 처리</button>
         <button class="btn btn-d" onclick="clearLoanQueue()">목록 비우기</button>
@@ -1863,16 +1861,14 @@ function renderLoanBookResults(keyword){
 }
 function pickLoanBook(barcode){
   var inp=document.getElementById('loan-barcode');
-  var searchInp=document.getElementById('loan-book-search');
   var box=document.getElementById('loan-book-results');
-  if(inp){inp.value=barcode;inp.dispatchEvent(new Event('input'));inp.dispatchEvent(new KeyboardEvent('keydown',{keyCode:13,bubbles:true}));}
-  if(searchInp) searchInp.value='';
+  if(inp){inp.value=barcode;inp.dispatchEvent(new KeyboardEvent('keydown',{keyCode:13,bubbles:true}));}
   if(box) box.style.display='none';
 }
 
 // 외부 클릭 시 닫기
 document.addEventListener('click',function(e){
-  var wrap=document.getElementById('loan-book-search');
+  var wrap=document.getElementById('loan-barcode');
   var box=document.getElementById('loan-book-results');
   if(wrap&&box&&!wrap.contains(e.target)&&!box.contains(e.target)) box.style.display='none';
 });
