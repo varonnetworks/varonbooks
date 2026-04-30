@@ -1361,9 +1361,9 @@ async function call(action,payload){
       await sbPost('teachers',{teacher_id:tid,name:payload.name,subject:payload.subject||null,contact:payload.contact||null,branch:currentBranch});
       return {ok:true,msg:'선생님 등록 완료: '+payload.name+' (ID: '+tid+')'};
     }
-    if(action==='addStudent'){var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});await fetch(SB_URL+'/students?on_conflict=student_id,branch',{method:'POST',headers:h2,body:JSON.stringify({student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,school:payload.school||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원',updated_at:new Date().toISOString()})}); return {ok:true,msg:'학생 등록/업데이트 완료: '+payload.name+' ('+(payload.status||'재원')+')'};}
+    if(action==='addStudent'){var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});await fetch(SB_URL+'/students?on_conflict=student_id,branch',{method:'POST',headers:h2,body:JSON.stringify({student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,school:payload.school||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원',division:payload.division||'CHESS',updated_at:new Date().toISOString()})}); return {ok:true,msg:'학생 등록/업데이트 완료: '+payload.name+' ('+(payload.status||'재원')+')'};}
     if(action==='bulkAddStudents'){
-      var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,school:r.school||null,note:r.note||null,branch:currentBranch,status:'재원',updated_at:new Date().toISOString()};});
+      var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,school:r.school||null,note:r.note||null,branch:currentBranch,status:'재원',division:detectDivision(r.grade||'',r.classNum||''),updated_at:new Date().toISOString()};});
       // upsert로 한 번에 처리 (신규 INSERT + 기존 UPDATE 동시)
       var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});
       var CHUNK=50; var upserted=0;
@@ -3379,6 +3379,33 @@ async function doAddTeacher(){
     if(res.ok){['teacher-name','teacher-subject'].forEach(function(i){document.getElementById(i).value='';});var tb=await call('getTeachers');teachers=tb.data||[];populateSelects();loadTeacherList();}
   }catch(e){toast('오류 발생',false);}
 }
+
+function detectDivision(grade, classNum){
+  var CHESS_LEVELS=['DSA1','DSA2','DSB1','DSB2','DSC1','DSC2','DSD1','DSD2',
+    'LSA1','LSA2','LSB1','LSB2','LSC1','LSC2','LSD1','LSD2',
+    'MSA1','MSA2','MSB1','MSB2','MSA','MSB','IS1','IS2'];
+  var ACE_LEVELS=['HB','PA1','PA2','A1','A2','MA1','MA2','MA3',
+    'HM1','HM2','HM3','HA1','HA2','HA3','B'];
+
+  // 대괄호 안에서 레벨 추출 예: [MA3]SP3/TTH → MA3
+  var cn=String(classNum||'').toUpperCase();
+  var bracketMatch=cn.match(/\[([A-Z0-9]+)\]/);
+  var level=bracketMatch?bracketMatch[1]:cn.trim();
+
+  // 길이 긴 것부터 매칭 (DSA1 > DSA 순)
+  CHESS_LEVELS.sort(function(a,b){return b.length-a.length;});
+  ACE_LEVELS.sort(function(a,b){return b.length-a.length;});
+
+  for(var i=0;i<CHESS_LEVELS.length;i++){if(level.startsWith(CHESS_LEVELS[i])) return 'CHESS';}
+  for(var i=0;i<ACE_LEVELS.length;i++){if(level.startsWith(ACE_LEVELS[i])) return 'ACE';}
+
+  // 1차: 학년으로 판단
+  var g=String(grade||'');
+  if(g.includes('중')) return 'ACE';
+  if(g.includes('초6')) return 'ACE';
+  if(g.includes('초')) return 'CHESS';
+  return 'CHESS';
+}
 async function doAddStudent(){
   var id=document.getElementById('student-id').value.trim();var name=document.getElementById('student-name').value.trim();
   if(!id||!name) return toast('ID와 이름은 필수입니다.',false);
@@ -3386,9 +3413,12 @@ async function doAddStudent(){
     var semester=document.getElementById('student-semester').value.trim();
     if(!semester) return toast('학기를 입력해주세요.',false);
     var statusVal=(document.getElementById('student-status')||{value:'재원'}).value||'재원';
-    var res=await call('addStudent',{id:id,name:name,semester:semester,grade:document.getElementById('student-grade').value.trim(),classNum:document.getElementById('student-class').value.trim(),school:document.getElementById('student-school')?document.getElementById('student-school').value.trim():'',contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim(),status:statusVal});
+    var _grade=document.getElementById('student-grade').value.trim();
+  var _class=document.getElementById('student-class').value.trim();
+  var divisionVal=detectDivision(_grade,_class);
+  var res=await call('addStudent',{id:id,name:name,semester:semester,grade:_grade,classNum:_class,school:document.getElementById('student-school')?document.getElementById('student-school').value.trim():'',contact:document.getElementById('student-contact').value.trim(),note:document.getElementById('student-note').value.trim(),status:statusVal,division:divisionVal});
     toast(res.msg,res.ok);
-    if(res.ok){['student-id','student-name','student-semester','student-school','student-grade','student-class','student-contact','student-note'].forEach(function(i){var el=document.getElementById(i);if(el) el.value='';}); var sb=await call('getStudents');students=sb.data||[];populateSelects();loadStudentList();}
+    if(res.ok){['student-id','student-name','student-semester','student-school','student-grade','student-class','student-contact','student-note'].forEach(function(i){var el=document.getElementById(i);if(el) el.value='';});; var sb=await call('getStudents');students=sb.data||[];populateSelects();loadStudentList();}
   }catch(e){toast('오류 발생',false);}
 }
 async function loadStudentList(){
