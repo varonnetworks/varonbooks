@@ -1200,8 +1200,9 @@ async function call(action,payload){
       var book=(await sbGet('books','select=name,price,purchase_price,vendor&barcode=eq.'+encodeURIComponent(bc)))[0];
       if(!book) return {ok:false,msg:'등록되지 않은 교재입니다.'};
       var isOut=payload.type==='출고';
-      // 출고: 정가 사용, 입고: 매입단가(payload.price) 사용
-      var unitPrice=isOut?(book.price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
+      var isBranchOut=payload.type==='분원출고';
+      // 출고: 정가, 분원출고: 매입단가, 입고: 매입단가(입력값 또는 DB)
+      var unitPrice=isOut?(book.price||0):isBranchOut?(book.purchase_price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
       var qty=Number(payload.qty)||1;
       var vendor=String(book.vendor||'');
       // vendors DB에서 직접 조회
