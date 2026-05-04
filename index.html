@@ -1349,7 +1349,7 @@ async function call(action,payload){
       var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
       var m={};
       bks.forEach(function(b){m[b.barcode]={교재명:b.name,바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
-      sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
+      sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고'||s.type==='분원입고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고'||s.type==='분원출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
       return {ok:true,data:Object.values(m)};
     }
@@ -1399,8 +1399,8 @@ async function call(action,payload){
         if(!nm) return; // 등록안된 교재 무시
         if(!bookNames[nm]) bookNames[nm]={};
         if(!bookNames[nm][br]) bookNames[nm][br]={총입고:0,총출고:0};
-        if(s.type==='입고') bookNames[nm][br].총입고+=Number(s.qty);
-        else if(s.type==='출고') bookNames[nm][br].총출고+=Number(s.qty);
+        if(s.type==='입고'||s.type==='분원입고') bookNames[nm][br].총입고+=Number(s.qty);
+        else if(s.type==='출고'||s.type==='분원출고') bookNames[nm][br].총출고+=Number(s.qty);
         else if(s.type==='입고취소') bookNames[nm][br].총입고-=Number(s.qty);
         else if(s.type==='출고취소') bookNames[nm][br].총출고-=Number(s.qty);
       });
@@ -1498,7 +1498,7 @@ async function acceptTransfer(btn){
     if(cached2){
       curStock2=Number(cached2['현재재고']||0);
     } else {
-      var inRows2=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고)');
+      var inRows2=await sbGet('sales_history','select=qty,type&barcode=eq.'+encodeURIComponent(barcode)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&type=in.(입고,출고,분원입고,분원출고)');
       inRows2.forEach(function(r){if(r.type==='입고') curStock2+=Number(r.qty||0);else curStock2-=Number(r.qty||0);});
     }
     if(curStock2<qty){
@@ -4524,6 +4524,30 @@ async function loadFinanceSummary(){
         if(!b.purchaseDetail[vendor].books[bname]) b.purchaseDetail[vendor].books[bname]={qty:0,amount:0};
         b.purchaseDetail[vendor].books[bname].qty+=Number(r.qty||0);
         b.purchaseDetail[vendor].books[bname].amount+=pp*Number(r.qty||0);
+      } else if(r.type==='분원입고'){
+        // 타분원에서 받은 교재는 매입 비용에 추가
+        var pp3=Number(r.purchase_price||r.unit_price||0);
+        b.purchaseTotal+=pp3*Number(r.qty||0);
+        var vendor3=vendorMap[r.barcode]||'미등록';
+        if(!b.purchaseDetail[vendor3]) b.purchaseDetail[vendor3]={amount:0,qty:0,books:{}};
+        b.purchaseDetail[vendor3].amount+=pp3*Number(r.qty||0);
+        b.purchaseDetail[vendor3].qty+=Number(r.qty||0);
+        var bname3=r.book_name||r.barcode;
+        if(!b.purchaseDetail[vendor3].books[bname3]) b.purchaseDetail[vendor3].books[bname3]={qty:0,amount:0};
+        b.purchaseDetail[vendor3].books[bname3].qty+=Number(r.qty||0);
+        b.purchaseDetail[vendor3].books[bname3].amount+=pp3*Number(r.qty||0);
+      } else if(r.type==='분원출고'){
+        // 타분원에 넘긴 교재는 매입 비용에서 차감
+        var pp2=Number(r.purchase_price||r.unit_price||0);
+        b.purchaseTotal-=pp2*Number(r.qty||0);
+        var vendor2=vendorMap[r.barcode]||'미등록';
+        if(!b.purchaseDetail[vendor2]) b.purchaseDetail[vendor2]={amount:0,qty:0,books:{}};
+        b.purchaseDetail[vendor2].amount-=pp2*Number(r.qty||0);
+        b.purchaseDetail[vendor2].qty-=Number(r.qty||0);
+        var bname2=r.book_name||r.barcode;
+        if(!b.purchaseDetail[vendor2].books[bname2]) b.purchaseDetail[vendor2].books[bname2]={qty:0,amount:0};
+        b.purchaseDetail[vendor2].books[bname2].qty-=Number(r.qty||0);
+        b.purchaseDetail[vendor2].books[bname2].amount-=pp2*Number(r.qty||0);
       } else if(r.type==='반품'){
         b.returnTotal+=Number(r.total||0);
       }
