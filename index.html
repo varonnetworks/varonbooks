@@ -1090,7 +1090,7 @@ function doLogin(){
   if(!BRANCHES[code]){document.getElementById('login-err').textContent='분원 코드가 올바르지 않습니다.';return;}
   currentBranch=code;
   sessionStorage.setItem('jls_branch',code);
-  var _bt=document.getElementById('tab-barcode');if(_bt) _bt.style.display=(code==='namdongtanjls')?'':'none';
+  // 바코드 탭은 모든 분원에서 표시
   document.getElementById('login-screen').style.display='none';
   document.getElementById('branch-display').innerHTML='<span class="branch-badge">'+BRANCHES[code].name+'</span>';
   // 관리자 탭 제어
@@ -1552,7 +1552,7 @@ function showTab(id,tabEl){
     var pc=document.getElementById('price-edit-card');if(pc) pc.style.display=isMain?'':'none';
     var vc=document.getElementById('vendor-edit-card');if(vc) vc.style.display=isMain?'':'none';
     var bc=document.getElementById('book-register-card');if(bc) bc.style.display=isMain?'':'none';
-    var barcodeTab=document.getElementById('tab-barcode');if(barcodeTab) barcodeTab.style.display=isMain?'':'none';
+    // 바코드 탭은 모든 분원에서 표시
   }
   if(id==='finance'){loadFinanceSummary();}
 }
@@ -3841,14 +3841,22 @@ async function doUpload(){
 }
 
 function initBarcodePage(){
-  // 남동탄만 생성 가능
+  // 남동탄만 자체제작 바코드 생성 가능
   var isAdmin=currentBranch==='namdongtanjls';
-  ['bc-generate-card','bc-custom-card'].forEach(function(id){
-    var el=document.getElementById(id);
-    if(el) el.style.display=isAdmin?'':'none';
-  });
-  if(isAdmin) renderTeacherBookList('');
-  loadBarcodeHistory();
+
+  // 자체제작 바코드 생성 영역은 남동탄 계정만 표시
+  var customCard=document.getElementById('bc-custom-card');
+  if(customCard) customCard.style.display=isAdmin?'':'none';
+
+  // 교재 목록 검색 + 바코드 출력 영역은 모든 분원에서 사용 가능
+  var generateCard=document.getElementById('bc-generate-card');
+  if(generateCard){
+    generateCard.style.display='';
+    var title=generateCard.querySelector('.card-title');
+    if(title) title.textContent=isAdmin?'바코드 출력 (교사용)':'바코드 출력';
+  }
+
+  renderTeacherBookList('');
 }
 function renderTeacherBookList(keyword){
   var el=document.getElementById('bc-teacher-booklist');
