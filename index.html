@@ -583,8 +583,11 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="card-title">바코드 출력 (교사용)</div>
     <div class="fgrid" style="margin-bottom:12px">
       <div class="fg" style="position:relative">
-        <label class="fl">레벨 검색</label>
-        <input type="text" id="bc-teacher-search" placeholder="예: DSA1, A1, LSD..." autocomplete="off" oninput="renderBcLevelDropdown(this.value.trim())" onfocus="renderBcLevelDropdown(this.value.trim())">
+        <label class="fl">교재명·레벨 검색</label>
+        <div style="display:flex;gap:6px">
+        <input type="text" id="bc-teacher-search" placeholder="예: 지내수, DSA1, A1..." autocomplete="off" oninput="renderBcLevelDropdown(this.value.trim())" onfocus="renderBcLevelDropdown(this.value.trim())" onkeydown="if(event.key==='Enter'){document.getElementById('bc-level-dropdown').style.display='none';filterTeacherBooks();}" style="flex:1">
+        <button onclick="document.getElementById('bc-level-dropdown').style.display='none';filterTeacherBooks();" style="padding:0 12px;border-radius:8px;border:2px solid var(--border-soft);background:var(--accent);color:#fff;font-size:16px;cursor:pointer;flex-shrink:0" title="검색">🔍</button>
+        </div>
         <div id="bc-level-dropdown" style="display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:50;background:#fff;border:2px solid var(--border-soft);border-radius:10px;box-shadow:var(--shadow);max-height:220px;overflow-y:auto"></div>
         <div id="bc-selected-level" style="display:none;margin-top:4px;font-size:11px;font-weight:700;color:var(--accent)"></div>
       </div>
@@ -3983,6 +3986,7 @@ function renderTeacherBookList(keyword){
     // 교사용만 필터
     if(_bcTeacherOnly && b['비고']!=='JLS교사용') return false;
     if(!matchBookKeyword(b, keyword)) return false;
+    if(b['비고']==='바론자체교재') return true; // 지내수 등 바론자체교재는 번호 필터 미적용
     var no=getTeacherBookNo(b);
     // 번호가 붙은 교사용 교재는 시작번호~끝번호만 표시
     // 번호가 없는 일반 교재는 검색 결과에서 그대로 표시
