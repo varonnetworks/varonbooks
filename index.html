@@ -4056,7 +4056,8 @@ document.addEventListener('click',function(e){
   if(inp&&box&&!inp.contains(e.target)&&!box.contains(e.target)) box.style.display='none';
 });
 function filterTeacherBooks(){
-  var kw=_bcSelectedLevel||document.getElementById('bc-teacher-search').value.trim();
+  var nameKw=document.getElementById('bc-teacher-search').value.trim();
+  var kw=nameKw||_bcSelectedLevel;
   renderTeacherBookList(kw);
 }
 function toggleAllTeacherBooks(checked){
