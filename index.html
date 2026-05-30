@@ -336,17 +336,10 @@ td{padding:10px 13px;vertical-align:middle}
       <button class="btn btn-cam" onclick="openCam('sales-barcode', false)">카메라</button>
     </div>
     <div id="sales-book-results" style="display:none;position:relative;z-index:40;background:#f3f5f8;border:1px solid #9aa8ba;border-radius:4px;box-shadow:none;max-height:220px;overflow-y:auto;margin:-4px 0 12px"></div>
-    <div id="sales-book-preview" style="display:none;margin:0 0 12px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8;display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
-        <div id="sales-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
-        <div id="sales-book-preview-barcode" class="mono" style="margin-top:2px"></div>
-      </div>
-      <div id="sales-price-tag" style="display:none;background:#fff3a0;border:2px solid #e2b73f;border-radius:8px;padding:8px 14px;text-align:center;box-shadow:2px 2px 0 rgba(0,0,0,.1);flex-shrink:0">
-        <div style="font-size:11px;font-weight:700;color:#7a5c00;margin-bottom:2px">판매가</div>
-        <div id="sales-price-tag-value" style="font-family:'VT323',monospace;font-size:28px;color:#4a3906;line-height:1"></div>
-        <div style="font-size:10px;color:#9e7400;margin-top:2px">원</div>
-      </div>
+    <div id="sales-book-preview" style="display:none;margin:0 0 12px;padding:10px 12px;border:2px solid var(--border-soft);border-radius:12px;background:#fff8e8">
+      <div style="font-size:11px;color:var(--muted);font-weight:700;margin-bottom:4px">선택된 교재</div>
+      <div id="sales-book-preview-name" style="font-size:15px;font-weight:700;color:var(--text)"></div>
+      <div id="sales-book-preview-barcode" class="mono" style="margin-top:2px"></div>
     </div>
     <!-- 입력 한 줄 -->
     <div style="display:flex;gap:8px;align-items:flex-end;flex-wrap:nowrap">
@@ -819,16 +812,7 @@ td{padding:10px 13px;vertical-align:middle}
     </div>
   </div>
 
-  <div class="card">
-    <div class="retro-strip"></div>
-    <div class="card-title">학기 등록</div>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:14px">학생 배정 전 학기를 미리 등록해두면 입출고·납입내역에서 바로 사용할 수 있어요.</p>
-    <div class="fgrid">
-      <div class="fg"><label class="fl">학기명 *</label><input type="text" id="semester-input" placeholder="예: 26년여름" onkeydown="if(event.key==='Enter') doAddSemester()"></div>
-      <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="doAddSemester()">학기 추가</button></div>
-    </div>
-    <div id="semester-list-wrap" style="margin-top:14px"></div>
-  </div>
+  
 
   <div class="card">
     <div class="retro-strip"></div>
@@ -1952,16 +1936,7 @@ function updateBookPreview(inputId,wrapId,nameId,barcodeId){
   wrap.style.display='block';
   if(found){nameEl.textContent=String(found['교재명']||'');nameEl.style.color='var(--text)';codeEl.textContent=barcode;}
   else{nameEl.textContent='등록되지 않은 교재';nameEl.style.color='var(--warn)';codeEl.textContent=barcode;}
-  // 판매가 포스트잇 업데이트 (판매입출고 탭만)
-  if(inputId==='sales-barcode'){
-    var priceTag=document.getElementById('sales-price-tag');
-    var priceTagVal=document.getElementById('sales-price-tag-value');
-    if(priceTag&&priceTagVal){
-      var price=found?Number(found['정가']||0):0;
-      if(price>0){priceTag.style.display='block';priceTagVal.textContent=price.toLocaleString();}
-      else{priceTag.style.display='none';}
-    }
-  }
+
 }
 function bindBarcodePreview(inputId,wrapId,nameId,barcodeId){
   var input=document.getElementById(inputId);if(!input) return;
