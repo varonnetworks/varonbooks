@@ -1924,6 +1924,7 @@ function finalizeBookInput(inputId,wrapId,nameId,barcodeId){
     input.dataset.selectedBarcode='';
   }
   updateBookPreview(inputId,wrapId,nameId,barcodeId);
+  if(inputId==='sales-barcode') toggleStudentField();
 }
 function updateBookPreview(inputId,wrapId,nameId,barcodeId){
   var input=document.getElementById(inputId);var wrap=document.getElementById(wrapId);var nameEl=document.getElementById(nameId);var codeEl=document.getElementById(barcodeId);
