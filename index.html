@@ -2557,8 +2557,6 @@ async function initUnpaidPage(){
 }
 async function updateUnpaidClasses(){
   var sem=document.getElementById('unpaid-semester').value;
-  var unpaidBranch=document.getElementById('unpaid-branch')?document.getElementById('unpaid-branch').value:'';
-  var targetBranchForUnpaid=isAdmin()?(unpaidBranch||null):currentBranch;
   var div=document.getElementById('unpaid-division').value;
   document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
   if(!sem) return;
@@ -2650,6 +2648,8 @@ function jumpToStudent(keyword){
 async function loadUnpaid(){
   var el=document.getElementById('unpaid-list');
   var sem=document.getElementById('unpaid-semester').value;
+  var unpaidBranch=document.getElementById('unpaid-branch')?document.getElementById('unpaid-branch').value:'';
+  var targetBranchForUnpaid=isAdmin()?(unpaidBranch||null):currentBranch;
   var cls=document.getElementById('unpaid-class').value;
   var div=document.getElementById('unpaid-division').value;
   var payFilter=document.getElementById('unpaid-pay-filter').value;
