@@ -1271,7 +1271,7 @@ async function call(action,payload){
       var isInitStock=payload.type==='초기재고';
       var isBranchOut=payload.type==='분원출고';
       // 출고: 정가, 분원출고: 매입단가, 입고: 매입단가(입력값 또는 DB)
-      var unitPrice=isOut?(book.price||0):isBranchOut?(book.purchase_price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
+      var unitPrice=isOut?(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):book.price||0):isBranchOut?(book.purchase_price||0):(payload.price!=null&&payload.price!==''?Number(String(payload.price).replace(/,/g,'')):(book['매입단가']||book.purchase_price||0));
       var qty=Number(payload.qty)||1;
       var vendor=String(book.vendor||'');
       // vendors DB에서 직접 조회
@@ -1421,8 +1421,8 @@ async function call(action,payload){
       sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고'||s.type==='분원출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
       var stockData=Object.values(m).sort(function(a,b){
-        var aIs=a['교재명'].startsWith('**');
-        var bIs=b['교재명'].startsWith('**');
+        var aIs=a['교재명'].startsWith('ㅎ.');
+        var bIs=b['교재명'].startsWith('ㅎ.');
         if(aIs&&!bIs) return 1;
         if(!aIs&&bIs) return -1;
         return a['교재명'].localeCompare(b['교재명'],'ko');
@@ -2110,8 +2110,9 @@ function toggleStudentField(){
   var selectedBarcode=salesBarcodeEl?salesBarcodeEl.dataset.selectedBarcode||'':'';
   var currentBook=(books||[]).find(function(b){return normalizeBarcode(b['바코드'])===normalizeBarcode(selectedBarcode);});
   var hasPurchasePrice=currentBook&&Number(currentBook['매입단가']||0)>0;
-  if(priceEl) priceEl.style.display=(isIn&&!hasPurchasePrice)||isReturn||isInitStock?'':'none';
-  if(priceLabel) priceLabel.textContent=isIn?'매입단가':'반품단가';
+  var hasPrice=currentBook&&Number(currentBook['정가']||0)>0;
+  if(priceEl) priceEl.style.display=(isIn&&!hasPurchasePrice)||(isOut&&!hasPrice)||isReturn||isInitStock?'':'none';
+  if(priceLabel) priceLabel.textContent=isIn||isInitStock?'매입단가':isOut?'판매단가':'반품단가';
   var branchEl=document.getElementById('sf-branch');
   var handlerEl=document.getElementById('sf-handler');
   var vendorEl=document.getElementById('sf-vendor-display');
