@@ -480,6 +480,11 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="retro-strip"></div>
     <div class="card-title">납입 내역 조회</div>
     <div class="fgrid">
+      <div id="unpaid-branch-wrap" style="display:none"><div class="fg"><label class="fl">분원</label>
+        <select id="unpaid-branch">
+          <option value="">전체 분원</option>
+        </select>
+      </div></div>
       <div class="fg"><label class="fl">학년</label>
         <select id="unpaid-division" onchange="updateUnpaidClasses()">
           <option value="">전체</option>
@@ -659,11 +664,13 @@ td{padding:10px 13px;vertical-align:middle}
   <div class="card" style="margin-bottom:12px">
     <div class="fgrid" style="align-items:end">
       <div class="fg"><label class="fl">학기 필터</label>
-        <select id="finance-semester">
+        <select id="finance-semester" onchange="onFinanceFilterChange()">
           <option value="">전체 학기</option>
         </select>
       </div>
-      <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadFinanceSummary()">조회</button></div>
+      <div class="fg"><label class="fl">시작일</label><input type="date" id="finance-date-from"></div>
+      <div class="fg"><label class="fl">종료일</label><input type="date" id="finance-date-to"></div>
+      <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="loadFinanceSummary()">조회</button></div>
     </div>
   </div>
 
@@ -1150,7 +1157,7 @@ function doLogin(){
   // 관리자 탭 제어
   document.querySelectorAll('.tab').forEach(function(t){
     var oc=t.getAttribute('onclick')||'';
-    var adminHide=["'unpaid'","'sales'","'bulk'","'stock'","'barcode'","'settings'"];
+    var adminHide=["'sales'","'bulk'","'stock'","'barcode'","'settings'"];
     var hide=isAdmin()&&adminHide.some(function(k){return oc.includes(k);});
     t.style.display=hide?'none':'';
   });
@@ -1329,7 +1336,10 @@ async function call(action,payload){
       return {ok:true,msg:'완납 처리되었습니다.'};
     }
     if(action==='getUnpaid'){
-      var params='select=*&type=eq.출고&order=student_name.asc,sale_date.asc&branch=eq.'+encodeURIComponent(currentBranch);
+      var _unpaidBranch=payload.branch||currentBranch;
+      var params='select=*&type=eq.출고&order=student_name.asc,sale_date.asc';
+      if(_unpaidBranch) params+='&branch=eq.'+encodeURIComponent(_unpaidBranch);
+      else params+='&branch=not.in.(testjls,varon)';
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
       if(payload.classNum) params+='&class_name=eq.'+encodeURIComponent(payload.classNum);
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
@@ -1337,7 +1347,10 @@ async function call(action,payload){
       // payments 합산 (내역 포함)
       // 학기 필터 없을 때: 학생 단위 전체 합산 / 있을 때: 학생+학기 단위
       var hasSem=!!payload.semester;
-      var pmtParams='select=*&branch=eq.'+encodeURIComponent(currentBranch)+'&order=paid_date.asc';
+      var _pmtBranch=_unpaidBranch||currentBranch;
+      var pmtParams='select=*&order=paid_date.asc';
+      if(_pmtBranch) pmtParams+='&branch=eq.'+encodeURIComponent(_pmtBranch);
+      else pmtParams+='&branch=not.in.(testjls,varon)';
       // 학기 필터 있어도 semester=null(전체조회에서 입금처리된 건)도 함께 가져옴
       if(hasSem) pmtParams+='&or=(semester.eq.'+encodeURIComponent(payload.semester)+',semester.is.null)';
       var pmts=await sbGet('payments',pmtParams);
@@ -2523,6 +2536,20 @@ async function doBulk(){
 }
 
 async function initUnpaidPage(){
+  // varon이면 분원 필터 표시
+  var branchWrap=document.getElementById('unpaid-branch-wrap');
+  if(branchWrap){
+    branchWrap.style.display=isAdmin()?'':'none';
+    if(isAdmin()){
+      var sel=document.getElementById('unpaid-branch');
+      if(sel&&sel.options.length<=1){
+        Object.keys(BRANCHES).filter(function(k){return k!=='varon'&&k!=='testjls';}).forEach(function(k){
+          var o=document.createElement('option');o.value=k;o.textContent=BRANCHES[k].name;sel.appendChild(o);
+        });
+      }
+    }
+  }
+
   var r=await call('getSemesters');semesters=r.data||[];
   var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
   document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
@@ -2530,6 +2557,8 @@ async function initUnpaidPage(){
 }
 async function updateUnpaidClasses(){
   var sem=document.getElementById('unpaid-semester').value;
+  var unpaidBranch=document.getElementById('unpaid-branch')?document.getElementById('unpaid-branch').value:'';
+  var targetBranchForUnpaid=isAdmin()?(unpaidBranch||null):currentBranch;
   var div=document.getElementById('unpaid-division').value;
   document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
   if(!sem) return;
@@ -2627,7 +2656,7 @@ async function loadUnpaid(){
   var nameSearch=(document.getElementById('unpaid-name-search').value||'').trim().toLowerCase();
   el.innerHTML='<div class="loading"><div class="spinner"></div><br>불러오는 중...</div>';
   try{
-    var res=await call('getUnpaid',{semester:sem||undefined,classNum:cls||undefined,division:div||undefined,payStatus:payFilter||undefined});
+    var res=await call('getUnpaid',{semester:sem||undefined,classNum:cls||undefined,division:div||undefined,payStatus:payFilter||undefined,branch:targetBranchForUnpaid||undefined});
     var data=res.data||[];
     if(nameSearch) data=data.filter(function(r){return (r['학생명']||'').toLowerCase().includes(nameSearch);});
 
@@ -4759,6 +4788,12 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape') closeCam();
 // ══════════════════════════════════════════════
 // 자금 현황 탭
 // ══════════════════════════════════════════════
+function onFinanceFilterChange(){}
+function getFinanceDateFilter(){
+  var from=document.getElementById('finance-date-from')?document.getElementById('finance-date-from').value:'';
+  var to=document.getElementById('finance-date-to')?document.getElementById('finance-date-to').value:'';
+  return {from:from,to:to};
+}
 async function loadFinanceSummary(){
   var sum=document.getElementById('finance-summary');
   var detail=document.getElementById('finance-detail');
@@ -4782,7 +4817,10 @@ async function loadFinanceSummary(){
     var branchList=isAdmin()?Object.keys(BRANCHES).filter(function(k){return k!=='varon'&&k!=='testjls';}):[currentBranch];
 
     // sales_history 전체 조회
+    var _dateFilter=getFinanceDateFilter();
     var salesParams='select=barcode,book_name,type,total,unit_price,qty,purchase_price,student_id,student_name,semester,branch';
+    if(_dateFilter.from) salesParams+='&sale_date=gte.'+_dateFilter.from;
+    if(_dateFilter.to) salesParams+='&sale_date=lte.'+_dateFilter.to;
     if(!isAdmin()) salesParams+='&branch=eq.'+encodeURIComponent(currentBranch);
     if(selectedSem) salesParams+='&semester=eq.'+encodeURIComponent(selectedSem);
     var sales=await sbGet('sales_history',salesParams);
