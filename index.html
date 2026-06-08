@@ -595,6 +595,8 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg" id="ft-stype" style="display:none"><label class="fl">입/출고</label><select id="filter-stype"><option value="">전체</option><option value="입고">입고</option><option value="출고">출고</option></select></div>
       <div class="fg" id="ft-sem" style="display:none"><label class="fl">학기</label><select id="filter-sem"><option value="">전체</option></select></div>
       <div class="fg" id="ft-student" style="display:none"><label class="fl" id="filter-student-label">학생 이름 검색</label><input type="text" id="filter-student-search" placeholder="이름 입력" style="width:100%"></div>
+      <div class="fg" id="ft-date-from"><label class="fl">시작일</label><input type="date" id="filter-date-from"></div>
+      <div class="fg" id="ft-date-to"><label class="fl">종료일</label><input type="date" id="filter-date-to"></div>
       <div class="fg" style="justify-content:flex-end"><button class="btn btn-p" onclick="loadHistory()">조회</button></div>
     </div>
   </div>
@@ -3166,7 +3168,11 @@ async function loadHistory(){
       var isBranch=type==='sales_branch';
       var semVal=document.getElementById('filter-sem').value||'';
       var studentKw=(document.getElementById('filter-student-search')||{}).value||'';
-      var salesQ='select=*&order=sale_date.desc,id.desc&limit=300';
+      var dateFrom=document.getElementById('filter-date-from')?document.getElementById('filter-date-from').value:'';
+      var dateTo=document.getElementById('filter-date-to')?document.getElementById('filter-date-to').value:'';
+      var salesQ='select=*&order=sale_date.desc,id.desc&limit=2000';
+      if(dateFrom) salesQ+='&sale_date=gte.'+dateFrom;
+      if(dateTo) salesQ+='&sale_date=lte.'+dateTo;
       if(targetBranch) salesQ+='&branch=eq.'+encodeURIComponent(targetBranch);
       else salesQ+='&branch=not.in.(testjls,varon)';
       if(typeVal) salesQ+='&type=eq.'+encodeURIComponent(typeVal);
@@ -3629,7 +3635,7 @@ function detectDivision(grade, classNum){
   // 1차: 학년으로 판단
   var g=String(grade||'');
   if(g.includes('중')) return 'ACE';
-  if(g.includes('초6')) return 'ACE';
+  if(g.includes('초6')||g.includes('초등6')) return 'ACE';
   if(g.includes('초')) return 'CHESS';
   return 'CHESS';
 }
