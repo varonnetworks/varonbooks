@@ -3170,7 +3170,9 @@ async function loadHistory(){
       var studentKw=(document.getElementById('filter-student-search')||{}).value||'';
       var dateFrom=document.getElementById('filter-date-from')?document.getElementById('filter-date-from').value:'';
       var dateTo=document.getElementById('filter-date-to')?document.getElementById('filter-date-to').value:'';
-      var salesQ='select=*&order=sale_date.desc,id.desc&limit=2000';
+      var studentKwCheck=(document.getElementById('filter-student-search')?document.getElementById('filter-student-search').value:'').trim();
+      var salesQ='select=*&order=sale_date.desc,id.desc';
+      if(!dateFrom&&!dateTo&&!studentKwCheck) salesQ+='&limit=2000';
       if(dateFrom) salesQ+='&sale_date=gte.'+dateFrom;
       if(dateTo) salesQ+='&sale_date=lte.'+dateTo;
       if(targetBranch) salesQ+='&branch=eq.'+encodeURIComponent(targetBranch);
@@ -3179,6 +3181,10 @@ async function loadHistory(){
       if(isBranch) salesQ+='&type=in.(분원출고,분원입고)';
       if(semVal) salesQ+='&semester=eq.'+encodeURIComponent(semVal);
       var data=await sbGet('sales_history',salesQ);
+      var divFilter=document.getElementById('filter-division')?document.getElementById('filter-division').value:'';
+      if(divFilter){
+        data=data.filter(function(r){return (r.division||'')=== divFilter;});
+      }
       if(studentKw.trim()){
         var isInType=type==='sales_in';
         data=data.filter(function(r){
