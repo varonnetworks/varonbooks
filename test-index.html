@@ -192,7 +192,7 @@ td{padding:10px 13px;vertical-align:middle}
 <div id="login-screen">
   <div class="login-box">
     <div class="login-title">📚 정상어학원</div>
-    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 2.0</div>
+    <div class="login-sub">교재 관리 시스템 · 분원 코드로 로그인 5.0</div>
     <label class="login-label">분원 코드 (네이버 아이디)</label>
     <input class="login-input" id="login-input" type="password" placeholder="분원 코드 입력" autocomplete="off" onkeydown="if(event.key==='Enter')doLogin()">
     <button class="login-btn" onclick="doLogin()">로그인</button>
@@ -669,7 +669,6 @@ td{padding:10px 13px;vertical-align:middle}
       <div class="fg"><label class="fl">바코드 *</label><input type="text" id="branch-book-barcode" placeholder="예: NSC-suwon-2026"></div>
       <div class="fg"><label class="fl">교재명 *</label><input type="text" id="branch-book-name" placeholder="교재명 입력"></div>
       <div class="fg"><label class="fl">판매가</label><input type="number" id="branch-book-price" placeholder="0" value="0"></div>
-      <div class="fg"><label class="fl">매입처</label><input type="text" id="branch-book-vendor" placeholder="예: 랭귀지하우스, 비비시스템"></div>
       <div class="fg" style="justify-content:flex-end;align-self:flex-end"><button class="btn btn-p" onclick="doAddBranchBook()">등록</button></div>
     </div>
     <div style="margin-top:14px">
@@ -1451,55 +1450,104 @@ async function call(action,payload){
     if(action==='getStockStatus'){
       var bks=await sbGet('books','select=*&order=name&note=not.in.(JLS자체교재,JLS교사용,분원자체교재)&name=not.like.*내신콘서트*');
       var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
-      var m={};
-      bks.forEach(function(b){m[b.barcode]={교재명:b.name,바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
-      sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고'||s.type==='분원출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
-      Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
-      // ㅎ.지내수 (A)/(B) 짝 합치기 - min 재고로 세트 표시
-      var merged={};
-      var usedKeys=new Set();
-      Object.values(m).forEach(function(r){
-        var mA=r['교재명'].match(/^(ㅎ\.지내수.+)\(A\)$/);
-        var mB=r['교재명'].match(/^(ㅎ\.지내수.+)\(B\)$/);
-        if(mA){
-          var base=mA[1].trim();
-          var mergedNm=base+'(A) (B)';
-          if(!merged[mergedNm]) merged[mergedNm]={교재명:mergedNm,바코드:r['바코드'],총입고:0,총출고:0,현재재고:0,최근업데이트:'',_a:null,_b:null};
-          merged[mergedNm]._a=r;
-          usedKeys.add(r['바코드']);
-        } else if(mB){
-          var base=mB[1].trim();
-          var mergedNm=base+'(A) (B)';
-          if(!merged[mergedNm]) merged[mergedNm]={교재명:mergedNm,바코드:r['바코드'],총입고:0,총출고:0,현재재고:0,최근업데이트:'',_a:null,_b:null};
-          merged[mergedNm]._b=r;
-          usedKeys.add(r['바코드']);
+
+      function _emptyStockRow(book){
+        return {교재명:book.name,바코드:book.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};
+      }
+      function _partInfo(barcode){
+        // 세트 개별권 바코드 규칙: ZNS9791157166039-017a / ZNS9791157166039-017b
+        // 마지막 a,b만 무조건 자르면 일반 바코드가 깨질 수 있으므로 "하이픈+숫자+a/b" 패턴만 세트로 인식
+        var m=String(barcode||'').trim().match(/^(.*-\d+)([aAbB])$/);
+        return m?{base:m[1],part:m[2].toUpperCase()}:null;
+      }
+      function _makeSetName(baseBook,aBook,bBook){
+        if(baseBook&&baseBook.name) return baseBook.name.replace(/^ㅎ\./,'');
+        var src=(aBook&&aBook.name)||(bBook&&bBook.name)||'';
+        return src.replace(/^ㅎ\./,'').replace(/\s*\([AB]\)\s*$/,'')+'(A) (B)';
+      }
+      function _addQty(row,type,qty){
+        qty=Number(qty)||0;
+        if(type==='입고'||type==='분원입고'||type==='초기재고') row.총입고+=qty;
+        else if(type==='출고'||type==='분원출고') row.총출고+=qty;
+        else if(type==='입고취소') row.총입고-=qty;
+        else if(type==='출고취소') row.총출고-=qty;
+      }
+      function _pickMinPart(a,b){
+        var aQty=a?a.총입고-a.총출고:0;
+        var bQty=b?b.총입고-b.총출고:0;
+        if(a&&b) return aQty<=bQty?a:b;
+        // A/B 중 한쪽만 따로 잡혀 있으면 세트 구성은 불가능하므로 0권으로 계산
+        // 단, 세트 바코드(017) 자체 입출고분은 아래에서 별도로 더한다.
+        return {총입고:0,총출고:0,현재재고:0};
+      }
+
+      var bookByBarcode={};
+      bks.forEach(function(b){bookByBarcode[String(b.barcode||'').trim()]=b;});
+
+      var raw={};
+      bks.forEach(function(b){raw[String(b.barcode||'').trim()]=_emptyStockRow(b);});
+      sales.forEach(function(s){
+        var bc=String(s.barcode||'').trim();
+        if(!raw[bc]) return;
+        _addQty(raw[bc],s.type,s.qty);
+      });
+      Object.values(raw).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
+
+      // base / a / b를 같은 세트 그룹으로 묶는다.
+      // 예: 017, 017a, 017b → 한 행으로 표시
+      var setGroups={};
+      Object.keys(bookByBarcode).forEach(function(bc){
+        var info=_partInfo(bc);
+        if(info){
+          if(!setGroups[info.base]) setGroups[info.base]={base:null,A:null,B:null};
+          setGroups[info.base][info.part]=bc;
         }
       });
-      // 합친 세트 재고 계산 (min)
-      Object.values(merged).forEach(function(g){
-        var a=g._a,b=g._b;
-        if(a&&b){
-          g.총입고=Math.min(a.총입고,b.총입고);
-          g.총출고=Math.min(a.총출고,b.총출고);
-          g.현재재고=Math.min(a.현재재고,b.현재재고);
-        } else if(a){
-          g.총입고=a.총입고;g.총출고=a.총출고;g.현재재고=a.현재재고;
-        } else if(b){
-          g.총입고=b.총입고;g.총출고=b.총출고;g.현재재고=b.현재재고;
-        }
-        g.최근업데이트=new Date().toISOString().slice(0,10);
-        delete g._a;delete g._b;
+      Object.keys(setGroups).forEach(function(base){
+        if(bookByBarcode[base]) setGroups[base].base=base;
       });
-      // ㅎ. 개별 제외하고 합친 세트 + 일반 교재 합치기
-      var stockData=Object.values(m).filter(function(r){return !usedKeys.has(r['바코드']);})
-        .concat(Object.values(merged))
-        .sort(function(a,b){
-          var aIs=a['교재명'].startsWith('ㅎ.');
-          var bIs=b['교재명'].startsWith('ㅎ.');
-          if(aIs&&!bIs) return 1;
-          if(!aIs&&bIs) return -1;
-          return a['교재명'].localeCompare(b['교재명'],'ko');
-        });
+
+      var usedPartBarcodes={};
+      var result=[];
+
+      // 먼저 일반 교재를 넣되, 세트 개별권(a/b)은 숨긴다.
+      Object.keys(raw).forEach(function(bc){
+        var info=_partInfo(bc);
+        if(info&&setGroups[info.base]){usedPartBarcodes[bc]=true;return;}
+        // 같은 base에 a/b가 있으면 base 행은 아래 세트 환산 행으로 다시 만든다.
+        if(setGroups[bc]) return;
+        result.push(raw[bc]);
+      });
+
+      // 세트 행 추가: 세트바코드 재고 + min(A재고, B재고)
+      Object.keys(setGroups).forEach(function(base){
+        var g=setGroups[base];
+        var baseRow=g.base&&raw[g.base]?raw[g.base]:{총입고:0,총출고:0,현재재고:0};
+        var aRow=g.A&&raw[g.A]?raw[g.A]:null;
+        var bRow=g.B&&raw[g.B]?raw[g.B]:null;
+        var minPart=_pickMinPart(aRow,bRow);
+        var baseBook=g.base?bookByBarcode[g.base]:null;
+        var aBook=g.A?bookByBarcode[g.A]:null;
+        var bBook=g.B?bookByBarcode[g.B]:null;
+        var row={
+          교재명:_makeSetName(baseBook,aBook,bBook),
+          바코드:base,
+          총입고:Number(baseRow.총입고||0)+Number(minPart.총입고||0),
+          총출고:Number(baseRow.총출고||0)+Number(minPart.총출고||0),
+          현재재고:0,
+          최근업데이트:new Date().toISOString().slice(0,10)
+        };
+        row.현재재고=row.총입고-row.총출고;
+        result.push(row);
+      });
+
+      var stockData=result.sort(function(a,b){
+        var aIs=String(a['교재명']||'').startsWith('ㅎ.');
+        var bIs=String(b['교재명']||'').startsWith('ㅎ.');
+        if(aIs&&!bIs) return 1;
+        if(!aIs&&bIs) return -1;
+        return String(a['교재명']||'').localeCompare(String(b['교재명']||''),'ko');
+      });
       return {ok:true,data:stockData};
     }
     if(action==='addBook'){var bc=String(payload.barcode||'').trim();await sbPost('books',{barcode:bc,name:payload.name,subject:payload.subject||null,publisher:payload.publisher||null,vendor:payload.vendor||null,price:payload.price?Number(String(payload.price).replace(/,/g,'')):0,purchase_price:payload.purchasePrice?Number(String(payload.purchasePrice).replace(/,/g,'')):0,note:payload.note||null});return {ok:true,msg:'교재 등록 완료: '+payload.name};}
@@ -1537,73 +1585,90 @@ async function call(action,payload){
       // books는 공용(branch 없음) - barcode→name 매핑만 사용
       var bks=await sbGet('books','select=barcode,name&order=name&note=not.in.(JLS자체교재,JLS교사용)&name=not.like.*내신콘서트*');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
-      // barcode → 교재명 맵
-      var barcodeToName={};
-      bks.forEach(function(b){barcodeToName[b.barcode]=b.name;});
-      // 교재명+분원별 집계
-      var bookNames={};
+
+      function _partInfo(barcode){
+        var m=String(barcode||'').trim().match(/^(.*-\d+)([aAbB])$/);
+        return m?{base:m[1],part:m[2].toUpperCase()}:null;
+      }
+      function _makeSetName(baseBook,aBook,bBook){
+        if(baseBook&&baseBook.name) return baseBook.name.replace(/^ㅎ\./,'');
+        var src=(aBook&&aBook.name)||(bBook&&bBook.name)||'';
+        return src.replace(/^ㅎ\./,'').replace(/\s*\([AB]\)\s*$/,'')+'(A) (B)';
+      }
+      function _blankBranchMap(){
+        var o={};
+        BRANCH_KEYS.forEach(function(br){o[br]={총입고:0,총출고:0};});
+        return o;
+      }
+      function _addQty(cell,type,qty){
+        qty=Number(qty)||0;
+        if(type==='입고'||type==='분원입고'||type==='초기재고') cell.총입고+=qty;
+        else if(type==='출고'||type==='분원출고') cell.총출고+=qty;
+        else if(type==='입고취소') cell.총입고-=qty;
+        else if(type==='출고취소') cell.총출고-=qty;
+      }
+      function _stock(cell){return (Number(cell&&cell.총입고)||0)-(Number(cell&&cell.총출고)||0);}
+      function _pickMinPart(aCell,bCell,hasA,hasB){
+        if(hasA&&hasB) return _stock(aCell)<=_stock(bCell)?aCell:bCell;
+        // 한쪽만 따로 잡혀 있으면 세트 구성 불가 → 0으로 계산
+        return {총입고:0,총출고:0};
+      }
+
+      var bookByBarcode={};
+      bks.forEach(function(b){bookByBarcode[String(b.barcode||'').trim()]=b;});
+
+      // raw[barcode][branch] = {총입고, 총출고}
+      var raw={};
+      Object.keys(bookByBarcode).forEach(function(bc){raw[bc]=_blankBranchMap();});
       sales.forEach(function(s){
+        var bc=String(s.barcode||'').trim();
         var br=s.branch||'?';
-        var nm=barcodeToName[s.barcode];
-        if(!nm) return; // 등록안된 교재 무시
-        if(!bookNames[nm]) bookNames[nm]={};
-        if(!bookNames[nm][br]) bookNames[nm][br]={총입고:0,총출고:0};
-        if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') bookNames[nm][br].총입고+=Number(s.qty);
-        else if(s.type==='출고'||s.type==='분원출고') bookNames[nm][br].총출고+=Number(s.qty);
-        else if(s.type==='입고취소') bookNames[nm][br].총입고-=Number(s.qty);
-        else if(s.type==='출고취소') bookNames[nm][br].총출고-=Number(s.qty);
+        if(!raw[bc]) return; // 등록안된 교재 무시
+        if(!raw[bc][br]) raw[bc][br]={총입고:0,총출고:0};
+        _addQty(raw[bc][br],s.type,s.qty);
       });
-      // a/b 분권 합치기: 바코드 끝에 a 또는 b 붙은 쌍을 합본으로 표시
-      // bookNames 키가 교재명이므로 **지내수....(A) / (B) 쌍 찾기
-      var mergedNames={};
-      Object.keys(bookNames).forEach(function(nm){
-        // ㅎ.으로 시작하고 (A) 또는 (B)로 끝나는 교재
-        var mA=nm.match(/^(ㅎ\..+)\(A\)$/);
-        var mB=nm.match(/^(ㅎ\..+)\(B\)$/);
-        if(mA){
-          var baseName=mA[1].trim();
-          var mergedNm=baseName+'(A) (B)';
-          if(!mergedNames[mergedNm]) mergedNames[mergedNm]={A:nm,B:null};
-          else mergedNames[mergedNm].A=nm;
-        } else if(mB){
-          var baseName=mB[1].trim();
-          var mergedNm=baseName+'(A) (B)';
-          if(!mergedNames[mergedNm]) mergedNames[mergedNm]={A:null,B:nm};
-          else mergedNames[mergedNm].B=nm;
+
+      // 세트 그룹: 017 / 017a / 017b
+      var setGroups={};
+      Object.keys(bookByBarcode).forEach(function(bc){
+        var info=_partInfo(bc);
+        if(info){
+          if(!setGroups[info.base]) setGroups[info.base]={base:null,A:null,B:null};
+          setGroups[info.base][info.part]=bc;
         }
       });
-
-      var result=Object.keys(bookNames).sort().filter(function(nm){
-        // a/b 분권은 제외 (합본으로 대체)
-        return !nm.match(/^\*\*.+\([AB]\)$/);
-      }).map(function(nm){
-        var row={교재명:nm};
-        BRANCH_KEYS.forEach(function(br){
-          var d=bookNames[nm][br]||{총입고:0,총출고:0};
-          row[br]=d.총입고-d.총출고;
-        });
-        return row;
+      Object.keys(setGroups).forEach(function(base){
+        if(bookByBarcode[base]) setGroups[base].base=base;
       });
 
-      // 합본 행 추가
-      Object.keys(mergedNames).sort().forEach(function(mergedNm){
-        var pair=mergedNames[mergedNm];
-        var row={교재명:mergedNm};
+      var result=[];
+      Object.keys(raw).forEach(function(bc){
+        var info=_partInfo(bc);
+        if(info&&setGroups[info.base]) return; // 개별 a/b 행 숨김
+        if(setGroups[bc]) return; // 세트 base 행은 아래에서 환산 행으로 표시
+        var row={교재명:(bookByBarcode[bc]||{}).name||bc};
+        BRANCH_KEYS.forEach(function(br){row[br]=_stock(raw[bc][br]);});
+        result.push(row);
+      });
+
+      Object.keys(setGroups).forEach(function(base){
+        var g=setGroups[base];
+        var baseBook=g.base?bookByBarcode[g.base]:null;
+        var aBook=g.A?bookByBarcode[g.A]:null;
+        var bBook=g.B?bookByBarcode[g.B]:null;
+        var row={교재명:_makeSetName(baseBook,aBook,bBook)};
         BRANCH_KEYS.forEach(function(br){
-          var aStock=pair.A?(bookNames[pair.A][br]||{총입고:0,총출고:0}):null;
-          var bStock=pair.B?(bookNames[pair.B][br]||{총입고:0,총출고:0}):null;
-          var aQty=aStock?aStock.총입고-aStock.총출고:0;
-          var bQty=bStock?bStock.총입고-bStock.총출고:0;
-          // 둘 다 있으면 min, 하나만 있으면 그 값
-          if(pair.A&&pair.B) row[br]=Math.min(aQty,bQty);
-          else if(pair.A) row[br]=aQty;
-          else row[br]=bQty;
+          var baseCell=(g.base&&raw[g.base]&&raw[g.base][br])?raw[g.base][br]:{총입고:0,총출고:0};
+          var aCell=(g.A&&raw[g.A]&&raw[g.A][br])?raw[g.A][br]:{총입고:0,총출고:0};
+          var bCell=(g.B&&raw[g.B]&&raw[g.B][br])?raw[g.B][br]:{총입고:0,총출고:0};
+          var minPart=_pickMinPart(aCell,bCell,!!g.A,!!g.B);
+          row[br]=_stock(baseCell)+_stock(minPart);
         });
         result.push(row);
       });
 
       // 교재명 기준 정렬
-      result.sort(function(a,b){return a['교재명'].localeCompare(b['교재명'],'ko');});
+      result.sort(function(a,b){return String(a['교재명']||'').localeCompare(String(b['교재명']||''),'ko');});
       return {ok:true,data:result};
     }
     if(action==='searchBook'){
@@ -3466,14 +3531,13 @@ async function doAddBranchBook(){
   var barcode=document.getElementById('branch-book-barcode').value.trim();
   var name=document.getElementById('branch-book-name').value.trim();
   var price=parseInt(document.getElementById('branch-book-price').value)||0;
-  var vendorVal=document.getElementById('branch-book-vendor')?document.getElementById('branch-book-vendor').value.trim():'';
   if(!barcode) return toast('바코드를 입력해주세요.',false);
   if(!name) return toast('교재명을 입력해주세요.',false);
   try{
     var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
     var res=await fetch(SB_URL+'/books',{method:'POST',headers:h,body:JSON.stringify({
       barcode:barcode, name:name, price:price, purchase_price:0,
-      note:'분원자체교재', vendor:vendorVal||currentBranch
+      note:'분원자체교재', vendor:currentBranch
     })});
     if(!res.ok){var err=await res.text();return toast('등록 실패: '+err,false);}
     toast('등록 완료: '+name, true);
