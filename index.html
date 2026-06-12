@@ -536,9 +536,12 @@ td{padding:10px 13px;vertical-align:middle}
     <p style="font-size:13px;color:var(--muted);margin-bottom:12px">모든 분원의 교재별 재고를 한눈에 확인합니다.</p>
     <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">
       <input type="text" id="allstock-search" placeholder="교재명 검색" style="max-width:260px" oninput="applyAllStockFilter()">
-      <button id="allstock-btn-regular" class="btn btn-y" onclick="setAllStockFilter('regular')">정규과정</button>
+      <button id="allstock-btn-all" class="btn btn-g" onclick="setAllStockFilter('all')">전체보기</button>
+      <button id="allstock-btn-grammar" class="btn btn-g" onclick="setAllStockFilter('grammar')">CHESS부교재</button>
+      <button id="allstock-btn-jinaesoo" class="btn btn-g" onclick="setAllStockFilter('jinaesoo')">지내수</button>
+      <button id="allstock-btn-portfolio" class="btn btn-g" onclick="setAllStockFilter('portfolio')">포트폴리오</button>
       <button id="allstock-btn-special" class="btn btn-g" onclick="setAllStockFilter('special')">특강교재</button>
-      <button class="btn btn-g" onclick="loadAllStock()">새로고침</button>
+      <button class="btn btn-y" onclick="loadAllStock()">새로고침</button>
     </div>
   </div>
   <div id="allstock-list"><div class="loading"><div class="spinner"></div></div></div>
@@ -1248,12 +1251,30 @@ async function call(action,payload){
     if(action==='getClassesBySemester'){
       var params='select=class_name&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=class_name';
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
-      var d=await sbGet('students',params);var cls=[...new Set(d.map(function(r){return r.class_name;}).filter(Boolean))];return {ok:true,data:cls};
+      var d=await sbGet('students',params);
+      var hParams='select=class_name&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch);
+      if(payload.division) hParams+='&division=eq.'+encodeURIComponent(payload.division);
+      var dh=await sbGet('students_history',hParams);
+      var cls=[...new Set([...d,...dh].map(function(r){return r.class_name;}).filter(Boolean))].sort(function(a,b){return String(a).localeCompare(String(b),'ko');});
+      return {ok:true,data:cls};
     }
     if(action==='getStudentsBySemesterClass'){
       var params='select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=name';
       if(payload.division) params+='&division=eq.'+encodeURIComponent(payload.division);
-      var d=await sbGet('students',params);return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학년':s.grade||'','반':s.class_name||'','구분':s.division||''};})};
+      var d=await sbGet('students',params);
+      var hParams='select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=name';
+      if(payload.division) hParams+='&division=eq.'+encodeURIComponent(payload.division);
+      var dh=await sbGet('students_history',hParams);
+      // students_history는 여러 snapshot_at 시점이 있을 수 있으므로 student_id별 최신 1건만
+      var hLatest={};
+      dh.forEach(function(s){
+        if(!hLatest[s.student_id]||new Date(s.snapshot_at)>new Date(hLatest[s.student_id].snapshot_at)) hLatest[s.student_id]=s;
+      });
+      var merged={};
+      d.forEach(function(s){merged[s.student_id]=s;});
+      Object.values(hLatest).forEach(function(s){if(!merged[s.student_id]) merged[s.student_id]=s;});
+      var combined=Object.values(merged).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'ko');});
+      return {ok:true,data:combined.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학년':s.grade||'','반':s.class_name||'','구분':s.division||''};})};
     }    if(action==='loanBook'){
       var bc=String(payload.barcode||'').trim();
       var book=(await sbGet('books','select=name&barcode=eq.'+encodeURIComponent(bc)))[0];
@@ -1453,9 +1474,15 @@ async function call(action,payload){
       var bks1=await sbGet('books','select=*&order=name&note=eq.바론자체교재');
       var bks2=await sbGet('books','select=*&order=name&note=eq.분원자체교재&vendor=eq.'+encodeURIComponent(currentBranch));
       var bks=bks1.concat(bks2);
-      var sales=await sbGet('sales_history','select=barcode,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
+      var sales=await sbGet('sales_history','select=barcode,book_name,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
       var m={};
       bks.forEach(function(b){m[b.barcode]={교재명:b.name.trim(),바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
+      // books에 없지만 이 분원이 입출고 이력을 가진 바코드도 추가 (예: 분원별 자체 제본교재 exam4you)
+      sales.forEach(function(s){
+        if(!m[s.barcode]&&s.barcode){
+          m[s.barcode]={교재명:(s.book_name||s.barcode).trim(),바코드:s.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};
+        }
+      });
       sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고'||s.type==='분원출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
       Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
 
@@ -1538,6 +1565,18 @@ async function call(action,payload){
     if(action==='addStudent'){var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});await fetch(SB_URL+'/students?on_conflict=student_id,branch',{method:'POST',headers:h2,body:JSON.stringify({student_id:payload.id,name:payload.name,contact:payload.contact||null,semester:payload.semester||null,grade:payload.grade||null,class_name:payload.classNum||null,school:payload.school||null,note:payload.note||null,branch:currentBranch,status:payload.status||'재원',division:payload.division||'CHESS',updated_at:new Date().toISOString()})}); return {ok:true,msg:'학생 등록/업데이트 완료: '+payload.name+' ('+(payload.status||'재원')+')'};}
     if(action==='bulkAddStudents'){
       var rows=(payload.rows||[]).map(function(r){return {student_id:r.id,name:r.name,contact:r.contact||null,semester:payload.semester,grade:r.grade||null,class_name:r.classNum||null,school:r.school||null,note:r.note||null,branch:currentBranch,status:'재원',division:detectDivision(r.grade||'',r.classNum||''),updated_at:new Date().toISOString()};});
+      // 업로드 직전, 현재 students 상태를 students_history에 스냅샷 백업
+      try{
+        var curStudents=await sbGet('students','select=student_id,name,contact,grade,class_name,semester,note,created_at,branch,division,status,updated_at,school&branch=eq.'+encodeURIComponent(currentBranch));
+        if(curStudents.length){
+          var snapAt=new Date().toISOString();
+          var snapRows=curStudents.map(function(s){return Object.assign({snapshot_at:snapAt},s);});
+          var hSnap=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+          for(var si=0;si<snapRows.length;si+=200){
+            await fetch(SB_URL+'/students_history',{method:'POST',headers:hSnap,body:JSON.stringify(snapRows.slice(si,si+200))});
+          }
+        }
+      }catch(snapErr){ /* 스냅샷 실패해도 업로드는 계속 진행 */ }
       // upsert로 한 번에 처리 (신규 INSERT + 기존 UPDATE 동시)
       var h2=Object.assign({},SB_HEADERS,{'Prefer':'resolution=merge-duplicates,return=minimal'});
       var CHUNK=50; var upserted=0; var failed=0;
@@ -1567,6 +1606,30 @@ async function call(action,payload){
       return {ok:true,msg:msg};
     }
     if(action==='getAllStockStatus'){
+      var SPECIAL_BOOKS=new Set([
+        'E1','E2','E2+','E3','E3+','E4','E4+','E5','E5+',
+        '구문돼지 Basic 1 구/절의 범위','구문돼지 Basic 2 문장 성분',
+        '한끝영 Basic 구와 절','한끝영 Basic 문장의 5가지 형식','한끝영 Basic 영어 문장 구조 종합','한끝영 Basic 품사와 문장성분',
+        '한끝영 Inter','한끝영 Inter구와 절','한끝영 Inter문장의 6가지 형식','한끝영 Inter영어 문장 구조 종합','한끝영 Inter품사와 문장성분'
+      ]);
+      var GRAMMAR_BOOKS=new Set([
+        'Grammar Mentor Joy 1','Grammar Mentor Joy 2','Grammar Mentor Joy 3','Grammar Mentor Joy 4',
+        'Grammar Mentor Joy Early Start 1','Grammar Mentor Joy Early Start 2',
+        'Grammar Mentor Joy plus 1','Grammar Mentor Joy plus 2','Grammar Mentor Joy plus 3','Grammar Mentor Joy plus 4',
+        'Grammar Mentor Joy Pre','Grammar Mentor Joy Start 1','Grammar Mentor Joy start 2',
+        'Sight Word Readers 1','Sight Word Readers 2',
+        'Very Easy Writing 1','Very Easy Writing 2',
+        'Vocabulary Mentor Joy Start 1','Vocabulary Mentor Joy Start 2',
+        '제대로 영작문 1: 입문(New Edition)','제대로 영작문 2: 기본(New Edition)','제대로 영작문 3: 실력(New Edition)'
+      ]);
+      function categorizeBookName(nm,isSpecial){
+        var base=nm.replace(/^ㅎ\./,'').trim();
+        if(SPECIAL_BOOKS.has(base)) return 'special';
+        if(GRAMMAR_BOOKS.has(base)) return 'grammar';
+        if(base.indexOf('지내수')>-1) return 'jinaesoo';
+        if(base.indexOf('포트폴리오')>-1) return 'portfolio';
+        return isSpecial?'special':'grammar';
+      }
       var bks=await sbGet('books','select=barcode,name,note&order=name&note=eq.바론자체교재');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
       // barcode → 교재명 맵
@@ -1639,7 +1702,7 @@ async function call(action,payload){
         }) || nm.startsWith('E') || nm.startsWith('Sight') || nm.startsWith('구문') || nm.startsWith('한끝');
         // 더 단순하게: 교재명이 특강 바코드에 매핑된 경우
         var isSpecialNm=bks.some(function(b){return b.name.trim()===nm.trim()&&b.barcode.startsWith('IMMERSION-');});
-        var row={교재명:nm,_isSpecial:isSpecialNm};
+        var row={교재명:nm,_isSpecial:isSpecialNm,_category:categorizeBookName(nm,isSpecialNm)};
         BRANCH_KEYS.forEach(function(br){
           var d=bookNames[nm][br]||{총입고:0,총출고:0};
           row[br]=d.총입고-d.총출고;
@@ -1651,7 +1714,7 @@ async function call(action,payload){
       Object.keys(mergedMap).sort().forEach(function(mergedNm){
         var p=mergedMap[mergedNm];
         var isSetSpecial=mergedNm&&bks.some(function(b){return b.name.trim()===mergedNm.trim()&&b.barcode.startsWith('IMMERSION-');});
-        var row={교재명:mergedNm,_isSet:true,_isSpecial:!!isSetSpecial,_aByBranch:{},_bByBranch:{}};
+        var row={교재명:mergedNm,_isSet:true,_isSpecial:!!isSetSpecial,_category:categorizeBookName(mergedNm,!!isSetSpecial),_aByBranch:{},_bByBranch:{}};
         BRANCH_KEYS.forEach(function(br){
           var baseIn=p.base?(bookNames[p.base][br]||{총입고:0,총출고:0}):{총입고:0,총출고:0};
           var dA=p.A?(bookNames[p.A][br]||{총입고:0,총출고:0}):{총입고:0,총출고:0};
@@ -4148,11 +4211,9 @@ function downloadSmsExcel(){
 
 // ===== 전분원 재고 =====
 var _allStockCache=[];
-var _allStockFilterType='regular'; // 'regular' or 'special'
+var _allStockFilterType='all'; // 'all' | 'grammar' | 'jinaesoo' | 'portfolio' | 'special'
 function setAllStockFilter(type){
   _allStockFilterType=type;
-  document.getElementById('allstock-btn-regular').className='btn '+(type==='regular'?'btn-y':'btn-g');
-  document.getElementById('allstock-btn-special').className='btn '+(type==='special'?'btn-y':'btn-g');
   applyAllStockFilter();
 }
 async function loadAllStock(){
@@ -4161,14 +4222,14 @@ async function loadAllStock(){
   try{
     var res=await call('getAllStockStatus');
     _allStockCache=res.data||[];
-    renderAllStock(_allStockCache);
+    applyAllStockFilter();
   }catch(e){el.innerHTML='<div class="empty">불러오기 실패</div>';}
 }
 function applyAllStockFilter(){
   var kw=document.getElementById('allstock-search').value.trim().toLowerCase();
   var filtered=_allStockCache.filter(function(r){
     var kwOk=!kw||r['교재명'].toLowerCase().includes(kw);
-    var typeOk=_allStockFilterType==='special'?r._isSpecial:!r._isSpecial;
+    var typeOk=_allStockFilterType==='all'||r._category===_allStockFilterType;
     return kwOk&&typeOk;
   });
   renderAllStock(filtered);
