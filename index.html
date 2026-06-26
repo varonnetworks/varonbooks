@@ -1628,8 +1628,8 @@ async function call(action,payload){
     }
     if(action==='getAllStockStatus'){
       var SPECIAL_BOOKS=new Set([
-        'E1','E2','E2+','E3','E3+','E4','E4+','E5','E5+',
-        '구문돼지 Basic 1 구/절의 범위','구문돼지 Basic 2 문장 성분',
+        'E1','E2','E2+','E3','E3+','E4','E4+','E5','E5+','E1 summer ver','E2 summer ver','E2+ summer ver','E3 summer ver','E3+ summer ver','E4 summer ver','E4+ summer ver','E5 summer ver','E5+ summer ver',
+        'Sight Word Readers 1','Sight Word Readers 2','구문돼지 Basic 1 구/절의 범위','구문돼지 Basic 2 문장 성분',
         '한끝영 Basic 구와 절','한끝영 Basic 문장의 5가지 형식','한끝영 Basic 영어 문장 구조 종합','한끝영 Basic 품사와 문장성분',
         '한끝영 Inter','한끝영 Inter구와 절','한끝영 Inter문장의 6가지 형식','한끝영 Inter영어 문장 구조 종합','한끝영 Inter품사와 문장성분'
       ]);
@@ -1638,7 +1638,6 @@ async function call(action,payload){
         'Grammar Mentor Joy Early Start 1','Grammar Mentor Joy Early Start 2',
         'Grammar Mentor Joy plus 1','Grammar Mentor Joy plus 2','Grammar Mentor Joy plus 3','Grammar Mentor Joy plus 4',
         'Grammar Mentor Joy Pre','Grammar Mentor Joy Start 1','Grammar Mentor Joy start 2',
-        'Sight Word Readers 1','Sight Word Readers 2',
         'Very Easy Writing 1','Very Easy Writing 2',
         'Vocabulary Mentor Joy Start 1','Vocabulary Mentor Joy Start 2',
         '제대로 영작문 1: 입문(New Edition)','제대로 영작문 2: 기본(New Edition)','제대로 영작문 3: 실력(New Edition)'
@@ -1750,7 +1749,14 @@ async function call(action,payload){
         result.push(row);
       });
 
-      result.sort(function(a,b){return a['교재명'].localeCompare(b['교재명'],'ko');});
+      result.sort(function(a,b){
+        var aSum=a['교재명'].toLowerCase().includes('summer')?1:0;
+        var bSum=b['교재명'].toLowerCase().includes('summer')?1:0;
+        if(aSum!==bSum) return aSum-bSum;
+        var aBase=a['교재명'].toLowerCase().replace(/\s*summer ver$/,'').trim();
+        var bBase=b['교재명'].toLowerCase().replace(/\s*summer ver$/,'').trim();
+        return aBase.localeCompare(bBase,'ko');
+      });
       return {ok:true,data:result};
     }
     if(action==='searchBook'){
@@ -2108,6 +2114,14 @@ function renderBookResults(inputId,resultsId,keyword){
     if(!keyword) return false;
     keyword=keyword.toLowerCase();
     return title.toLowerCase().includes(keyword)||barcode.toLowerCase().includes(keyword);
+  }).sort(function(a,b){
+    var aSum=a['교재명'].toLowerCase().includes('summer')?1:0;
+    var bSum=b['교재명'].toLowerCase().includes('summer')?1:0;
+    if(aSum!==bSum) return aSum-bSum;
+    // summer 제거한 기본명으로 정렬
+    var aBase=a['교재명'].toLowerCase().replace(/\s*summer ver$/,'').trim();
+    var bBase=b['교재명'].toLowerCase().replace(/\s*summer ver$/,'').trim();
+    return aBase.localeCompare(bBase,'en');
   }).slice(0,50);
   if(!keyword && document.activeElement!==input){ box.style.display='none'; return; }
   if(!list.length){
