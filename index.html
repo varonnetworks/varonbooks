@@ -542,6 +542,7 @@ td{padding:10px 13px;vertical-align:middle}
       <button id="allstock-btn-jinaesoo" class="btn btn-g" onclick="setAllStockFilter('jinaesoo')">지내수</button>
       <button id="allstock-btn-portfolio" class="btn btn-g" onclick="setAllStockFilter('portfolio')">포트폴리오</button>
       <button id="allstock-btn-special" class="btn btn-g" onclick="setAllStockFilter('special')">특강교재</button>
+      <button id="allstock-btn-supply" class="btn btn-g" onclick="setAllStockFilter('supply')">소모품</button>
       <button class="btn btn-y" onclick="loadAllStock()">새로고침</button>
     </div>
   </div>
@@ -1642,7 +1643,8 @@ async function call(action,payload){
         'Vocabulary Mentor Joy Start 1','Vocabulary Mentor Joy Start 2',
         '제대로 영작문 1: 입문(New Edition)','제대로 영작문 2: 기본(New Edition)','제대로 영작문 3: 실력(New Edition)'
       ]);
-      function categorizeBookName(nm,isSpecial){
+      function categorizeBookName(nm,isSpecial,note){
+        if(note==='소모품') return 'supply';
         var base=nm.replace(/^ㅎ\./,'').trim();
         if(SPECIAL_BOOKS.has(base)) return 'special';
         if(GRAMMAR_BOOKS.has(base)) return 'grammar';
@@ -1650,7 +1652,7 @@ async function call(action,payload){
         if(base.indexOf('포트폴리오')>-1) return 'portfolio';
         return isSpecial?'special':'grammar';
       }
-      var bks=await sbGet('books','select=barcode,name,note&order=name&note=eq.바론자체교재');
+      var bks=await sbGet('books','select=barcode,name,note&order=name&note=in.(바론자체교재,소모품)');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
       // barcode → 교재명 맵
       var barcodeToName={};
@@ -1711,18 +1713,15 @@ async function call(action,payload){
         if(mergedMap[nm]) abNames.add(nm);
       });
 
+      var nameToNote={};
+      bks.forEach(function(b){nameToNote[b.name.trim()]=b.note;});
+
       // 일반 교재 행
       var result=Object.keys(bookNames).sort().filter(function(nm){
         return !abNames.has(nm);
       }).map(function(nm){
-        var isSpecial=Object.keys(bookNames[nm]).some(function(br){
-          return Object.keys(barcodeIsSpecial).some(function(bc){
-            return barcodeToName[bc]===nm && barcodeIsSpecial[bc];
-          });
-        }) || nm.startsWith('E') || nm.startsWith('Sight') || nm.startsWith('구문') || nm.startsWith('한끝');
-        // 더 단순하게: 교재명이 특강 바코드에 매핑된 경우
         var isSpecialNm=bks.some(function(b){return b.name.trim()===nm.trim()&&b.barcode.startsWith('IMMERSION-');});
-        var row={교재명:nm,_isSpecial:isSpecialNm,_category:categorizeBookName(nm,isSpecialNm)};
+        var row={교재명:nm,_isSpecial:isSpecialNm,_category:categorizeBookName(nm,isSpecialNm,nameToNote[nm])};
         BRANCH_KEYS.forEach(function(br){
           var d=bookNames[nm][br]||{총입고:0,총출고:0};
           row[br]=d.총입고-d.총출고;
@@ -1749,7 +1748,15 @@ async function call(action,payload){
         result.push(row);
       });
 
+      var SUPPLY_ORDER=['봉투(소)','봉투(대)','네이비가방','거북이가방','포켓홀더','볼펜','상담신청서','코칭 브로셔','스위칭 브로셔','교재관리 스티커','책책 스티커','필통','우산'];
       result.sort(function(a,b){
+        if(a._category==='supply'&&b._category==='supply'){
+          var ai=SUPPLY_ORDER.indexOf(a['교재명']);
+          var bi=SUPPLY_ORDER.indexOf(b['교재명']);
+          if(ai===-1) ai=999;
+          if(bi===-1) bi=999;
+          return ai-bi;
+        }
         var aSum=a['교재명'].toLowerCase().includes('summer')?1:0;
         var bSum=b['교재명'].toLowerCase().includes('summer')?1:0;
         if(aSum!==bSum) return aSum-bSum;
@@ -2108,8 +2115,10 @@ function renderBookResults(inputId,resultsId,keyword){
     // 판매 가능 교재: vendor 있는 것만 (판매입출고 검색창에서만 적용)
     if(inputId==='sales-barcode'||inputId==='bulk-barcode'){
       if(b['비고']==='JLS교사용') return false;
-      var vendorNames=(vendors||[]).map(function(v){return v.name;});
-      if(vendorNames.length&&!vendorNames.includes(b['업체']||'')) return false;
+      if(b['비고']!=='바론자체교재'&&b['비고']!=='분원자체교재'&&b['비고']!=='소모품'){
+        var vendorNames=(vendors||[]).map(function(v){return v.name;});
+        if(vendorNames.length&&!vendorNames.includes(b['업체']||'')) return false;
+      }
     }
     if(!keyword) return false;
     keyword=keyword.toLowerCase();
