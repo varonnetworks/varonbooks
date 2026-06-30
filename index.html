@@ -1749,14 +1749,15 @@ async function call(action,payload){
       });
 
       var SUPPLY_ORDER=['봉투(소)','봉투(대)','네이비가방','거북이가방','포켓홀더','볼펜','상담신청서','코칭 브로셔','스위칭 브로셔','교재관리 스티커','책책 스티커','필통','우산'];
-      result.sort(function(a,b){
-        if(a._category==='supply'&&b._category==='supply'){
-          var ai=SUPPLY_ORDER.indexOf(a['교재명']);
-          var bi=SUPPLY_ORDER.indexOf(b['교재명']);
-          if(ai===-1) ai=999;
-          if(bi===-1) bi=999;
-          return ai-bi;
-        }
+      var supplyRows=result.filter(function(r){return r._category==='supply';});
+      var nonSupplyRows=result.filter(function(r){return r._category!=='supply';});
+      // SUPPLY_ORDER 순서대로 확정적으로 재배치 (sort 비교함수 의존 제거)
+      var supplyByName={};
+      supplyRows.forEach(function(r){supplyByName[r['교재명']]=r;});
+      var orderedSupply=[];
+      SUPPLY_ORDER.forEach(function(nm){if(supplyByName[nm]){orderedSupply.push(supplyByName[nm]);delete supplyByName[nm];}});
+      Object.values(supplyByName).forEach(function(r){orderedSupply.push(r);}); // 목록에 없는 소모품은 끝에 추가
+      nonSupplyRows.sort(function(a,b){
         var aSum=a['교재명'].toLowerCase().includes('summer')?1:0;
         var bSum=b['교재명'].toLowerCase().includes('summer')?1:0;
         if(aSum!==bSum) return aSum-bSum;
@@ -1764,6 +1765,7 @@ async function call(action,payload){
         var bBase=b['교재명'].toLowerCase().replace(/\s*summer ver$/,'').trim();
         return aBase.localeCompare(bBase,'ko');
       });
+      result=nonSupplyRows.concat(orderedSupply);
       return {ok:true,data:result};
     }
     if(action==='searchBook'){
