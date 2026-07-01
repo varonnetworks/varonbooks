@@ -481,7 +481,7 @@ td{padding:10px 13px;vertical-align:middle}
     <div class="card-title">납입 내역 조회</div>
     <div class="fgrid">
       <div id="unpaid-branch-wrap" style="display:none"><div class="fg"><label class="fl">분원</label>
-        <select id="unpaid-branch">
+        <select id="unpaid-branch" onchange="reloadUnpaidSemesters()">
           <option value="">전체 분원</option>
         </select>
       </div></div>
@@ -1250,7 +1250,7 @@ async function call(action,payload){
     }
     if(action==='getBooks'){var d=await sbGet('books','select=*,level_namdongtanjls&order=name&limit=5000');return {ok:true,data:d.map(function(b){return {'바코드':b.barcode,'교재명':b.name,'과목':b.subject||'','출판사':b.publisher||'','업체':b.vendor||'','정가':b.price||0,'매입단가':b.purchase_price||0,'비고':b.note||'','레벨':b.level||'','레벨_남동탄':b.level_namdongtanjls||''};})};}
     if(action==='getStudents'){var d=await sbGet('students','select=*&order=name&branch=eq.'+encodeURIComponent(currentBranch));return {ok:true,data:d.map(function(s){return {'학생ID':s.student_id,'이름':s.name,'학부모연락처':s.contact||'','학기':s.semester||'','학년':s.grade||'','반':s.class_name||'','학교':s.school||'','비고':s.note||'','구분':s.division||'CHESS','상태':s.status||'재원'};})};}
-    if(action==='getSemesters'){var d1=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch));var d2=await sbGet('sales_history','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(currentBranch)+'&type=eq.출고');var d3=await sbGet('semesters','select=name&branch=eq.'+encodeURIComponent(currentBranch)+'&order=created_at.desc');var sems=[...new Set([...d1,...d2].map(function(r){return r.semester;}).concat(d3.map(function(r){return r.name;})).filter(Boolean))].sort(function(a,b){return b.localeCompare(a,'ko');});return {ok:true,data:sems};}
+    if(action==='getSemesters'){var _semBr=payload.branch||currentBranch;var d1=await sbGet('students','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(_semBr));var d2=await sbGet('sales_history','select=semester&order=semester.desc&branch=eq.'+encodeURIComponent(_semBr)+'&type=eq.출고');var d3=await sbGet('semesters','select=name&branch=eq.'+encodeURIComponent(_semBr)+'&order=created_at.desc');var sems=[...new Set([...d1,...d2].map(function(r){return r.semester;}).concat(d3.map(function(r){return r.name;})).filter(Boolean))].sort(function(a,b){return b.localeCompare(a,'ko');});return {ok:true,data:sems};}
     if(action==='getStudentsBySemester'){
       var sParams='select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch)+'&order=class_name,name';
       var sCur=await sbGet('students',sParams);
@@ -1402,7 +1402,7 @@ async function call(action,payload){
       return {ok:true,msg:'완납 처리되었습니다.'};
     }
     if(action==='getUnpaid'){
-      var _unpaidBranch=payload.branch||currentBranch;
+      var _unpaidBranch=payload.branch||(isAdmin()?'':currentBranch);
       var params='select=*&type=eq.출고&order=student_name.asc,sale_date.asc';
       if(_unpaidBranch) params+='&branch=eq.'+encodeURIComponent(_unpaidBranch);
       else params+='&branch=not.in.(testjls,varon)';
@@ -1413,7 +1413,7 @@ async function call(action,payload){
       // payments 합산 (내역 포함)
       // 학기 필터 없을 때: 학생 단위 전체 합산 / 있을 때: 학생+학기 단위
       var hasSem=!!payload.semester;
-      var _pmtBranch=_unpaidBranch||currentBranch;
+      var _pmtBranch=_unpaidBranch;
       var pmtParams='select=*&order=paid_date.asc';
       if(_pmtBranch) pmtParams+='&branch=eq.'+encodeURIComponent(_pmtBranch);
       else pmtParams+='&branch=not.in.(testjls,varon)';
@@ -1423,11 +1423,10 @@ async function call(action,payload){
       var pmtMap={};    // 학생(+학기)별 입금 합계
       var pmtHistory={}; // 학생(+학기)별 입금 내역
       pmts.forEach(function(p){
-        // student_id 없는 퇴원학생은 student_name으로 키 구성
         var _pid=(p.student_id&&p.student_id!=='null'&&p.student_id!=='')?p.student_id:(p.student_name||'__noname__');
         var k=hasSem
-          ?_pid+'__'+(p.semester||'')+'__'+(p.branch||currentBranch)
-          :_pid+'__'+(p.branch||currentBranch);
+          ?_pid+'__'+(p.semester||'')+'__'+(p.branch||'')
+          :_pid+'__'+(p.branch||'');
         if(!pmtMap[k]) pmtMap[k]=0;
         pmtMap[k]+=Number(p.paid_amount||0);
         if(!pmtHistory[k]) pmtHistory[k]=[];
@@ -1438,16 +1437,16 @@ async function call(action,payload){
       d.forEach(function(r){
         var _rid=(r.student_id&&r.student_id!=='null'&&r.student_id!=='')?r.student_id:(r.student_name||'__noname__');
         var k=hasSem
-          ?_rid+'__'+(r.semester||'')+'__'+currentBranch
-          :_rid+'__'+currentBranch;
+          ?_rid+'__'+(r.semester||'')+'__'+(r.branch||'')
+          :_rid+'__'+(r.branch||'');
         if(!totalByStudent[k]) totalByStudent[k]=0;
         totalByStudent[k]+=Number(r.total||0);
       });
       var rows=d.map(function(r){
         var _rid=(r.student_id&&r.student_id!=='null')?r.student_id:(r.student_name||'__noname__');
         var k=hasSem
-          ?_rid+'__'+(r.semester||'')+'__'+currentBranch
-          :_rid+'__'+currentBranch;
+          ?_rid+'__'+(r.semester||'')+'__'+(r.branch||'')
+          :_rid+'__'+(r.branch||'');
         var paid=pmtMap[k]||0;
         var studentTotal=totalByStudent[k]||0;
         var balance=studentTotal-paid;
@@ -2809,10 +2808,43 @@ async function initUnpaidPage(){
     }
   }
 
-  var r=await call('getSemesters');semesters=r.data||[];
+  var _semBranch=isAdmin()?(document.getElementById('unpaid-branch')?document.getElementById('unpaid-branch').value:''):currentBranch;
+  if(!_semBranch&&isAdmin()){
+    var allBranches2=Object.keys(BRANCHES).filter(function(k){return k!=='varon'&&k!=='testjls';});
+    var allSems2=new Set();
+    await Promise.all(allBranches2.map(async function(b){
+      var res2=await call('getSemesters',{branch:b});
+      (res2.data||[]).forEach(function(s){allSems2.add(s);});
+    }));
+    semesters=[...allSems2].sort(function(a,b){return b.localeCompare(a,'ko');});
+  } else {
+    var r2=await call('getSemesters',{branch:_semBranch});semesters=r2.data||[];
+  }
   var semOpts=semesters.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
   document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
   document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';loadUnpaid();
+}
+async function reloadUnpaidSemesters(){
+  var br=document.getElementById('unpaid-branch').value;
+  var r;
+  if(!br&&isAdmin()){
+    // 전체 분원: 모든 분원 학기 합산
+    var allBranches=Object.keys(BRANCHES).filter(function(k){return k!=='varon'&&k!=='testjls';});
+    var allSems=new Set();
+    await Promise.all(allBranches.map(async function(b){
+      var res=await call('getSemesters',{branch:b});
+      (res.data||[]).forEach(function(s){allSems.add(s);});
+    }));
+    var semList=[...allSems].sort(function(a,b){return b.localeCompare(a,'ko');});
+    var semOpts=semList.map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
+  } else {
+    r=await call('getSemesters',{branch:br||currentBranch});
+    var semOpts=(r.data||[]).map(function(s){return '<option value="'+s+'">'+s+'</option>';}).join('');
+    document.getElementById('unpaid-semester').innerHTML='<option value="">전체 학기</option>'+semOpts;
+  }
+  document.getElementById('unpaid-class').innerHTML='<option value="">전체 반</option>';
+  loadUnpaid();
 }
 async function updateUnpaidClasses(){
   var sem=document.getElementById('unpaid-semester').value;
