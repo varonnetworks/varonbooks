@@ -316,6 +316,130 @@
     .take-btn{order:3;}
     .test-type{font-size:26px;}
   }
+
+  /* Timer section */
+  .timer-section{
+    max-width:1400px;
+    margin:0 auto 26px;
+    background:var(--bg-soft);
+    border:1px solid var(--card-border);
+    border-radius:20px;
+    padding:22px 24px 26px;
+  }
+  .timer-head{
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:16px;
+  }
+  .timer-head h2{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:22px;
+    margin:0;
+    letter-spacing:-0.01em;
+  }
+  .timer-form{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .timer-form input[type=text]{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    color:var(--ink);
+    padding:10px 14px;
+    border-radius:9px;
+    font-family:var(--body);
+    font-size:14px;
+    flex:1;
+    min-width:160px;
+  }
+  .timer-form input[type=text]:focus{outline:none;border-color:var(--amber);}
+  .timer-form input[type=number]{
+    width:64px;
+    background:var(--card);
+    border:1px solid var(--card-border);
+    color:var(--ink);
+    padding:10px 8px;
+    border-radius:9px;
+    font-family:var(--mono);
+    font-size:14px;
+    text-align:center;
+  }
+  .timer-form .sep{color:var(--ink-dim);font-family:var(--mono);}
+  .preset-btn{
+    padding:10px 16px;
+    border-radius:9px;
+    border:1px solid var(--card-border);
+    background:var(--card);
+    color:var(--ink);
+    font-family:var(--body);
+    font-weight:600;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .preset-btn:hover{border-color:var(--amber);color:var(--amber);}
+
+  .timer-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(200px,1fr));
+    gap:14px;
+  }
+  .timer-card{
+    background:var(--card);
+    border:1px solid var(--card-border);
+    border-radius:16px;
+    padding:16px 18px;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .timer-label{
+    font-size:15px;
+    font-weight:700;
+    color:var(--ink);
+    line-height:1.3;
+    word-break:break-word;
+  }
+  .timer-clock{
+    font-family:var(--display);
+    font-weight:700;
+    font-size:40px;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+  }
+  .timer-stop{
+    align-self:flex-start;
+    padding:6px 12px;
+    border-radius:8px;
+    border:1px solid var(--card-border);
+    background:transparent;
+    color:var(--ink-dim);
+    font-family:var(--body);
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .timer-stop:hover{border-color:var(--red);color:var(--red);}
+  .timer-empty{
+    color:var(--ink-dim);
+    font-size:13px;
+    padding:10px 4px;
+  }
+  @keyframes timer-blink{
+    0%,100%{background:var(--card); border-color:var(--card-border);}
+    50%{background:rgba(224,64,63,0.85); border-color:var(--red);}
+  }
+  .timer-card.done{
+    animation:timer-blink 1s step-start infinite;
+  }
+  .timer-card.done .timer-clock,
+  .timer-card.done .timer-label{
+    color:#fff;
+  }
 </style>
 </head>
 <body>
@@ -343,10 +467,26 @@
     <div class="manage-list" id="manageList"></div>
   </div>
 
+  <div class="timer-section">
+    <div class="timer-head"><h2>⏱ 타이머</h2></div>
+    <div class="timer-form">
+      <input type="text" id="timerLabel" placeholder="이름/메모 (예: 김민준 재시)">
+      <button class="preset-btn" data-preset-min="5">5분</button>
+      <button class="preset-btn" data-preset-min="20">20분</button>
+      <span class="sep">직접입력</span>
+      <input type="number" id="timerMin" placeholder="분" min="0">
+      <span class="sep">:</span>
+      <input type="number" id="timerSec" placeholder="초" min="0" max="59">
+      <button class="btn primary" id="startTimerBtn">타이머 시작</button>
+    </div>
+    <div class="timer-grid" id="timerGrid"></div>
+  </div>
+
   <div class="levels" id="levels"></div>
 </div>
 
 <div class="toast" id="toast"></div>
+
 
 <script>
 /* ====== Supabase 설정 : 아래 두 값을 본인 프로젝트 값으로 채워주세요 ====== */
@@ -553,8 +693,99 @@ function runApp(){
     return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // initial load
+  /* ===== 타이머 ===== */
+  const timerGrid = document.getElementById('timerGrid');
+  const timerLabelInput = document.getElementById('timerLabel');
+  const timerMinInput = document.getElementById('timerMin');
+  const timerSecInput = document.getElementById('timerSec');
+
+  let timers = [];
+
+  async function fetchTimers(){
+    const { data, error } = await supa.from('pretest_timers').select('*').order('created_at', {ascending:true});
+    if(error){ console.error(error); return; }
+    timers = data || [];
+    renderTimers();
+  }
+
+  async function startTimer(label, totalSeconds){
+    if(totalSeconds <= 0){ toast('시간을 입력해주세요'); return; }
+    const endAt = new Date(Date.now() + totalSeconds*1000).toISOString();
+    const { error } = await supa.from('pretest_timers').insert({
+      label: label || '타이머',
+      duration_seconds: totalSeconds,
+      end_at: endAt
+    });
+    if(error){ toast('타이머 시작 실패: '+error.message); return; }
+  }
+
+  async function deleteTimer(id){
+    const { error } = await supa.from('pretest_timers').delete().eq('id', id);
+    if(error) toast('삭제 실패: '+error.message);
+  }
+
+  document.querySelectorAll('.preset-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const mins = parseInt(btn.dataset.presetMin, 10);
+      startTimer(timerLabelInput.value.trim(), mins*60);
+      timerLabelInput.value = '';
+    });
+  });
+
+  document.getElementById('startTimerBtn').addEventListener('click', ()=>{
+    const mins = parseInt(timerMinInput.value, 10) || 0;
+    const secs = parseInt(timerSecInput.value, 10) || 0;
+    startTimer(timerLabelInput.value.trim(), mins*60 + secs);
+    timerLabelInput.value = '';
+    timerMinInput.value = '';
+    timerSecInput.value = '';
+  });
+
+  function formatClock(ms){
+    const totalSec = Math.max(0, Math.ceil(ms/1000));
+    const m = Math.floor(totalSec/60);
+    const s = totalSec % 60;
+    return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  }
+
+  function renderTimers(){
+    if(!timers.length){
+      timerGrid.innerHTML = `<div class="timer-empty">진행 중인 타이머가 없어요. 위에서 이름 입력하고 시작해보세요.</div>`;
+      return;
+    }
+    timerGrid.innerHTML = timers.map(t=>{
+      const remaining = new Date(t.end_at).getTime() - Date.now();
+      const done = remaining <= 0;
+      return `<div class="timer-card ${done?'done':''}" data-timer-id="${t.id}">
+        <div class="timer-label">${escapeHtml(t.label)}</div>
+        <div class="timer-clock" data-clock="${t.id}">${formatClock(remaining)}</div>
+        <button class="timer-stop" data-stop="${t.id}">${done ? '확인' : '중지'}</button>
+      </div>`;
+    }).join('');
+
+    timerGrid.querySelectorAll('[data-stop]').forEach(btn=>{
+      btn.addEventListener('click', ()=> deleteTimer(btn.dataset.stop));
+    });
+  }
+
+  // 1초마다 로컬에서 남은 시간 재계산 (DB 재조회 없이)
+  setInterval(()=>{
+    if(!timers.length) return;
+    let needsFullRerender = false;
+    timers.forEach(t=>{
+      const remaining = new Date(t.end_at).getTime() - Date.now();
+      const clockEl = timerGrid.querySelector(`[data-clock="${t.id}"]`);
+      const wasDone = clockEl && clockEl.closest('.timer-card').classList.contains('done');
+      const isDone = remaining <= 0;
+      if(isDone !== wasDone) needsFullRerender = true;
+      if(clockEl) clockEl.textContent = formatClock(remaining);
+    });
+    if(needsFullRerender) renderTimers();
+  }, 1000);
+
+  /* ===== 초기 로드 & 실시간 구독 ===== */
   fetchAll();
+  fetchTimers();
 
   // realtime subscription — 모든 기기가 즉시 반영됨
   supa.channel('pretest_stock_changes')
@@ -564,6 +795,12 @@ function runApp(){
     .subscribe((status)=>{
       if(status === 'SUBSCRIBED') syncLabel.textContent = '실시간 연결됨';
     });
+
+  supa.channel('pretest_timers_changes')
+    .on('postgres_changes', { event:'*', schema:'public', table:'pretest_timers' }, () => {
+      fetchTimers();
+    })
+    .subscribe();
 }
 </script>
 </body>
