@@ -1219,7 +1219,7 @@ var loanQueue=[];
 var returnQueue=[];
 
 // Supabase REST API 헬퍼
-function sbGet(table,params){return fetch(SB_URL+'/'+table+'?'+params,{headers:SB_HEADERS}).then(function(r){return r.json();});}
+function sbGet(table,params){return fetch(SB_URL+'/'+table+'?'+params,{headers:Object.assign({},SB_HEADERS,{'Range-Unit':'items','Range':'0-49999'})}).then(function(r){return r.json();});}
 function sbPost(table,body){return fetch(SB_URL+'/'+table,{method:'POST',headers:SB_HEADERS,body:JSON.stringify(body)}).then(function(r){return r.json();});}
 function sbPatch(table,params,body){var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});return fetch(SB_URL+'/'+table+'?'+params,{method:'PATCH',headers:h,body:JSON.stringify(body)}).then(function(r){if(!r.ok) return r.text().then(function(t){throw new Error(r.status+': '+t);});return {ok:true};});}
 
@@ -1654,7 +1654,7 @@ async function call(action,payload){
         return isSpecial?'special':'grammar';
       }
       var bks=await sbGet('books','select=barcode,name,note&order=name&note=in.(바론자체교재,소모품)');
-      var sales=await sbGet('sales_history','select=barcode,type,qty,branch');
+      var sales=await sbGet('sales_history','select=barcode,type,qty,branch&limit=50000');
       // barcode → 교재명 맵
       var barcodeToName={};
       var barcodeIsSpecial={}; // IMMERSION- 바코드는 특강
