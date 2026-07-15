@@ -1067,6 +1067,7 @@ var SB_HEADERS={'apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY,'Content-Type':
 
 // 분원 설정
 var BRANCHES={
+  'baronbooks':    {name:'바론',   account:'', accountHolder:''},
   'namdongtanjls': {name:'남동탄', account:'국민 549801-01-260123', accountHolder:'바론네트웍스'},
   'suwon_jls':     {name:'수원',   account:'', accountHolder:''},
   'suwonjls2009':  {name:'장안',   account:'', accountHolder:''},
@@ -1076,6 +1077,7 @@ var BRANCHES={
   'varon':         {name:'관리자',  account:'', accountHolder:''},
   'testjls':       {name:'테스트',  account:'', accountHolder:''}
 };
+function effectiveBranch(){return currentBranch==='varon'?'baronbooks':currentBranch;}
 // localStorage에 저장된 계좌 불러오기
 (function(){
   try{
@@ -1186,7 +1188,7 @@ function doLogin(){
   // 관리자 탭 제어
   document.querySelectorAll('.tab').forEach(function(t){
     var oc=t.getAttribute('onclick')||'';
-    var adminHide=["'sales'","'bulk'","'stock'","'barcode'","'settings'"];
+    var adminHide=["'bulk'","'stock'","'barcode'","'settings'"];
     var hide=isAdmin()&&adminHide.some(function(k){return oc.includes(k);});
     t.style.display=hide?'none':'';
   });
@@ -1363,12 +1365,12 @@ async function call(action,payload){
       if(payload.branchTarget) memoStr=(memoStr?memoStr+' | ':'')+(payload.type==='분원출고'?'→':'←')+BRANCHES[payload.branchTarget]?.name;
       if(payload.handler) memoStr=(memoStr?memoStr+' | ':'')+'처리자:'+payload.handler;
       var divisionVal=st?st.division||null:null;
-      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty+taxAmount,tax_amount:taxAmount,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,division:divisionVal,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:currentBranch,purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
+      await sbPost('sales_history',{barcode:bc,book_name:book.name,type:payload.type,qty:qty,unit_price:unitPrice,total:unitPrice*qty+taxAmount,tax_amount:taxAmount,sale_date:new Date().toISOString().slice(0,10),student_id:payload.studentId||null,student_name:studentName||null,semester:payload.semester||null,class_name:className||null,division:divisionVal,pay_status:payload.payStatus||'미납',memo:memoStr||null,branch:effectiveBranch(),purchase_price:isOut?null:(payload.price!=null?Number(payload.price):null)});
       var msgTax=taxAmount>0?' (공급가 '+(unitPrice*qty).toLocaleString()+'원 + 세액 '+taxAmount.toLocaleString()+'원 = '+(unitPrice*qty+taxAmount).toLocaleString()+'원)':'';
       return {ok:true,msg:(payload.type)+' 처리 완료: '+book.name+msgTax};
     }
     if(action==='getSalesHistory'){
-      var params='select=*&order=sale_date.desc,id.desc&limit=200&branch=eq.'+encodeURIComponent(currentBranch);
+      var params='select=*&order=sale_date.desc,id.desc&limit=200&branch=eq.'+encodeURIComponent(effectiveBranch());
       if(payload.type) params+='&type=eq.'+encodeURIComponent(payload.type);
       if(payload.semester) params+='&semester=eq.'+encodeURIComponent(payload.semester);
       if(payload.studentId) params+='&student_id=eq.'+encodeURIComponent(payload.studentId);
@@ -1478,7 +1480,7 @@ async function call(action,payload){
       var sts=await sbGet('students','select=*&semester=eq.'+encodeURIComponent(payload.semester)+'&class_name=eq.'+encodeURIComponent(payload.classNum)+'&branch=eq.'+encodeURIComponent(currentBranch));
       if(!sts.length) return {ok:false,msg:'해당 반 학생이 없습니다.'};
       // 중복 판매 확인: 이미 해당 교재 판매된 학생 제외
-      var dupCheck=await sbGet('sales_history','select=student_id&type=eq.출고&barcode=eq.'+encodeURIComponent(bc)+'&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(currentBranch));
+      var dupCheck=await sbGet('sales_history','select=student_id&type=eq.출고&barcode=eq.'+encodeURIComponent(bc)+'&semester=eq.'+encodeURIComponent(payload.semester)+'&branch=eq.'+encodeURIComponent(effectiveBranch()));
       var dupIds=new Set(dupCheck.map(function(r){return r.student_id;}));
       var dupNames=sts.filter(function(s){return dupIds.has(s.student_id);}).map(function(s){return s.name;});
       var toProcess=sts.filter(function(s){return !dupIds.has(s.student_id);});
@@ -1486,7 +1488,7 @@ async function call(action,payload){
       if(dupNames.length) {
         // 중복 학생 있으면 제외하고 처리 (프론트에서 confirm은 이미 했으므로 여기선 그냥 제외)
       }
-      await sbPost('sales_history',toProcess.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:currentBranch,division:s.division||null};}));
+      await sbPost('sales_history',toProcess.map(function(s){return {barcode:bc,book_name:book.name,type:'출고',qty:1,unit_price:unitPrice,total:unitPrice,sale_date:new Date().toISOString().slice(0,10),student_id:s.student_id,student_name:s.name,semester:payload.semester,class_name:payload.classNum,pay_status:'미납',memo:payload.memo||null,branch:effectiveBranch(),division:s.division||null};}));
       var msg=toProcess.length+'명 출고 완료';
       if(dupNames.length) msg+=' ('+dupNames.join(', ')+' '+dupNames.length+'명 중복 제외)';
       return {ok:true,msg:msg};
@@ -1495,7 +1497,7 @@ async function call(action,payload){
       var bks1=await sbGet('books','select=*&order=name&note=eq.바론자체교재');
       var bks2=await sbGet('books','select=*&order=name&note=eq.분원자체교재&vendor=eq.'+encodeURIComponent(currentBranch));
       var bks=bks1.concat(bks2);
-      var sales=await sbGet('sales_history','select=barcode,book_name,type,qty&branch=eq.'+encodeURIComponent(currentBranch));
+      var sales=await sbGet('sales_history','select=barcode,book_name,type,qty&branch=eq.'+encodeURIComponent(effectiveBranch()));
       var m={};
       bks.forEach(function(b){m[b.barcode]={교재명:b.name.trim(),바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
       // books에 없지만 이 분원이 입출고 이력을 가진 바코드도 추가 (예: 분원별 자체 제본교재 exam4you)
@@ -4360,11 +4362,12 @@ function renderAllStock(data){
   var _baseKeys=BRANCH_KEYS.filter(function(k){return !_excludedKeys.includes(k);})
     .sort(function(a,b){return BRANCHES[a].name.localeCompare(BRANCHES[b].name,'ko');});
   // 일반 분원 로그인 시엔 내 분원을 맨 앞으로
+  var _myKey=currentBranch==='varon'?'baronbooks':currentBranch;
   var orderedKeys=_excludedKeys.includes(currentBranch)
-    ? _baseKeys
+    ? [_myKey].concat(_baseKeys.filter(function(k){return k!==_myKey;}))
     : [currentBranch].concat(_baseKeys.filter(function(k){return k!==currentBranch;}));
   var head='<tr><th>교재명</th>'+orderedKeys.map(function(k,i){
-    var isMine=k===currentBranch;
+    var isMine=(k===currentBranch)||(currentBranch==='varon'&&k==='baronbooks');
     return '<th class="'+(i%2===0?'branch-col-odd':'branch-col-even')+'" style="'+(isMine?'font-weight:800;':'')+'">'+BRANCHES[k].name+(isMine?' ★':'')+'</th>';
   }).join('')+'</tr>';
   var rows=data.map(function(r){
