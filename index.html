@@ -1655,6 +1655,7 @@ async function call(action,payload){
       }
       var bks=await sbGet('books','select=barcode,name,note&order=name&note=in.(바론자체교재,소모품)');
       var sales=await sbGet('sales_history','select=barcode,type,qty,branch&limit=50000');
+      console.log('[디버그] ACEHKY-02 운정2:', sales.filter(function(s){return s.barcode==='IMMERSION-ACEHKY-02'&&s.branch==='unjeongjls2';}));
       // barcode → 교재명 맵
       var barcodeToName={};
       var barcodeIsSpecial={}; // IMMERSION- 바코드는 특강
