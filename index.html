@@ -1654,33 +1654,26 @@ async function call(action,payload){
         return isSpecial?'special':'grammar';
       }
       var bks=await sbGet('books','select=barcode,name,note&order=name&note=in.(바론자체교재,소모품)');
-      var sales=await sbGet('sales_history','select=barcode,type,qty,branch&limit=50000');
-      console.log('[디버그] ACEHKY-02 운정2:', sales.filter(function(s){return s.barcode==='IMMERSION-ACEHKY-02'&&s.branch==='unjeongjls2';}));
-      // barcode → 교재명 맵
-      var barcodeToName={};
-      var barcodeIsSpecial={}; // IMMERSION- 바코드는 특강
-      bks.forEach(function(b){
-        barcodeToName[b.barcode]=b.name.trim();
-        barcodeIsSpecial[b.barcode]=b.barcode.startsWith('IMMERSION-');
-      });
-      // books에 등록된 교재는 이력 없어도 0권으로 초기화
+      // stock_by_branch 뷰에서 분원별 재고 집계 (페이지네이션으로 전체 가져오기)
+      var stockRows=[];
+      var _sp=0;var _sdone=false;
+      while(!_sdone){
+        var _sc=await fetch(SB_URL+'/stock_by_branch?select=book_name,branch,stock&limit=2000&offset='+(_sp*2000),{headers:SB_HEADERS}).then(function(r){return r.json();});
+        if(!_sc||!_sc.length){_sdone=true;}
+        else{stockRows=stockRows.concat(_sc);if(_sc.length<2000)_sdone=true;}
+        _sp++;if(_sp>20)_sdone=true;
+      }
+      // bookNames 구조로 변환
       var bookNames={};
-      bks.forEach(function(b){
-        var nm=b.name.trim();
-        if(!bookNames[nm]) bookNames[nm]={};
-      });
-      // 교재명+분원별 입출고 집계 (ㅎ. 분권 포함)
-      sales.forEach(function(s){
-        var br=s.branch||'?';
-        var nm=barcodeToName[s.barcode];
+      bks.forEach(function(b){var nm=b.name.trim();if(!bookNames[nm])bookNames[nm]={};});
+      stockRows.forEach(function(r){
+        var nm=r.book_name;
         if(!nm) return;
         if(!bookNames[nm]) bookNames[nm]={};
-        if(!bookNames[nm][br]) bookNames[nm][br]={총입고:0,총출고:0};
-        if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') bookNames[nm][br].총입고+=Number(s.qty);
-        else if(s.type==='출고'||s.type==='분원출고') bookNames[nm][br].총출고+=Number(s.qty);
-        else if(s.type==='입고취소') bookNames[nm][br].총입고-=Number(s.qty);
-        else if(s.type==='출고취소') bookNames[nm][br].총출고-=Number(s.qty);
+        bookNames[nm][r.branch]=Number(r.stock||0);
       });
+      var barcodeIsSpecial={};
+      bks.forEach(function(b){barcodeIsSpecial[b.barcode]=b.barcode.startsWith('IMMERSION-');});
 
       // ㅎ. 분권(A)/(B) 쌍 + 합본 바코드 통합 계산
       // 합본 바코드명: "지내수...소재 1(A) (B)", 분권명: "ㅎ.지내수...소재 1(A)"/"ㅎ.지내수...소재 1(B)"
@@ -1725,8 +1718,7 @@ async function call(action,payload){
         var isSpecialNm=bks.some(function(b){return b.name.trim()===nm.trim()&&b.barcode.startsWith('IMMERSION-');});
         var row={교재명:nm,_isSpecial:isSpecialNm,_category:categorizeBookName(nm,isSpecialNm,nameToNote[nm])};
         BRANCH_KEYS.forEach(function(br){
-          var d=bookNames[nm][br]||{총입고:0,총출고:0};
-          row[br]=d.총입고-d.총출고;
+          row[br]=typeof bookNames[nm][br]==='number'?bookNames[nm][br]:0;
         });
         return row;
       });
@@ -1737,12 +1729,11 @@ async function call(action,payload){
         var isSetSpecial=mergedNm&&bks.some(function(b){return b.name.trim()===mergedNm.trim()&&b.barcode.startsWith('IMMERSION-');});
         var row={교재명:mergedNm,_isSet:true,_isSpecial:!!isSetSpecial,_category:categorizeBookName(mergedNm,!!isSetSpecial),_aByBranch:{},_bByBranch:{}};
         BRANCH_KEYS.forEach(function(br){
-          var baseIn=p.base?(bookNames[p.base][br]||{총입고:0,총출고:0}):{총입고:0,총출고:0};
-          var dA=p.A?(bookNames[p.A][br]||{총입고:0,총출고:0}):{총입고:0,총출고:0};
-          var dB=p.B?(bookNames[p.B][br]||{총입고:0,총출고:0}):{총입고:0,총출고:0};
-          var baseStock=baseIn.총입고-baseIn.총출고;
-          var aQty=baseStock+(dA.총입고-dA.총출고);
-          var bQty=baseStock+(dB.총입고-dB.총출고);
+          var baseStock=p.base?(typeof bookNames[p.base][br]==='number'?bookNames[p.base][br]:0):0;
+          var aStock=p.A?(typeof bookNames[p.A][br]==='number'?bookNames[p.A][br]:0):0;
+          var bStock=p.B?(typeof bookNames[p.B][br]==='number'?bookNames[p.B][br]:0):0;
+          var aQty=baseStock+aStock;
+          var bQty=baseStock+bStock;
           row[br]=Math.min(aQty,bQty);
           row._aByBranch[br]=aQty;
           row._bByBranch[br]=bQty;
