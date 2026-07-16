@@ -1764,6 +1764,23 @@ var _tt;
 async function checkPendingTransfers(){
   try{
     var d=await sbGet('transfers','select=*&from_branch=eq.'+encodeURIComponent(currentBranch)+'&status=eq.대기중&order=created_at.desc');
+    // 바론에서 내 분원으로 즉시 입고된 알림 (최근 7일)
+    var sevenDaysAgo=new Date(Date.now()-7*24*60*60*1000).toISOString();
+    var baronIncoming=await sbGet('transfers','select=*&to_branch=eq.'+encodeURIComponent(currentBranch)+'&from_branch=eq.baronbooks&status=eq.완료&created_at=gte.'+encodeURIComponent(sevenDaysAgo)+'&order=created_at.desc');
+    if(baronIncoming.length){
+      var notifId='baron-incoming-banner';
+      var existing=document.getElementById(notifId);
+      if(!existing){
+        existing=document.createElement('div');
+        existing.id=notifId;
+        existing.style.cssText='background:#e8f5e9;border:2px solid #4caf50;border-radius:10px;padding:14px 18px;margin:12px 0;display:flex;align-items:center;gap:12px;flex-wrap:wrap';
+        document.querySelector('main').insertBefore(existing, document.querySelector('main').firstChild);
+      }
+      var items=baronIncoming.map(function(t){return t.book_name+' '+t.qty+'권';}).join(', ');
+      existing.innerHTML='<span style="font-size:20px">📦</span>'
+        +'<span style="font-weight:700;color:#2e7d32">바론에서 입고: <b>'+items+'</b></span>'
+        +'<button class="btn btn-sm btn-g" style="margin-left:auto" onclick="this.parentNode.remove()">확인</button>';
+    }
     if(!d.length) return;
     var banner=document.getElementById('pending-transfer-banner');
     if(!banner){
@@ -2378,10 +2395,13 @@ function toggleStudentField(){
   if((isBranchOut||isBranchIn)&&document.getElementById('sales-branch')){
     var sel=document.getElementById('sales-branch');
     sel.innerHTML='<option value="">-- 분원 선택 --</option>'+
-      Object.keys(BRANCHES).filter(function(k){return k!==currentBranch&&k!=='varon'&&k!=='testjls';}).map(function(k){
+      Object.keys(BRANCHES).filter(function(k){return k!==currentBranch&&k!=='varon'&&k!=='testjls'&&k!=='baronbooks';}).map(function(k){
         return '<option value="'+k+'">'+BRANCHES[k].name+'</option>';
       }).join('');
   }
+  // 바론 계정에서 분원출고 옵션 레이블 변경
+  var branchOutOption=document.querySelector('#sales-type option[value="분원출고"]');
+  if(branchOutOption) branchOutOption.textContent=currentBranch==='varon'?'타분원 출고':'분원요청';
 }
 function initSalesStudentSearch(){
   var input=document.getElementById('sales-student-search');var hidden=document.getElementById('sales-student');var box=document.getElementById('sales-student-results');
@@ -2591,16 +2611,38 @@ async function doSales(){
   if(type==='분원출고'){
     try{
       var book=findBookByBarcode(barcode)||{};
-      // 가장 최근 매입단가 조회
       var bkPP=(await sbGet('books','select=purchase_price&barcode=eq.'+encodeURIComponent(barcode)+'&limit=1'))[0];
       var purchasePrice=bkPP?Number(bkPP.purchase_price||0):0;
       if(!purchasePrice){var recentPurchase=await sbGet('sales_history','select=purchase_price&barcode=eq.'+encodeURIComponent(barcode)+'&type=eq.입고&branch=eq.'+encodeURIComponent(currentBranch)+'&order=sale_date.desc&limit=1');purchasePrice=recentPurchase.length?Number(recentPurchase[0].purchase_price||0):0;}
+      // 바론 계정은 즉시 처리 (분원출고 + 상대분원 분원입고 동시)
+      if(currentBranch==='varon'){
+        var bookName=(book['교재명']||barcode);
+        var today=new Date().toISOString().slice(0,10);
+        var toName=(BRANCHES[branchTarget]||{}).name||branchTarget;
+        // 바론 분원출고
+        await call('addSales',{barcode:barcode,type:'분원출고',qty:qty,price:0,memo:'→'+toName,branchTarget:branchTarget});
+        // 받는 분원 분원입고
+        var h2=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
+        await fetch(SB_URL+'/sales_history',{method:'POST',headers:h2,body:JSON.stringify({
+          branch:branchTarget,barcode:barcode,book_name:bookName,type:'분원입고',qty:qty,
+          unit_price:0,total:0,purchase_price:purchasePrice,sale_date:today,memo:'←바론'
+        })});
+        // 받는 분원에 알림 저장
+        await fetch(SB_URL+'/transfers',{method:'POST',headers:h2,body:JSON.stringify({
+          from_branch:'baronbooks',to_branch:branchTarget,barcode:barcode,book_name:bookName,
+          qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'완료'
+        })});
+        toast(toName+' 분원에 '+bookName+' '+qty+'권 출고 완료!',true);
+        document.getElementById('sales-barcode').value='';
+        updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
+        document.getElementById('sales-qty').value='1';
+        loadSalesHistory();
+        return;
+      }
       var h=Object.assign({},SB_HEADERS,{'Prefer':'return=minimal'});
-      // 요청: from=출고해줄 분원(상대), to=입고받을 분원(나)
       var body={from_branch:branchTarget,to_branch:currentBranch,barcode:barcode,book_name:book['교재명']||barcode,qty:qty,purchase_price:purchasePrice,handler:handler||null,status:'대기중'};
       var res=await fetch(SB_URL+'/transfers',{method:'POST',headers:h,body:JSON.stringify(body)});
       if(!res.ok){var err=await res.text();toast('분원요청 실패: '+err,false);return;}
-      // 요청만 저장, 재고 차감 없음 (상대 분원이 수락해야 처리됨)
       toast(BRANCHES[branchTarget].name+' 입고 요청 완료! 상대 분원이 수락하면 자동 처리됩니다.',true);
       document.getElementById('sales-barcode').value='';
       updateBookPreview('sales-barcode','sales-book-preview','sales-book-preview-name','sales-book-preview-barcode');
