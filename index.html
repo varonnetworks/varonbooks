@@ -1494,20 +1494,20 @@ async function call(action,payload){
       return {ok:true,msg:msg};
     }
     if(action==='getStockStatus'){
-      var bks1=await sbGet('books','select=*&order=name&note=eq.바론자체교재');
-      var bks2=await sbGet('books','select=*&order=name&note=eq.분원자체교재&vendor=eq.'+encodeURIComponent(currentBranch));
-      var bks=bks1.concat(bks2);
-      var sales=await sbGet('sales_history','select=barcode,book_name,type,qty&branch=eq.'+encodeURIComponent(effectiveBranch()));
+      // stock_by_branch_all 뷰에서 해당 분원 재고 가져오기
+      var _br=effectiveBranch();
+      var stockView=await sbGet('stock_by_branch_all','select=book_name,barcode,note,vendor,stock&branch=eq.'+encodeURIComponent(_br));
       var m={};
-      bks.forEach(function(b){m[b.barcode]={교재명:b.name.trim(),바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};});
-      // books에 없지만 이 분원이 입출고 이력을 가진 바코드도 추가 (예: 분원별 자체 제본교재 exam4you)
-      sales.forEach(function(s){
-        if(!m[s.barcode]&&s.barcode){
-          m[s.barcode]={교재명:(s.book_name||s.barcode).trim(),바코드:s.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:''};
-        }
+      stockView.forEach(function(r){
+        m[r.barcode]={교재명:r.book_name,바코드:r.barcode,총입고:0,총출고:0,현재재고:Number(r.stock||0),최근업데이트:new Date().toISOString().slice(0,10)};
       });
-      sales.forEach(function(s){if(!m[s.barcode]) return;if(s.type==='입고'||s.type==='분원입고'||s.type==='초기재고') m[s.barcode].총입고+=Number(s.qty);else if(s.type==='출고'||s.type==='분원출고') m[s.barcode].총출고+=Number(s.qty);else if(s.type==='입고취소') m[s.barcode].총입고-=Number(s.qty);else if(s.type==='출고취소') m[s.barcode].총출고-=Number(s.qty);});
-      Object.values(m).forEach(function(r){r.현재재고=r.총입고-r.총출고;r.최근업데이트=new Date().toISOString().slice(0,10);});
+      // books에 있지만 이력 없는 교재도 포함 (바론자체교재 + 분원자체교재)
+      var bks1=await sbGet('books','select=barcode,name&order=name&note=eq.바론자체교재');
+      var bks2=await sbGet('books','select=barcode,name&order=name&note=eq.분원자체교재&vendor=eq.'+encodeURIComponent(currentBranch));
+      bks1.concat(bks2).forEach(function(b){
+        if(!m[b.barcode]) m[b.barcode]={교재명:b.name.trim(),바코드:b.barcode,총입고:0,총출고:0,현재재고:0,최근업데이트:new Date().toISOString().slice(0,10)};
+      });
+      var bks=bks1.concat(bks2);
 
       // ㅎ. 분권(A)/(B) + 합본 바코드 통합 재고 계산
       // 전략: 합본 입고 - 합본 출고 - 분권A 출고 - 분권B 출고 = 통합 풀
@@ -1515,50 +1515,36 @@ async function call(action,payload){
       var mergedStock={};
       var abBarcodes=new Set();
 
-      // 1단계: 분권 쌍 수집
+      // 1단계: 분권 쌍 수집 (뷰에서 현재재고 직접 사용)
       Object.values(m).forEach(function(r){
         var mA=r['교재명'].match(/^ㅎ\.(.+)\(A\)$/);
         var mB=r['교재명'].match(/^ㅎ\.(.+)\(B\)$/);
         if(mA||mB){
           var baseName=(mA||mB)[1].trim();
           var mergedNm=baseName+'(A) (B)';
-          if(!mergedStock[mergedNm]) mergedStock[mergedNm]={교재명:mergedNm,바코드:'',_bcA:'',_bcB:'',_inA:0,_outA:0,_inB:0,_outB:0,_baseIn:0,_baseOut:0,최근업데이트:r.최근업데이트};
-          if(mA){ mergedStock[mergedNm]._inA=r.총입고; mergedStock[mergedNm]._outA=r.총출고; mergedStock[mergedNm]._bcA=r['바코드']; }
-          else { mergedStock[mergedNm]._inB=r.총입고; mergedStock[mergedNm]._outB=r.총출고; mergedStock[mergedNm]._bcB=r['바코드']; }
+          if(!mergedStock[mergedNm]) mergedStock[mergedNm]={교재명:mergedNm,바코드:'',_bcA:'',_bcB:'',_aQty:0,_bQty:0,_baseStock:0,최근업데이트:r.최근업데이트};
+          if(mA){ mergedStock[mergedNm]._aQty=r.현재재고; mergedStock[mergedNm]._bcA=r['바코드']; }
+          else { mergedStock[mergedNm]._bQty=r.현재재고; mergedStock[mergedNm]._bcB=r['바코드']; }
           abBarcodes.add(r['바코드']);
         }
       });
 
-      // 2단계: 합본 바코드 재고를 통합 풀에 합산
-      // 합본 바코드: 분권 바코드에서 끝 a/b 제거한 것
+      // 2단계: 합본 바코드 재고 합산
       Object.keys(mergedStock).forEach(function(nm){
         var ms=mergedStock[nm];
-        // _bcA 에서 마지막 a 제거 → 합본 바코드 추정
         var baseBC=ms._bcA?ms._bcA.replace(/a$/i,''):ms._bcB?ms._bcB.replace(/b$/i,''):'';
         if(baseBC && m[baseBC]){
-          ms._baseIn=m[baseBC].총입고;   // 합본 입고 별도 보관
-          ms._baseOut=m[baseBC].총출고;  // 합본 출고 별도 보관
-          abBarcodes.add(baseBC); // 합본 단독 행도 제거
+          ms._baseStock=m[baseBC].현재재고;
+          abBarcodes.add(baseBC);
         }
         ms['바코드']=[ms._bcA,ms._bcB].filter(Boolean).join(' / ');
       });
 
-      // 3단계: 통합 재고 계산
-      // 합본 입고 5, 합본 출고 2, 분권A 출고 1, 분권B 출고 0 이면:
-      // 합본풀 = (합본입고 - 합본출고) → 별도 추적 필요
-      // _inA에 합본입고가 합산되어 있고, _outA에 합본출고+분권A출고 합산
-      // 합본풀 = _inA - (_outA - _outA_only) 로 분리 불가 → 다른 방식
-      // ──────────────────────────────────────────────────────
-      // 합본 재고 _base = _inBase - _outBase (2단계에서 별도 저장됨)
-      // A 실재고 = _base - _outA(분권A만)
-      // B 실재고 = _base - _outB(분권B만)
-      // 세트 재고 = min(A실재고, B실재고)
+      // 3단계: 세트 재고 = 합본재고 + min(A재고, B재고)
       Object.values(mergedStock).forEach(function(r){
-        var baseStock = r._baseIn - r._baseOut;   // 합본 잔여 (세트 기준)
-        r._aQty = baseStock + (r._inA - r._outA); // 합본잔여 + 분권A순재고
-        r._bQty = baseStock + (r._inB - r._outB); // 합본잔여 + 분권B순재고
-        r.총입고 = r._baseIn + r._inA + r._inB;
-        r.총출고 = r._baseOut + r._outA + r._outB;
+        r._aQty = r._baseStock + r._aQty;
+        r._bQty = r._baseStock + r._bQty;
+        r.총입고 = 0; r.총출고 = 0;
         r.현재재고 = Math.min(r._aQty, r._bQty);
       });
 
